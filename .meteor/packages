@@ -5,5 +5,14 @@
 # but you can also edit it by hand.
 
 meteor-platform
-autopublish
-insecure
+reactjs:react
+sanjo:jasmine
+velocity:html-reporter
+semantic:ui
+flemay:less-autoprefixer
+iron:router
+accounts-password
+audit-argument-checks
+less
+underscore
+accounts-ui
