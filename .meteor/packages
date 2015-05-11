@@ -13,6 +13,5 @@ flemay:less-autoprefixer
 iron:router
 accounts-password
 audit-argument-checks
-less
 underscore
 accounts-ui
