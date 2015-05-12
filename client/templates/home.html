@@ -1,16 +1,11 @@
-<head>
-  <title>DeClash Tournament</title>
-</head>
-
-<body>
+<template name="home">
   <h1>Welcome to DeClash! This is the homepage!</h1>
 
   <a href="/register">Register as Tab Director</a>
 
   {{> hello}}
-</body>
+</template>
 
 <template name="hello">
-  <button>Click Me</button>
-  <p>You've pressed the button {{counter}} times.</p>
+  <h2>Hello, {{name}}.</h2>
 </template>

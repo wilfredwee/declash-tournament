@@ -33,15 +33,31 @@ var TabRegistrationForm = ReactMeteor.createClass({
     var password = React.findDOMNode(this.refs.password).value.trim();
     var institution = React.findDOMNode(this.refs.institution).value.trim();
 
-    Meteor.call("registerTabUser", name, email, password, institution, true, function(error, result) {
-      if(error) {
-        // TODO
-        console.log(error);
+    var user = {
+      email: email,
+      password: password,
+      profile: {
+        name: name,
+        institution: institution,
+        isAdmin: true
+      }
+    };
+
+    Meteor.call("registerTabUser", user, function(err, result) {
+      if(err) {
+        alert(err.reason);
       }
       else {
-        // TODO
-        console.log(result);
+        Meteor.loginWithPassword(user.email, user.password, function(err) {
+          if(err) {
+            alert(err.reason);
+          }
+          else {
+            window.location.href = "/management";
+          }
+        });
       }
-    })
+    });
+
   }
 });
