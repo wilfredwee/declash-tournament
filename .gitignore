@@ -1,2 +1,4 @@
 *.sublime-project
 *.sublime-workspace
+client/lib/semantic-ui/*
+!client/lib/semantic-ui/custom.semantic.json
