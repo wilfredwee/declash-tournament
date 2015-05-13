@@ -1,5 +1,9 @@
 Meteor.publish("tabUsers", function() {
-  Meteor.users.find({
-    role: "tab"
+  return Meteor.users.find({
+    role: "super"
   });
+});
+
+Meteor.publish("unfinishedTournaments", function() {
+  return Tournaments.find({finished: false});
 });

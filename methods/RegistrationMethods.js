@@ -1,3 +1,5 @@
+// We need to have a better way to check() things.
+
 Meteor.methods({
   registerTabUser: function(options) {
     check(options, Object);
@@ -11,5 +13,22 @@ Meteor.methods({
     user = Accounts.createUser(options);
 
     return user;
+  },
+
+  registerTournament: function(tournament) {
+    check(tournament, {
+        name: String,
+        style: String, 
+        maxUsers: Number
+    });
+
+    tournament.ownerId = this.userId;
+    tournament.createdAt = new Date();
+    tournament.paymentVerified = false;
+    tournament.finished = false;
+
+    Tournaments.insert(tournament);
+
+    return tournament;
   }
 });

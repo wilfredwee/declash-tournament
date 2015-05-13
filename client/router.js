@@ -3,7 +3,7 @@ Router.route("/register", function() {
 });
 
 Router.route("/management", function() {
-  this.render("Management");
+  this.render("ManagementBody");
 });
 
 Router.route("/", function() {
