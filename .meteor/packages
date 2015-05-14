@@ -12,7 +12,6 @@ semantic:ui
 flemay:less-autoprefixer
 iron:router
 accounts-password
-audit-argument-checks
 underscore
 accounts-ui
 semantic:ui-data
