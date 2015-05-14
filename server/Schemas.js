@@ -12,9 +12,112 @@
 
 // 4. Currently, institution is just a String with no referential integrity.
 
-var Schemas = {};
+var DebaterSchema = new SimpleSchema({
+  name: {
+    type: String,
+    label: "Debater name",
+    max: 100
+  },
 
-TournamentSchema = new SimpleSchema({
+  scoreForRound: {
+    type: Object,
+    label: "All scores for a debater. They are a key-value pair. Key:Round index. Value: score",
+  }
+});
+
+var JudgeSchema = new SimpleSchema({
+  name: {
+    type: String,
+    label: "Judge name.",
+    max: 100
+  },
+
+  institution: {
+    type: String,
+    label: "Judge institution name.",
+    max: 100
+  },
+
+  scoreForRound: {
+    type: Object,
+    label:"All scores for a judge. They are a key-value pair. Key: Round index, Value: score",
+    optional: true
+  }
+});
+
+var RoomSchema = new SimpleSchema({
+  locationId: {
+    type: String,
+    label: "Location for a room.",
+    max: 30
+  },
+
+  teams: {
+    type: [String],
+    label: "Teams guid in a particular room of a round.",
+    minCount: 0
+  },
+
+  motion: {
+    type:String,
+    label: "Room-specific motions for a round.",
+    max: 1000,
+    optional: true
+  }
+});
+
+var TeamSchema = new SimpleSchema({
+  guid: {
+    type: String,
+    label: "guid of a team of a particular tournament."
+  },
+
+  name: {
+    type: String,
+    label: "Team name",
+    max: 100
+  },
+
+  institution: {
+    type: String,
+    label: "Team institution name.",
+    max: 100
+  },
+
+  debaters: {
+    type: [DebaterSchema],
+    label: "All debaters in a team.",
+    minCount: 1
+  },
+
+  resultForRound: {
+    type: Object,
+    label: "All results for a team. They are a key-value pair. Key:Round index. Value: result",
+  }
+});
+
+var RoundSchema = new SimpleSchema({
+  index: {
+    type: Number,
+    label: "Index of a round for a tournament, starting with 0",
+    min: 0
+  },
+
+  motion: {
+    type: String,
+    label: "Motion for a round.",
+    max: 1000
+  },
+
+  rooms: {
+    type:[RoomSchema],
+    label: "All rooms for a round.",
+    minCount: 0
+  }
+});
+
+
+var TournamentSchema = new SimpleSchema({
   createdAt: {
     type: Date
   },
@@ -78,107 +181,4 @@ TournamentSchema = new SimpleSchema({
   }
 });
 
-JudgeSchema = new SimpleSchema({
-  name: {
-    type: String,
-    label: "Judge name.",
-    max: 100
-  },
-
-  institution: {
-    type: String,
-    label: "Judge institution name.",
-    max: 100
-  }
-
-  scoreForRound: {
-    type: Object,
-    label:"All scores for a judge. They are a key-value pair. Key: Round index, Value: score",
-    optional: true
-  }
-});
-
-
-RoundSchema = new SimpleSchema({
-  index: {
-    type: Number,
-    label: "Index of a round for a tournament, starting with 0",
-    min: 0
-  },
-
-  motion: {
-    type: String,
-    label: "Motion for a round.",
-    max: 1000
-  },
-
-  rooms: {
-    type:[RoomSchema],
-    label: "All rooms for a round.",
-    minCount: 0
-  }
-});
-
-RoomSchema = new SimpleSchema({
-  locationId: {
-    type: String,
-    label: "Location for a room.",
-    max: 30
-  },
-
-  teams: {
-    type: [String],
-    label: "Teams guid in a particular room of a round.",
-    minCount: 0
-  },
-
-  motion: {
-    type:String,
-    label: "Room-specific motions for a round.",
-    max: 1000,
-    optional: true
-  }
-});
-
-TeamSchema = new SimpleSchema({
-  guid: {
-    type: String,
-    label: "guid of a team of a particular tournament."
-  },
-
-  name: {
-    type: String,
-    label: "Team name",
-    max: 100
-  },
-
-  institution: {
-    type: String,
-    label: "Team institution name.",
-    max: 100
-  },
-
-  debaters: {
-    type: [DebaterSchema],
-    label: "All debaters in a team.",
-    minCount: 1
-  },
-
-  resultForRound: {
-    type: Object,
-    label: "All results for a team. They are a key-value pair. Key:Round index. Value: result",
-  }
-});
-
-DebaterSchema = new SimpleSchema({
-  name: {
-    type: String,
-    label: "Debater name",
-    max: 100
-  },
-
-  scoreForRound: {
-    type: Object,
-    label: "All scores for a debater. They are a key-value pair. Key:Round index. Value: score",
-  }
-});
+Tournaments.attachSchema(TournamentSchema);
