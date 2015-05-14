@@ -46,21 +46,6 @@ Meteor.methods({
     }
 
     // INVARIANT: A single user can only have one unfinished tournament at a time.
-    // check(tournamentId, String);
-    // check(teams, Array);
-    // _.each(teams, function(team) {
-    //     check(team, {
-    //         name: String,
-    //         debaters: Array,
-    //         institution: String
-    //     });
-
-    //     _.each(team.debaters, function(debater) {
-    //         check(debater, {
-    //             name: String
-    //         });
-    //     });
-    // });
     
     check(arguments, [Match.Any]);
 
@@ -70,10 +55,7 @@ Meteor.methods({
         team.guid = guid();
         team.resultForRound = {};
 
-        team.debaters = _.map(team.debaters, function(debaterName) {
-            var debater = {};
-
-            debater.name = debaterName;
+        team.debaters = _.map(team.debaters, function(debater) {
             debater.scoreForRound = {};
 
             return debater;
@@ -82,6 +64,6 @@ Meteor.methods({
         return team;
     }.bind(this));
 
-    Tournaments.update(tournament._id, {$set: {teams: validTeams}});
+    Tournaments.update(tournament._id, {$push: {teams: {$each: validTeams}}});
   }
 });

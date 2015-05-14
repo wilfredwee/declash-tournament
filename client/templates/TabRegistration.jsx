@@ -1,5 +1,3 @@
-/** @jsx React.DOM */
-
 var TabRegistrationForm = ReactMeteor.createClass({
   templateName: "TabRegistration",
 
