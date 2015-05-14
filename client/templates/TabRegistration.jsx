@@ -39,7 +39,6 @@ var TabRegistrationForm = ReactMeteor.createClass({
       profile: {
         name: name,
         institution: institution,
-        isAdmin: true
       }
     };
 

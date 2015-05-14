@@ -1,5 +1,8 @@
 /** @jsx React.DOM */
 
+var REGISTER_TEAMS_HEADERS = ["Team Name", "Institution", "Debater 1", "Debater 2"];
+var REGISTER_TEAMS_SCHEMA = {teamName: null, institution: null, debater1: null, debater2: null};
+
 var ManagementBody = ReactMeteor.createClass({
   templateName: "ManagementBody",
 
@@ -21,6 +24,7 @@ var ManagementBody = ReactMeteor.createClass({
         <div>
           {headerNode}
           <h1>You are now managing {this.state.tournament.name}</h1>
+          <HandsOnTableContainer colHeaders={REGISTER_TEAMS_HEADERS} dataSchema={REGISTER_TEAMS_SCHEMA}  tournament={this.state.tournament}/>
         </div>
       );
     }
@@ -102,6 +106,92 @@ var TournamentRegistrationForm = ReactMeteor.createClass({
         <input type="number" placeholder="Maximum amount of debaters." ref="maxUsers" />
         <input type="submit" className="ui submit button" value="Create Tournament" />
       </form>
+    );
+  }
+});
+
+var HandsOnTableContainer = ReactMeteor.createClass({
+  getMeteorState: function() {
+    // TODO
+  },
+
+  handleSave: function(e) {
+    var flattenedTeams = this.refs.hotComponent.getData();
+
+
+
+    var teams = _.map(flattenedTeams, function(team) {
+      var schemaTeam = {};
+      schemaTeam.name = team.teamName;
+      schemaTeam.institution = team.institution;
+      schemaTeam.debaters = [team.debater1, team.debater2];
+
+      return schemaTeam;
+    });
+
+    Meteor.call("registerTeams", teams, function(err, result) {
+      // TODO
+      if(err) {
+        alert(err.reason);
+      }
+    });
+  },
+
+  render: function() {
+    return (
+      <div>
+        <HandsOnTableComponent
+          ref="hotComponent"
+          data={this.props.data} 
+          colHeaders={this.props.colHeaders} 
+          dataSchema={this.props.dataSchema} 
+        />
+        <br />
+        <button className="ui positive button" onClick={this.handleSave}>Save</button>
+      </div>
+    );
+  }
+});
+
+var HandsOnTableComponent = ReactMeteor.createClass({
+  getMeteorState: function() {
+    // TODO
+  },
+
+  initializeHot: function(data, colHeaders, dataSchema) {
+    var tableData = data || [];
+
+    this.hot = new Handsontable(this.getDOMNode(), {
+      data: tableData,
+      minCols: colHeaders.length,
+      startRows: 5,
+      startCols: colHeaders.length,
+      minSpareRows: 1,
+      rowHeaders: true,
+      colHeaders: colHeaders,
+      contextMenu: true,
+      allowRemoveColumn: false,
+      dataSchema: dataSchema
+    });
+  },
+
+  getData: function() {
+    var unsanitizedData = this.hot.getData();
+
+    unsanitizedData.pop();
+
+    return unsanitizedData;
+  },
+
+  componentDidMount: function() {
+    if(!this.hot) {
+      this.initializeHot(this.props.data, this.props.colHeaders, this.props.dataSchema);
+    }
+  },
+
+  render: function() {
+    return (
+      <div className="handsontablecomponent"></div>
     );
   }
 });
