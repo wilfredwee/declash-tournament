@@ -26,7 +26,6 @@ Meteor.methods({
     tournament.rooms = [];
     tournament.rounds = [];
 
-    check(tournament, Tournaments.simpleSchema());
 
     Tournaments.insert(tournament);
 
@@ -47,7 +46,6 @@ Meteor.methods({
 
     // INVARIANT: A single user can only have one unfinished tournament at a time.
     
-    check(arguments, [Match.Any]);
 
     var tournament = Tournaments.findOne({ownerId: this.userId, finished: false});
 
@@ -65,5 +63,20 @@ Meteor.methods({
     }.bind(this));
 
     Tournaments.update(tournament._id, {$push: {teams: {$each: validTeams}}});
+  },
+
+  registerJudges: function(judges) {
+    // INVARIANT: A single user can only have one unfinished tournament at a time.
+    var tournament = Tournaments.findOne({ownerId: this.userId, finished: false});
+
+    Tournaments.update(tournament._id, {$push: {judges: {$each: judges}}});
+
+  },
+
+  registerRooms: function(rooms) {
+    // INVARIANT: A single user can only have one unfinished tournament at a time.
+    var tournament = Tournaments.findOne({ownerId: this.userId, finished: false});
+
+    Tournaments.update(tournament._id, {$push: {rooms: {$each: rooms}}});
   }
 });

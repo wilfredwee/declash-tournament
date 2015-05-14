@@ -1,6 +1,41 @@
 var REGISTER_TEAMS_HEADERS = ["Team Name", "Institution", "Debater 1", "Debater 2"];
 var REGISTER_TEAMS_SCHEMA = {teamName: null, institution: null, debater1: null, debater2: null};
-var REGISTER_TEAM_COLUMNS = [{data: "teamName"}, {data: "institution"}, {data: "debater1"}, {data: "debater2"}];
+var REGISTER_TEAMS_COLUMNS = [{data: "teamName"}, {data: "institution"}, {data: "debater1"}, {data: "debater2"}];
+
+var REGISTER_JUDGES_HEADERS = ["Judge Name", "Institution"];
+var REGISTER_JUDGES_SCHEMA = {name: null, institution: null};
+var REGISTER_JUDGES_COLUMNS = [{data: "name"}, {data: "institution"}];
+
+var REGISTER_ROOMS_HEADERS = ["Room Location"];
+var REGISTER_ROOMS_SCHEMA = {location: null};
+var REGISTER_ROOMS_COLUMNS = [{data: "location"}];
+
+var TEAM_CONTEXT_TYPE = "team";
+var JUDGE_CONTEXT_TYPE = "judge";
+var ROOM_CONTEXT_TYPE = "room";
+
+var TEAM_CONTEXT = {
+  colHeaders: REGISTER_TEAMS_HEADERS,
+  dataSchema: REGISTER_TEAMS_SCHEMA,
+  columns: REGISTER_TEAMS_COLUMNS,
+  type: TEAM_CONTEXT_TYPE
+};
+
+var JUDGE_CONTEXT = {
+  colHeaders: REGISTER_JUDGES_HEADERS,
+  dataSchema: REGISTER_JUDGES_SCHEMA,
+  columns: REGISTER_JUDGES_COLUMNS,
+  type: JUDGE_CONTEXT_TYPE
+};
+
+var ROOM_CONTEXT = {
+  colHeaders: REGISTER_ROOMS_HEADERS,
+  dataSchema: REGISTER_ROOMS_SCHEMA,
+  columns: REGISTER_ROOMS_COLUMNS,
+  type: ROOM_CONTEXT_TYPE
+};
+
+
 
 
 var ManagementBody = ReactMeteor.createClass({
@@ -16,12 +51,9 @@ var ManagementBody = ReactMeteor.createClass({
     };
   },
 
-  renderRegistrationTable: function(colHeaders, dataSchema, columns) {
+  renderRegistrationTable: function(context) {
     return (<HandsOnTableContainer 
-              colHeaders={colHeaders}
-              dataSchema={dataSchema}
-              columns={columns}
-              tournament={this.state.tournament}
+              context={context}
             />);
   },
 
@@ -32,15 +64,19 @@ var ManagementBody = ReactMeteor.createClass({
       var contentToRender;
 
       if(this.state.tournament.teams.length <= 0) {
-        contentToRender = this.renderRegistrationTable(
-          REGISTER_TEAMS_HEADERS,
-          REGISTER_TEAMS_SCHEMA,
-          REGISTER_TEAM_COLUMNS);
+        contentToRender = this.renderRegistrationTable(TEAM_CONTEXT);
+      }
+      else if(this.state.tournament.judges.length <= 0) {
+        contentToRender = this.renderRegistrationTable(JUDGE_CONTEXT);
+      }
+      else if(this.state.tournament.rooms.length <= 0) {
+        contentToRender = this.renderRegistrationTable(ROOM_CONTEXT);
       }
       else {
-        // TODO
-        contentToRender = <div></div>;
+        // TODO: Temporary until we have something new to render.
+        contentToRender = <h2>You are done!</h2>;
       }
+
 
       return (
         <div>
@@ -65,7 +101,6 @@ var Header = ReactMeteor.createClass({
   templateName: "ManagementHeader",
 
   startMeteorSubscriptions: function() {
-    Meteor.subscribe("tabUsers");
     // TODO
   },
 
@@ -139,25 +174,33 @@ var HandsOnTableContainer = ReactMeteor.createClass({
 
   componentDidMount: function() {
     if(!this.hot) {
-      this.initializeHot();
+      this.initializeHot(this.props.context);
     }
   },
 
-  initializeHot: function() {
-    var tableData = this.props.data || [];
+  componentWillReceiveProps: function(nextProps) {
+    if(this.hot) {
+      // We may want to have a more performant way to render the new table.
+      this.hot.destroy();
+      this.hot = undefined;
+    }
+    this.initializeHot(nextProps.context);
+  },
+
+  initializeHot: function(context) {
+    var tableData = context.data || [];
 
     this.hot = new Handsontable(this.refs.handsontable.getDOMNode(), {
       data: tableData,
-      minCols: this.props.colHeaders.length,
-      startRows: 5,
-      startCols: this.props.colHeaders.length,
+      minCols: context.colHeaders.length,
+      startCols: context.colHeaders.length,
       minSpareRows: 1,
       rowHeaders: true,
-      colHeaders: this.props.colHeaders,
+      colHeaders: context.colHeaders,
       contextMenu: true,
       allowRemoveColumn: false,
-      dataSchema: this.props.dataSchema,
-      columns: this.props.columns
+      dataSchema: context.dataSchema,
+      columns: context.columns
     });
   },
 
@@ -166,24 +209,68 @@ var HandsOnTableContainer = ReactMeteor.createClass({
     // TODO: Refactor logic out to something that specializes in
     //        schema transformation.
 
-    var unsanitizedFlattenedTeams = this.hot.getData();
-    unsanitizedFlattenedTeams.pop();
+    var contextType = this.props.context.type;
+    switch(contextType) {
+      case TEAM_CONTEXT_TYPE:
+        registerTeams.call(this);
+        break;
+      case JUDGE_CONTEXT_TYPE:
+        registerJudges.call(this);
+        break;
+      case ROOM_CONTEXT_TYPE:
+        registerRooms.call(this);
+        break;
+    }
 
-    var teams = _.map(unsanitizedFlattenedTeams, function(team) {
-      var schemaTeam = {};
-      schemaTeam.name = team.teamName;
-      schemaTeam.institution = team.institution;
-      schemaTeam.debaters = [{name: team.debater1}, {name: team.debater2}];
-    
-      return schemaTeam;
-    });
+    function registerTeams() {
+      var unsanitizedFlattenedTeams = this.hot.getData();
+      unsanitizedFlattenedTeams.pop();
 
-    Meteor.call("registerTeams", teams, function(err, result) {
-      // TODO
-      if(err) {
-        alert(err.reason);
-      }
-    });
+      var teams = _.map(unsanitizedFlattenedTeams, function(team) {
+        var schemaTeam = {};
+        schemaTeam.name = team.teamName;
+        schemaTeam.institution = team.institution;
+        schemaTeam.debaters = [{name: team.debater1}, {name: team.debater2}];
+      
+        return schemaTeam;
+      });
+
+      Meteor.call("registerTeams", teams, function(err, result) {
+        // TODO
+        if(err) {
+          alert(err.reason);
+        }
+      });
+    }
+
+    function registerJudges() {
+      var unsanitizedJudges = this.hot.getData();
+      unsanitizedJudges.pop();
+
+      Meteor.call("registerJudges", unsanitizedJudges, function(err, result) {
+        // TODO
+        if(err) {
+          alert(err.reason);
+        }
+      });
+    }
+
+    function registerRooms() {
+      var unsanitizedRooms = this.hot.getData();
+      unsanitizedRooms.pop();
+
+      var rooms = _.map(unsanitizedRooms, function(room) {
+        return room.location;
+      });
+
+
+      Meteor.call("registerRooms", rooms, function(err, result) {
+        // TODO
+        if(err) {
+          alert(err.reason);
+        }
+      });
+    }
   },
 
   render: function() {
