@@ -93,6 +93,11 @@ var TeamSchema = new SimpleSchema({
   resultForRound: {
     type: Object,
     label: "All results for a team. They are a key-value pair. Key:Round index. Value: result",
+  },
+
+  roleForRound: {
+    type: Object,
+    label: "All roles for a team. They are a key-value pair. Key:Round index. Value: role(String)"
   }
 });
 
