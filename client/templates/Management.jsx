@@ -52,7 +52,7 @@ var ManagementBody = ReactMeteor.createClass({
   },
 
   renderRegistrationTable: function(context) {
-    return (<HandsOnTableContainer 
+    return (<HandsOnTableContainer
               context={context}
             />);
   },
@@ -209,29 +209,32 @@ var HandsOnTableContainer = ReactMeteor.createClass({
     // TODO: Refactor logic out to something that specializes in
     //        schema transformation.
 
+    var data = this.hot.getData();
+
+    var dataWithoutEmptyRows = _.filter(data, function(rowData, index) {
+        return !this.hot.isEmptyRow(index);
+    }.bind(this));
+
     var contextType = this.props.context.type;
     switch(contextType) {
       case TEAM_CONTEXT_TYPE:
-        registerTeams.call(this);
+        registerTeams(dataWithoutEmptyRows);
         break;
       case JUDGE_CONTEXT_TYPE:
-        registerJudges.call(this);
+        registerJudges(dataWithoutEmptyRows);
         break;
       case ROOM_CONTEXT_TYPE:
-        registerRooms.call(this);
+        registerRooms(dataWithoutEmptyRows);
         break;
     }
 
-    function registerTeams() {
-      var unsanitizedFlattenedTeams = this.hot.getData();
-      unsanitizedFlattenedTeams.pop();
-
+    function registerTeams(unsanitizedFlattenedTeams) {
       var teams = _.map(unsanitizedFlattenedTeams, function(team) {
         var schemaTeam = {};
         schemaTeam.name = team.teamName;
         schemaTeam.institution = team.institution;
         schemaTeam.debaters = [{name: team.debater1}, {name: team.debater2}];
-      
+
         return schemaTeam;
       });
 
@@ -243,10 +246,7 @@ var HandsOnTableContainer = ReactMeteor.createClass({
       });
     }
 
-    function registerJudges() {
-      var unsanitizedJudges = this.hot.getData();
-      unsanitizedJudges.pop();
-
+    function registerJudges(unsanitizedJudges) {
       Meteor.call("registerJudges", unsanitizedJudges, function(err, result) {
         // TODO
         if(err) {
@@ -255,10 +255,7 @@ var HandsOnTableContainer = ReactMeteor.createClass({
       });
     }
 
-    function registerRooms() {
-      var unsanitizedRooms = this.hot.getData();
-      unsanitizedRooms.pop();
-
+    function registerRooms(unsanitizedRooms) {
       var rooms = _.map(unsanitizedRooms, function(room) {
         return room.location;
       });

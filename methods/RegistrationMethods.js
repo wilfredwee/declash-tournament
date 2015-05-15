@@ -1,5 +1,3 @@
-// We need to have a better way to check() things.
-
 Meteor.methods({
   registerTabUser: function(options) {
     check(options, Object);
@@ -45,13 +43,14 @@ Meteor.methods({
     }
 
     // INVARIANT: A single user can only have one unfinished tournament at a time.
-    
+
 
     var tournament = Tournaments.findOne({ownerId: this.userId, finished: false});
 
     var validTeams = _.map(teams, function(team) {
         team.guid = guid();
         team.resultForRound = {};
+        team.roleForRound = {};
 
         team.debaters = _.map(team.debaters, function(debater) {
             debater.scoreForRound = {};
