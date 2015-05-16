@@ -26,6 +26,11 @@ var DebaterSchema = new SimpleSchema({
 });
 
 var JudgeSchema = new SimpleSchema({
+  guid: {
+    type: String,
+    label: "guid of a judge of a particular tournament."
+  },
+
   name: {
     type: String,
     label: "Judge name.",
@@ -42,6 +47,11 @@ var JudgeSchema = new SimpleSchema({
     type: Object,
     label:"All scores for a judge. They are a key-value pair. Key: Round index, Value: score",
     optional: true
+  },
+
+  isChairForRound: {
+    type: Object,
+    label: "All isChar for a judge. They are a key-value pair. Key:Round index, Value: score"
   }
 });
 
@@ -55,6 +65,12 @@ var RoomSchema = new SimpleSchema({
   teams: {
     type: [String],
     label: "Teams guid in a particular room of a round.",
+    minCount: 0
+  },
+
+  judges: {
+    type: [String],
+    label: "Judges guid in a particular room of a round.",
     minCount: 0
   },
 
@@ -98,6 +114,11 @@ var TeamSchema = new SimpleSchema({
   roleForRound: {
     type: Object,
     label: "All roles for a team. They are a key-value pair. Key:Round index. Value: role(String)"
+  },
+
+  isActiveForRound: {
+    type: Object,
+    label: "All active status for a team. They are a key-value pair. Key:Round index. Value: isActive(Boolean)"
   }
 });
 

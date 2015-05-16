@@ -1,3 +1,14 @@
+// A good-enough guid generator.
+var createGuid = function() {
+  function s4() {
+    return Math.floor((1 + Math.random()) * 0x10000)
+      .toString(16)
+      .substring(1);
+  }
+  return s4() + s4() + "-" + s4() + "-" + s4() + "-" +
+    s4() + "-" + s4() + s4() + s4();
+};
+
 Meteor.methods({
   registerTabUser: function(options) {
     check(options, Object);
@@ -31,26 +42,15 @@ Meteor.methods({
   },
 
   registerTeams: function(teams) {
-    // Generate a good-enough guid.
-    function guid() {
-      function s4() {
-        return Math.floor((1 + Math.random()) * 0x10000)
-          .toString(16)
-          .substring(1);
-      }
-      return s4() + s4() + "-" + s4() + "-" + s4() + "-" +
-        s4() + "-" + s4() + s4() + s4();
-    }
-
     // INVARIANT: A single user can only have one unfinished tournament at a time.
-
 
     var tournament = Tournaments.findOne({ownerId: this.userId, finished: false});
 
     var validTeams = _.map(teams, function(team) {
-        team.guid = guid();
+        team.guid = createGuid();
         team.resultForRound = {};
         team.roleForRound = {};
+        team.isActiveForRound = {};
 
         team.debaters = _.map(team.debaters, function(debater) {
             debater.scoreForRound = {};
@@ -67,6 +67,11 @@ Meteor.methods({
   registerJudges: function(judges) {
     // INVARIANT: A single user can only have one unfinished tournament at a time.
     var tournament = Tournaments.findOne({ownerId: this.userId, finished: false});
+
+    _.each(judges, function(judge) {
+      judge.guid = createGuid();
+      judge.isChairForRound = {};
+    });
 
     Tournaments.update(tournament._id, {$push: {judges: {$each: judges}}});
 
