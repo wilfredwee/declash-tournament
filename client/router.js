@@ -1,6 +1,8 @@
+// except: [undefined], where undefined is the route "/"
 Router.onBeforeAction(function() {
   if(Meteor.loggingIn()) {
     // TODO: Render a loading template.
+    this.next();
     return;
   }
   else if(!Meteor.userId()) {
@@ -9,6 +11,8 @@ Router.onBeforeAction(function() {
   else {
     this.next();
   }
+}, {
+  except: [undefined]
 });
 
 Router.route("/register", function() {
