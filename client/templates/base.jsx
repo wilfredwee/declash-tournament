@@ -1,22 +1,58 @@
-var baseComponent = ReactMeteor.createClass({
+var BaseComponent = ReactMeteor.createClass({
   templateName: "baseTemplate",
 
+  getMeteorState: function() {
+
+  },
+  render: function() {
+    return (<NavBar></NavBar>);
+  }
+});
+
+var NavBar = ReactMeteor.createClass({
+  getMeteorState: function() {
+
+  },
+
+  handleClick: function() {
+    Router.go("/");
+  },
+
+  render: function() {
+    return (
+      <div className="ui grid">
+        <div className="computer tablet only row">
+          <div className="ui inverted fixed menu navbar page grid">
+            <a href="/" className="brand item">DeClash</a>
+            <div className="right menu">
+              <UserLoginButtons />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+});
+
+var UserLoginButtons = ReactMeteor.createClass({
   getMeteorState: function() {
     return {
       user: Meteor.user()
     };
   },
 
-  handleLogout: function() {
-    Meteor.logout();
+  handleClick: function() {
+    if(this.state.user) {
+      Meteor.logout();
+    }
+    else {
+      Router.go("login");
+    }
   },
 
   render: function() {
-    if(this.state.user) {
-      return (<button onClick={this.handleLogout}>Logout</button>);
-    }
-    else {
-      return (<h1>Can I have login pls?</h1>);
-    }
+    var message = this.state.user? "Logout" : "Login";
+
+    return(<a className="active item" href="" onClick={this.handleClick}>{message}</a>);
   }
 });

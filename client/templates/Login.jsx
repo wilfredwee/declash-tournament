@@ -1,3 +1,9 @@
+LoginPageContainer = ReactMeteor.createClass({
+  render: function() {
+    return <LoginComponent />;
+  }
+});
+
 var LoginComponent = ReactMeteor.createClass({
   templateName: "Login",
 

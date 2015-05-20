@@ -1,5 +1,14 @@
+TabRegistrationPageContainer = ReactMeteor.createClass({
+  templateName: "TabRegistrationPageContainer",
+
+  render: function() {
+    return <TabRegistrationForm />;
+  }
+});
+
+
 var TabRegistrationForm = ReactMeteor.createClass({
-  templateName: "TabRegistration",
+  templateName: "TabRegistrationForm",
 
   startMeteorSubscriptions: function() {
     Meteor.subscribe("tabUsers");

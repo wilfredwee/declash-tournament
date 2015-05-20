@@ -5,7 +5,6 @@
 # but you can also edit it by hand.
 
 meteor-platform
-reactjs:react
 sanjo:jasmine
 velocity:html-reporter
 semantic:ui
@@ -17,3 +16,4 @@ accounts-ui
 semantic:ui-data
 alanning:roles
 aldeed:collection2
+reactjs:react

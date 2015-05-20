@@ -35,7 +35,11 @@ var ROOM_CONTEXT = {
   type: ROOM_CONTEXT_TYPE
 };
 
-
+ManagementPageContainer = ReactMeteor.createClass({
+  render: function() {
+    return <ManagementBody />;
+  }
+});
 
 
 var ManagementBody = ReactMeteor.createClass({
