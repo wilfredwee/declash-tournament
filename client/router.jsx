@@ -1,7 +1,7 @@
 function renderReactPage(component) {
   React.render(component, document.getElementById("ReactComponentDiv"));
-  // call this.stop() to prevent the router from warning that we did not call this.next()
-  this.stop();
+  // router will keep warning that we did not call this.next() here.
+  // we can't call this.stop() because it'll kill our reactive state.
 }
 
 Router.onBeforeAction(function() {
@@ -13,7 +13,7 @@ Router.onBeforeAction(function() {
     this.next();
   }
   else if(!Meteor.userId()) {
-    renderReactPage.call(this, <LoginPageContainer />);
+    renderReactPage(<LoginPageContainer />);
   }
   else {
     this.next();
@@ -21,12 +21,12 @@ Router.onBeforeAction(function() {
 });
 
 Router.route("/register", function() {
-  renderReactPage.call(this, <TabRegistrationPageContainer />);
+  renderReactPage(<TabRegistrationPageContainer />);
 });
 
 Router.route("/login", function() {
   if(!Meteor.user()) {
-    renderReactPage.call(this, <LoginPageContainer />);
+    renderReactPage(<LoginPageContainer />);
   }
   else {
     this.redirect("/");
@@ -34,10 +34,9 @@ Router.route("/login", function() {
 });
 
 Router.route("/management", function() {
-  this.render("ManagementBody");
-  renderReactPage.call(this, <ManagementPageContainer />);
+  renderReactPage(<ManagementPageContainer />);
 });
 
 Router.route("/", function() {
-  renderReactPage.call(this, <HomePageContainer />);
+  renderReactPage(<HomePageContainer />);
 });

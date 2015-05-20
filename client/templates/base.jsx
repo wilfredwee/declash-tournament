@@ -44,6 +44,7 @@ var UserLoginButtons = ReactMeteor.createClass({
   handleClick: function() {
     if(this.state.user) {
       Meteor.logout();
+      Router.go("/");
     }
     else {
       Router.go("login");

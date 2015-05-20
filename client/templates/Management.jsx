@@ -43,8 +43,6 @@ ManagementPageContainer = ReactMeteor.createClass({
 
 
 var ManagementBody = ReactMeteor.createClass({
-  templateName: "ManagementBody",
-
   startMeteorSubscriptions: function() {
     Meteor.subscribe("unfinishedTournaments");
   },
@@ -102,8 +100,6 @@ var ManagementBody = ReactMeteor.createClass({
 });
 
 var Header = ReactMeteor.createClass({
-  templateName: "ManagementHeader",
-
   startMeteorSubscriptions: function() {
     // TODO
   },
@@ -126,8 +122,6 @@ var Header = ReactMeteor.createClass({
 });
 
 var TournamentRegistrationForm = ReactMeteor.createClass({
-  templateName: "TournamentRegistrationForm",
-
   getMeteorState: function() {
     return {};
   },

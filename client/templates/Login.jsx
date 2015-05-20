@@ -5,15 +5,13 @@ LoginPageContainer = ReactMeteor.createClass({
 });
 
 var LoginComponent = ReactMeteor.createClass({
-  templateName: "Login",
-
   startMeteorSubscriptions: function() {
     // TODO
   },
 
   getMeteorState: function() {
     return {
-      isLoggedIn: !!Meteor.userId()
+      isLoggedIn: !!Meteor.user()
     };
   },
 
@@ -27,6 +25,9 @@ var LoginComponent = ReactMeteor.createClass({
       // TODO
       if(err) {
         alert(err.reason);
+      }
+      else {
+        Router.go("/management");
       }
     });
   },

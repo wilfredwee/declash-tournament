@@ -5,8 +5,6 @@ HomePageContainer = ReactMeteor.createClass({
 });
 
 var Home = ReactMeteor.createClass({
-  templateName: "Home",
-
   handleClick: function() {
     window.location.href = "/register";
   },

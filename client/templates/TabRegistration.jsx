@@ -8,8 +8,6 @@ TabRegistrationPageContainer = ReactMeteor.createClass({
 
 
 var TabRegistrationForm = ReactMeteor.createClass({
-  templateName: "TabRegistrationForm",
-
   startMeteorSubscriptions: function() {
     Meteor.subscribe("tabUsers");
   },
