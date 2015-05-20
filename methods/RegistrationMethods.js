@@ -30,6 +30,7 @@ Meteor.methods({
     tournament.createdAt = new Date();
     tournament.paymentVerified = false;
     tournament.finished = false;
+    tournament.enablePublicRegister = false;
     tournament.teams = [];
     tournament.judges = [];
     tournament.rooms = [];
@@ -44,7 +45,19 @@ Meteor.methods({
   registerTeams: function(teams, tournamentId) {
     // INVARIANT: A single user can only have one unfinished tournament at a time.
 
-    var tournamentId = tournamentId || Tournaments.findOne({ownerId: this.userId, finished: false})._id;
+    var tournament = tournamentId?
+      Tournaments.findOne({_id: tournamentId, finished: false})
+      :Tournaments.findOne({ownerId: this.userId, finished: false})._id;
+
+    if(!tournament) {
+      throw new Meteor.Error("invalidAction", "Unable to find the tournament you're looking for.");
+    }
+    else if(!tournament.enablePublicRegister) {
+      throw new Meteor.Error("invalidAction", "You cannot register for this tournament.");
+    }
+    else if(!this.userId && teams.length > 1) {
+      throw new Meteor.Error("throttleAction", "Please register only one at a time.");
+    }
 
     var validTeams = _.map(teams, function(team) {
         team.guid = createGuid();
@@ -61,19 +74,31 @@ Meteor.methods({
         return team;
     }.bind(this));
 
-    Tournaments.update(tournamentId, {$push: {teams: {$each: validTeams}}});
+    Tournaments.update(tournament._id, {$push: {teams: {$each: validTeams}}});
   },
 
   registerJudges: function(judges, tournamentId) {
     // INVARIANT: A single user can only have one unfinished tournament at a time.
-    var tournamentId = tournamentId || Tournaments.findOne({ownerId: this.userId, finished: false})._id;
+    var tournament = tournamentId?
+      Tournaments.findOne({_id: tournamentId, finished: false})
+      :Tournaments.findOne({ownerId: this.userId, finished: false})._id;
+
+    if(!tournament) {
+      throw new Meteor.Error("invalidAction", "Unable to find the tournament you're looking for.");
+    }
+    else if(!tournament.enablePublicRegister) {
+      throw new Meteor.Error("invalidAction", "You cannot register for this tournament.");
+    }
+    else if(!this.userId && judges.length > 1) {
+      throw new Meteor.Error("throttleAction", "Please register only one at a time.");
+    }
 
     _.each(judges, function(judge) {
       judge.guid = createGuid();
       judge.isChairForRound = {};
     });
 
-    Tournaments.update(tournamentId, {$push: {judges: {$each: judges}}});
+    Tournaments.update(tournament._id, {$push: {judges: {$each: judges}}});
 
   },
 
