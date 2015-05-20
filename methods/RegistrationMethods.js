@@ -41,10 +41,10 @@ Meteor.methods({
     return tournament;
   },
 
-  registerTeams: function(teams) {
+  registerTeams: function(teams, tournamentId) {
     // INVARIANT: A single user can only have one unfinished tournament at a time.
 
-    var tournament = Tournaments.findOne({ownerId: this.userId, finished: false});
+    var tournamentId = tournamentId || Tournaments.findOne({ownerId: this.userId, finished: false})._id;
 
     var validTeams = _.map(teams, function(team) {
         team.guid = createGuid();
@@ -61,19 +61,19 @@ Meteor.methods({
         return team;
     }.bind(this));
 
-    Tournaments.update(tournament._id, {$push: {teams: {$each: validTeams}}});
+    Tournaments.update(tournamentId, {$push: {teams: {$each: validTeams}}});
   },
 
-  registerJudges: function(judges) {
+  registerJudges: function(judges, tournamentId) {
     // INVARIANT: A single user can only have one unfinished tournament at a time.
-    var tournament = Tournaments.findOne({ownerId: this.userId, finished: false});
+    var tournamentId = tournamentId || Tournaments.findOne({ownerId: this.userId, finished: false})._id;
 
     _.each(judges, function(judge) {
       judge.guid = createGuid();
       judge.isChairForRound = {};
     });
 
-    Tournaments.update(tournament._id, {$push: {judges: {$each: judges}}});
+    Tournaments.update(tournamentId, {$push: {judges: {$each: judges}}});
 
   },
 

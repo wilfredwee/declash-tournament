@@ -40,3 +40,11 @@ Router.route("/management", function() {
 Router.route("/", function() {
   renderReactPage(<HomePageContainer />);
 });
+
+Router.route("/tournaments", function() {
+  renderReactPage(<TournamentListPageContainer />);
+});
+
+Router.route("/registerParticipants/:tournamentId", function() {
+  renderReactPage(<ParticipantRegistrationPageContainer tournamentId={this.params.tournamentId} />);
+});

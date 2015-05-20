@@ -57,7 +57,7 @@ var TabRegistrationForm = ReactMeteor.createClass({
             alert(err.reason);
           }
           else {
-            window.location.href = "/management";
+            Router.go("/management");
           }
         });
       }

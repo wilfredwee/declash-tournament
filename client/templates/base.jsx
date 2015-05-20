@@ -14,14 +14,10 @@ var NavBar = ReactMeteor.createClass({
 
   },
 
-  handleClick: function() {
-    Router.go("/");
-  },
-
   render: function() {
     return (
       <div className="ui grid">
-        <div className="computer tablet only row">
+        <div className="row">
           <div className="ui inverted fixed menu navbar page grid">
             <a href="/" className="brand item">DeClash</a>
             <div className="right menu">
@@ -41,7 +37,7 @@ var UserLoginButtons = ReactMeteor.createClass({
     };
   },
 
-  handleClick: function() {
+  handleLogins: function() {
     if(this.state.user) {
       Meteor.logout();
       Router.go("/");
@@ -54,6 +50,17 @@ var UserLoginButtons = ReactMeteor.createClass({
   render: function() {
     var message = this.state.user? "Logout" : "Login";
 
-    return(<a className="active item" href="" onClick={this.handleClick}>{message}</a>);
+    var logins = <a className="active item" href="" onClick={this.handleLogins}>{message}</a>;
+    if(this.state.user) {
+      return (
+        <div>{logins}</div>
+      );
+    }
+    return (
+      <div>
+        <a className="item" href="/register">Register</a>
+        {logins}
+      </div>
+    );
   }
 });

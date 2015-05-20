@@ -5,10 +5,6 @@ HomePageContainer = ReactMeteor.createClass({
 });
 
 var Home = ReactMeteor.createClass({
-  handleClick: function() {
-    window.location.href = "/register";
-  },
-
   render: function() {
     var fontStyle = {fontSize: 12};
     return (
