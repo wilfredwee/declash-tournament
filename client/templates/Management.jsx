@@ -49,7 +49,8 @@ var ManagementBody = ReactMeteor.createClass({
 
   getMeteorState: function() {
     return {
-      tournament: Tournaments.findOne({ownerId: Meteor.userId()})
+      tournament: Tournaments.findOne({ownerId: Meteor.userId()}),
+      enablePublicRegistration: Session.get("enablePublicRegistration")
     };
   },
 
@@ -60,25 +61,38 @@ var ManagementBody = ReactMeteor.createClass({
   },
 
   render: function() {
+    var getContext = function(skipPublicRegisters) {
+      if(this.state.tournament.teams.length <= 0 && !skipPublicRegisters) {
+        return TEAM_CONTEXT;
+      }
+
+      if(this.state.tournament.judges.length <= 0 && !skipPublicRegisters) {
+        return JUDGE_CONTEXT
+      }
+
+      if(this.state.tournament.rooms.length <= 0) {
+        return ROOM_CONTEXT;
+      }
+
+      return null;
+    }.bind(this);
+
     var headerNode = <div className="ManagementHeader"><Header /></div>;
     if(this.state.tournament) {
       var tournamentNameHeader = <h1>You are now managing {this.state.tournament.name}</h1>;
       var contentToRender;
 
-      if(this.state.tournament.teams.length <= 0) {
-        contentToRender = this.renderRegistrationTable(TEAM_CONTEXT);
+      if(this.state.enablePublicRegistration === false) {
+        var context = getContext();
+        contentToRender = context? this.renderRegistrationTable(context) : <h2>You are done!</h2>;
       }
-      else if(this.state.tournament.judges.length <= 0) {
-        contentToRender = this.renderRegistrationTable(JUDGE_CONTEXT);
-      }
-      else if(this.state.tournament.rooms.length <= 0) {
-        contentToRender = this.renderRegistrationTable(ROOM_CONTEXT);
+      else if(this.state.enablePublicRegistration === true) {
+        var context = getContext(true);
+        contentToRender = context? this.renderRegistrationTable(context) : <h2>You are done!</h2>;
       }
       else {
-        // TODO: Temporary until we have something new to render.
-        contentToRender = <h2>You are done!</h2>;
+        contentToRender = <PublicRegistrationChooser />
       }
-
 
       return (
         <div>
@@ -121,6 +135,35 @@ var Header = ReactMeteor.createClass({
   }
 });
 
+var PublicRegistrationChooser = ReactMeteor.createClass({
+  handleYes: function() {
+    Meteor.call("enablePublicRegistration", function(err, result) {
+      if(err) {
+        // TODO
+        alert(err.reason);
+      }
+      else {
+        Session.set("enablePublicRegistration", result);
+      }
+    })
+  },
+
+  handleNo: function() {
+    Session.set("enablePublicRegistration", false);
+  },
+
+  render: function() {
+    return (
+      <div>
+        <h2>Would you like to allow debaters and judges to register themselves?</h2>
+        <br />
+        <button onClick={this.handleYes}>Yes please. Skip to registering rooms.</button>
+        <button onClick={this.handleNo}>No thanks. I want to register them myself now.</button>
+      </div>
+    );
+  }
+});
+
 var TournamentRegistrationForm = ReactMeteor.createClass({
   getMeteorState: function() {
     return {};
@@ -144,6 +187,8 @@ var TournamentRegistrationForm = ReactMeteor.createClass({
         // TODO
       }
       else {
+        // EDGE CASE: If session is already defined, we want to clear it.
+        Session.set("enablePublicRegistration", null);
         // TODO - Figure out how to handle waiting for payments here. Maybe?
         // Just wait for re-render once tournament changes to true.
       }

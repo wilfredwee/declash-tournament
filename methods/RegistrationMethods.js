@@ -30,7 +30,7 @@ Meteor.methods({
     tournament.createdAt = new Date();
     tournament.paymentVerified = false;
     tournament.finished = false;
-    tournament.enablePublicRegister = false;
+    tournament.enablePublicRegistration = false;
     tournament.teams = [];
     tournament.judges = [];
     tournament.rooms = [];

@@ -181,7 +181,7 @@ var TournamentSchema = new SimpleSchema({
     label: "Has the tournament been explicitly closed by the owner."
   },
 
-  enablePublicRegister: {
+  enablePublicRegistration: {
     type: Boolean,
     label: "Field for whether tournament enables the public to register"
   },
