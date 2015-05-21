@@ -221,7 +221,7 @@ var RegistrationHotContainer = ReactMeteor.createClass({
 
   componentWillReceiveProps: function(nextProps) {
     if(this.hot) {
-      // We may want to have a more performant way to render the new table.
+      // TODO: We may want to have a more performant way to render the new table.
       this.hot.destroy();
       this.hot = undefined;
     }
@@ -323,7 +323,176 @@ var RegistrationHotContainer = ReactMeteor.createClass({
 });
 
 var TournamentManagementContainer = ReactMeteor.createClass({
+  getMeteorState: function() {
+    return {
+      containerContext: Session.get("containerContext")
+    };
+  },
+
+  switchContainerContext: function(context) {
+    Session.set("containerContext", context);
+  },
+
+  renderAccordingToContext: function(context) {
+    switch(context) {
+      case "team":
+        return <ManagementHotContainer context={TEAM_CONTEXT} />;
+        break;
+    }
+  },
+
   render: function() {
-    return <h1>Hi, you reached the tournament management container.</h1>;
+    var content = this.renderAccordingToContext(this.state.containerContext);
+    return (
+      <div>
+        <div className="row">
+          <div className="ui menu">
+            <div tabIndex="-1" className="ui simple pointing dropdown link item">
+              <i tabIndex="0" className="dropdown icon"></i>
+              <span className="text">Management</span>
+              <div tabIndex="-1" className="menu">
+                <div className="item" onClick={this.switchContainerContext.bind(this, "team")}>Teams</div>
+                <div className="item" onClick={this.switchContainerContext.bind(this, "judge")}>Judges</div>
+                <div className="item" onClick={this.switchContainerContext.bind(this, "room")}>Rooms</div>
+              </div>
+            </div>
+            <div className="item">Round 1 TODO</div>
+            <div className="item">Round 2 TODO</div>
+          </div>
+        </div>
+        <br /><br />
+        <div className="row">
+          {content}
+        </div>
+      </div>
+    );
+  }
+});
+
+var ManagementHotContainer = ReactMeteor.createClass({
+  startMeteorSubscriptions: function() {
+    Meteor.subscribe("unfinishedTournaments");
+  },
+
+  getMeteorState: function() {
+    return {
+      tournament: Tournaments.findOne({ownerId: Meteor.userId()})
+    };
+  },
+
+  componentDidMount: function() {
+    if(!this.hot) {
+      this.initializeHot(this.props.context);
+    }
+  },
+
+  componentDidUpdate: function (prevProps, prevState) {
+      console.log("I did update huh.");
+  },
+
+  initializeHot: function(context) {
+    function transformCollectionToTableData(tournament) {
+      return _.map(tournament.teams, function(team) {
+        var newTeam = {};
+        newTeam.teamName = team.name;
+        newTeam.institution = team.institution;
+        newTeam.debater1 = team.debaters[0].name;
+        newTeam.debater2 = team.debaters[1].name;
+        newTeam.guid = team.guid;
+
+        return newTeam;
+      });
+    }
+
+    var tableData = transformCollectionToTableData(this.state.tournament);
+    var allowRemoveRow = false;
+
+    this.hot = new Handsontable(this.refs.handsontable.getDOMNode(), {
+      data: tableData,
+      minCols: context.colHeaders.length,
+      startCols: context.colHeaders.length,
+      minSpareRows: 1,
+      rowHeaders: true,
+      colHeaders: context.colHeaders,
+      contextMenu: true,
+      allowRemoveColumn: false,
+      dataSchema: context.dataSchema,
+      columns: context.columns,
+      afterChange: function(changes, source) {
+        if(source !== "loadData") {
+          _.each(changes, function(change) {
+
+          });
+          console.log(changes);
+          // Meteor.call("registerTeams", [{
+          //   name: "auto test",
+          //   institution: "auto inst test",
+          //   debaters: [
+          //     {name: "auto deb 1 test"},
+          //     {name: "auto deb 2 test"}
+          //   ]
+          // }]);
+        }
+      },
+      beforeRemoveRow: function(index, amount) {
+        var thisTable = this;
+
+        if(allowRemoveRow === true) {
+          for(var i=index; i<(index+amount); i++) {
+            var guid = this.getSourceDataAtRow(i).guid;
+            if(guid) {
+              Meteor.call("removeTeam", guid, function(err, result) {
+                // TODO
+                if(err) {
+                  alert(err);
+                }
+              });
+            }
+          }
+          return true;
+        }
+        else {
+          $(".ui.modal").modal({
+            closable: false,
+            onDeny: function() {
+              allowRemoveRow = false;
+            },
+            onApprove: function() {
+              allowRemoveRow = true;
+              thisTable.alter("remove_row", index, amount);
+            }
+          }).modal("show");
+          return false;
+        }
+      },
+      afterRemoveRow: function(index, amount) {
+        allowRemoveRow = false;
+      }
+    });
+  },
+
+  render: function() {
+    return (
+      <div>
+        <div className="handsontable" ref="handsontable"></div>
+
+        {/*UI for the Modal we will render*/}
+        <div className="ui modal">
+          <i className="close icon"></i>
+          <div className="header">
+            Warning
+          </div>
+          <div className="content">
+            <div className="description">
+              Are you sure you want to delete a registered team?
+            </div>
+          </div>
+          <div className="actions">
+            <div className="ui cancel button">No</div>
+            <div className="ui ok button">Yes</div>
+          </div>
+        </div>
+      </div>
+    );
   }
 });
