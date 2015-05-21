@@ -54,61 +54,61 @@ var ManagementBody = ReactMeteor.createClass({
     };
   },
 
+  render: function() {
+    if(!this.state.tournament || this.state.tournament.rooms.length <= 0) {
+      return <RegistrationContainer tournament={this.state.tournament} />;
+    }
+    else {
+      return <TournamentManagementContainer tournament={this.state.tournament} />
+    }
+  }
+});
+
+var RegistrationContainer = ReactMeteor.createClass({
+  getMeteorState: function() {
+    return {
+      enablePublicRegistration: Session.get("enablePublicRegistration")
+    };
+  },
+
   renderRegistrationTable: function(context) {
-    return (<HandsOnTableContainer
-              context={context}
-            />);
+    return <RegistrationHotContainer context={context} />;
   },
 
   render: function() {
-    var getContext = function(skipPublicRegisters) {
-      if(this.state.tournament.teams.length <= 0 && !skipPublicRegisters) {
-        return TEAM_CONTEXT;
-      }
-
-      if(this.state.tournament.judges.length <= 0 && !skipPublicRegisters) {
-        return JUDGE_CONTEXT
-      }
-
-      if(this.state.tournament.rooms.length <= 0) {
-        return ROOM_CONTEXT;
-      }
-
-      return null;
-    }.bind(this);
-
-    var headerNode = <div className="ManagementHeader"><Header /></div>;
-    if(this.state.tournament) {
-      var tournamentNameHeader = <h1>You are now managing {this.state.tournament.name}</h1>;
-      var contentToRender;
-
-      if(this.state.enablePublicRegistration === false) {
-        var context = getContext();
-        contentToRender = context? this.renderRegistrationTable(context) : <h2>You are done!</h2>;
-      }
-      else if(this.state.enablePublicRegistration === true) {
-        var context = getContext(true);
-        contentToRender = context? this.renderRegistrationTable(context) : <h2>You are done!</h2>;
-      }
-      else {
-        contentToRender = <PublicRegistrationChooser />
-      }
-
+    if(!this.props.tournament) {
+      // render tournament registration form.
       return (
         <div>
-          {headerNode}
-          {tournamentNameHeader}
-          {contentToRender}
+          <Header />
+          <TournamentRegistrationForm />
         </div>
       );
     }
     else {
-      return (
-        <div>
-          {headerNode}
-          <TournamentRegistrationForm></TournamentRegistrationForm>
-        </div>
-      );
+      // render registration tables accordingly.
+      var enablePublicRegistrationState = Session.get("enablePublicRegistration");
+
+      if(enablePublicRegistrationState === undefined) {
+        // Render choosing.
+        return <PublicRegistrationChooser />;
+      }
+      else if(enablePublicRegistrationState === true) {
+        // render rooms table.
+        return this.renderRegistrationTable(ROOM_CONTEXT);
+      }
+      else if(enablePublicRegistrationState === false) {
+        if(this.props.tournament.teams.length <= 0) {
+          return this.renderRegistrationTable(TEAM_CONTEXT);
+        }
+        if(this.props.tournament.judges.length <= 0) {
+          return this.renderRegistrationTable(JUDGE_CONTEXT);
+        }
+        if(this.props.tournament.rooms.length <= 0) {
+          return this.renderRegistrationTable(ROOM_CONTEXT);
+        }
+        // Render success with timeout here.
+      }
     }
   }
 });
@@ -188,13 +188,11 @@ var TournamentRegistrationForm = ReactMeteor.createClass({
       }
       else {
         // EDGE CASE: If session is already defined, we want to clear it.
-        Session.set("enablePublicRegistration", null);
+        Session.set("enablePublicRegistration", undefined);
         // TODO - Figure out how to handle waiting for payments here. Maybe?
         // Just wait for re-render once tournament changes to true.
       }
     })
-
-
   },
 
   render: function() {
@@ -210,7 +208,7 @@ var TournamentRegistrationForm = ReactMeteor.createClass({
   }
 });
 
-var HandsOnTableContainer = ReactMeteor.createClass({
+var RegistrationHotContainer = ReactMeteor.createClass({
   getMeteorState: function() {
     // TODO
   },
@@ -321,5 +319,11 @@ var HandsOnTableContainer = ReactMeteor.createClass({
         <button className="ui positive button" onClick={this.handleSave}>Save</button>
       </div>
     );
+  }
+});
+
+var TournamentManagementContainer = ReactMeteor.createClass({
+  render: function() {
+    return <h1>Hi, you reached the tournament management container.</h1>;
   }
 });

@@ -47,12 +47,12 @@ Meteor.methods({
 
     var tournament = tournamentId?
       Tournaments.findOne({_id: tournamentId, finished: false})
-      :Tournaments.findOne({ownerId: this.userId, finished: false})._id;
+      :Tournaments.findOne({ownerId: this.userId, finished: false});
 
     if(!tournament) {
       throw new Meteor.Error("invalidAction", "Unable to find the tournament you're looking for.");
     }
-    else if(!tournament.enablePublicRegister) {
+    else if(!this.userId && !tournament.enablePublicRegister) {
       throw new Meteor.Error("invalidAction", "You cannot register for this tournament.");
     }
     else if(!this.userId && teams.length > 1) {
@@ -81,12 +81,12 @@ Meteor.methods({
     // INVARIANT: A single user can only have one unfinished tournament at a time.
     var tournament = tournamentId?
       Tournaments.findOne({_id: tournamentId, finished: false})
-      :Tournaments.findOne({ownerId: this.userId, finished: false})._id;
+      :Tournaments.findOne({ownerId: this.userId, finished: false});
 
     if(!tournament) {
       throw new Meteor.Error("invalidAction", "Unable to find the tournament you're looking for.");
     }
-    else if(!tournament.enablePublicRegister) {
+    else if(!this.userId && !tournament.enablePublicRegister) {
       throw new Meteor.Error("invalidAction", "You cannot register for this tournament.");
     }
     else if(!this.userId && judges.length > 1) {
