@@ -387,7 +387,17 @@ var ManagementHotContainer = ReactMeteor.createClass({
   },
 
   shouldComponentUpdate: function(nextProps, nextState) {
-    return !_.isEqual(this.state.tournament, nextState.tournament);
+    // Only update if our table data AND current state is out of sync with nextState.
+    // Updating serves only one purpose: To loadData to the table.
+
+    // Why check for both conditions: Because this can be called even if
+    // current state === nextState.
+    var tableData = _.filter(this.hot.getData(), function(rowData, index) {
+        return !this.hot.isEmptyRow(index);
+    }.bind(this));
+
+    return !_.isEqual(tableData, this.transformCollectionToTableData(nextState.tournament))
+      && !_.isEqual(this.state, nextState);
   },
 
   componentDidUpdate: function (prevProps, prevState) {
@@ -474,6 +484,7 @@ var ManagementHotContainer = ReactMeteor.createClass({
       colHeaders: context.colHeaders,
       contextMenu: true,
       autoWrapRow: true,
+      undo: true,
       stretchH: "all",
       height: 500,
       allowRemoveColumn: false,
