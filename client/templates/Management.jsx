@@ -426,6 +426,40 @@ var ManagementHotContainer = ReactMeteor.createClass({
     return collectionTeam;
   },
 
+  getDataToBeChanged: function(changes, hot) {
+    var uniqueChanges = _.filter(changes, function(change) {
+      return change[2] !== change[3];
+    });
+
+    if(uniqueChanges.length <= 0) {
+      return null;
+    }
+
+    var uniqueRowIndexes = [];
+    _.each(uniqueChanges, function(change) {
+      if(!_.contains(uniqueRowIndexes, change[0])){
+        uniqueRowIndexes.push(change[0]);
+      }
+    });
+
+    var dataToBeChanged = _.chain(uniqueRowIndexes)
+      .map(function(index) {
+        var data = hot.getSourceDataAtRow(index);
+
+        var hasIncompleteData = _.some(data, function(element) {
+          return !element || element.length <= 0
+        });
+
+        return hasIncompleteData? null : data;
+      })
+      .filter(function(data) {
+        return data !== null;
+      })
+      .value();
+
+    return dataToBeChanged.length <= 0? null : dataToBeChanged;
+  },
+
   initializeHot: function(context) {
     var componentThis = this;
     var tableData = this.transformCollectionToTableData(this.state.tournament);
@@ -446,58 +480,35 @@ var ManagementHotContainer = ReactMeteor.createClass({
       dataSchema: context.dataSchema,
       columns: context.columns,
       afterChange: function(changes, source) {
-        if(source !== "loadData") {
-          var uniqueChanges = _.filter(changes, function(change) {
-            return change[2] !== change[3];
-          });
-
-          if(uniqueChanges.length <= 0) {
-            return;
-          }
-
-          var uniqueRowIndexes = [];
-          _.each(uniqueChanges, function(change) {
-            if(!_.contains(uniqueRowIndexes, change[0])){
-              uniqueRowIndexes.push(change[0]);
-            }
-          });
-
-          _.each(uniqueRowIndexes, function(index) {
-            var data = this.getSourceDataAtRow(index);
-
-            var hasIncompleteData = _.some(data, function(element) {
-              return !element || element.length <= 0
-            });
-
-            if(hasIncompleteData) {
-              return;
-            }
-
-            if(data.guid) {
-              // Convert team here.
-              var collectionTeam = componentThis.transformTableDataToCollection(data);
-              Meteor.call("updateTeam", collectionTeam, function(err, result) {
-                // TODO
-                if(err) {
-                  alert(err);
-                }
-              });
-            }
-            else {
-              // convert team here.
-              var collectionTeam = [componentThis.transformTableDataToCollection(data)];
-              Meteor.call("registerTeams", collectionTeam, function(err, result) {
-                // TODO
-                if(err) {
-                  alert(err);
-                }
-              });
-            }
-
-
-
-          }.bind(this))
+        if(source === "loadData") {
+          return;
         }
+
+        var dataArray = componentThis.getDataToBeChanged(changes, this);
+        if(!dataArray) {
+          return;
+        }
+
+        _.each(dataArray, function(data) {
+          if(data.guid) {
+            var collectionTeam = componentThis.transformTableDataToCollection(data);
+            Meteor.call("updateTeam", collectionTeam, function(err, result) {
+              // TODO
+              if(err) {
+                alert(err);
+              }
+            });
+          }
+          else {
+            var collectionTeam = [componentThis.transformTableDataToCollection(data)];
+            Meteor.call("registerTeams", collectionTeam, function(err, result) {
+              // TODO
+              if(err) {
+                alert(err);
+              }
+            });
+          }
+        });
       },
       beforeRemoveRow: function(index, amount) {
         var thisTable = this;
