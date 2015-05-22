@@ -386,12 +386,17 @@ var ManagementHotContainer = ReactMeteor.createClass({
     }
   },
 
-  componentDidUpdate: function (prevProps, prevState) {
-      console.log("I did update huh.");
+  shouldComponentUpdate: function(nextProps, nextState) {
+    return !_.isEqual(this.state.tournament, nextState.tournament);
   },
 
-  initializeHot: function(context) {
-    function transformCollectionToTableData(tournament) {
+  componentDidUpdate: function (prevProps, prevState) {
+      if(this.hot) {
+        this.hot.loadData(this.transformCollectionToTableData(this.state.tournament));
+      }
+  },
+
+  transformCollectionToTableData: function(tournament) {
       return _.map(tournament.teams, function(team) {
         var newTeam = {};
         newTeam.teamName = team.name;
@@ -402,9 +407,28 @@ var ManagementHotContainer = ReactMeteor.createClass({
 
         return newTeam;
       });
+  },
+
+  transformTableDataToCollection: function(tableData) {
+    var collectionTeam = {};
+
+    if(tableData.guid) {
+      collectionTeam.guid = tableData.guid;
+    }
+    collectionTeam.name = tableData.teamName;
+    collectionTeam.institution = tableData.institution;
+    collectionTeam.debaters = [{name: tableData.debater1}, {name: tableData.debater2}];
+
+    if(tableData.guid) {
+      collectionTeam.guid
     }
 
-    var tableData = transformCollectionToTableData(this.state.tournament);
+    return collectionTeam;
+  },
+
+  initializeHot: function(context) {
+    var componentThis = this;
+    var tableData = this.transformCollectionToTableData(this.state.tournament);
     var allowRemoveRow = false;
 
     this.hot = new Handsontable(this.refs.handsontable.getDOMNode(), {
@@ -415,23 +439,64 @@ var ManagementHotContainer = ReactMeteor.createClass({
       rowHeaders: true,
       colHeaders: context.colHeaders,
       contextMenu: true,
+      autoWrapRow: true,
+      stretchH: "all",
+      height: 500,
       allowRemoveColumn: false,
       dataSchema: context.dataSchema,
       columns: context.columns,
       afterChange: function(changes, source) {
         if(source !== "loadData") {
-          _.each(changes, function(change) {
-
+          var uniqueChanges = _.filter(changes, function(change) {
+            return change[2] !== change[3];
           });
-          console.log(changes);
-          // Meteor.call("registerTeams", [{
-          //   name: "auto test",
-          //   institution: "auto inst test",
-          //   debaters: [
-          //     {name: "auto deb 1 test"},
-          //     {name: "auto deb 2 test"}
-          //   ]
-          // }]);
+
+          if(uniqueChanges.length <= 0) {
+            return;
+          }
+
+          var uniqueRowIndexes = [];
+          _.each(uniqueChanges, function(change) {
+            if(!_.contains(uniqueRowIndexes, change[0])){
+              uniqueRowIndexes.push(change[0]);
+            }
+          });
+
+          _.each(uniqueRowIndexes, function(index) {
+            var data = this.getSourceDataAtRow(index);
+
+            var hasIncompleteData = _.some(data, function(element) {
+              return !element || element.length <= 0
+            });
+
+            if(hasIncompleteData) {
+              return;
+            }
+
+            if(data.guid) {
+              // Convert team here.
+              var collectionTeam = componentThis.transformTableDataToCollection(data);
+              Meteor.call("updateTeam", collectionTeam, function(err, result) {
+                // TODO
+                if(err) {
+                  alert(err);
+                }
+              });
+            }
+            else {
+              // convert team here.
+              var collectionTeam = [componentThis.transformTableDataToCollection(data)];
+              Meteor.call("registerTeams", collectionTeam, function(err, result) {
+                // TODO
+                if(err) {
+                  alert(err);
+                }
+              });
+            }
+
+
+
+          }.bind(this))
         }
       },
       beforeRemoveRow: function(index, amount) {
