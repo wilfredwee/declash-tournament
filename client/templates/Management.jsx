@@ -522,8 +522,31 @@ var ManagementHotContainer = ReactMeteor.createClass({
       stretchH: "all",
       height: 500,
       allowRemoveColumn: false,
+      allowInsertColumn: false,
+      allowInvalid: false,
       dataSchema: context.dataSchema,
       columns: context.columns,
+      afterCreateRow: function() {
+        this.validateCells(function() {
+          // do nothing.
+        });
+      },
+      beforeValidate: function(value, row, prop, source) {
+        if(!this.isEmptyRow(row) && value === null) {
+          return false;
+        }
+        if(typeof value === "string" && value.length <= 0) {
+          return false
+        }
+      },
+      validator: function(value, callback) {
+        if(value === false) {
+          callback(false);
+        }
+        else {
+          callback(true);
+        }
+      },
       afterChange: function(changes, source) {
         if(source === "loadData") {
           return;
@@ -586,7 +609,7 @@ var ManagementHotContainer = ReactMeteor.createClass({
         var rowIndexes = _.range(index, index+amount);
 
         var notEmptyRows = _.filter(rowIndexes, function(rowIndex) {
-          return !this.isEmptyRow(rowIndex);
+          return !this.isEmptyRow(rowIndex) || this.getSourceDataAtRow(rowIndex).guid;
         }.bind(this));
 
         if(notEmptyRows.length <= 0) {
@@ -701,7 +724,7 @@ var ManagementHotContainer = ReactMeteor.createClass({
           </div>
           <div className="content">
             <div className="description">
-              Are you sure you want to delete a registered team?
+              Are you sure you want to delete the item?
             </div>
           </div>
           <div className="actions">
