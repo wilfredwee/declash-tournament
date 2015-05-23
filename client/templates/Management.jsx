@@ -583,7 +583,7 @@ var ManagementHotContainer = ReactMeteor.createClass({
       },
       beforeRemoveRow: function(index, amount) {
         // Check if all rows to remove are empty.
-        var rowIndexes = _.range(index, amount+1);
+        var rowIndexes = _.range(index, index+amount);
 
         var notEmptyRows = _.filter(rowIndexes, function(rowIndex) {
           return !this.isEmptyRow(rowIndex);
@@ -600,8 +600,8 @@ var ManagementHotContainer = ReactMeteor.createClass({
           if(context.type === ROOM_CONTEXT_TYPE) {
             var data = this.getData();
 
-            var dataWithoutEmptyRows = _.filter(data, function(rowData, index) {
-                return !this.isEmptyRow(index);
+            var dataWithoutEmptyRows = _.filter(data, function(rowData, rowIndex) {
+                return !this.isEmptyRow(rowIndex) && !_.contains(rowIndexes, rowIndex);
             }.bind(this));
 
             var roomStrings = _.map(dataWithoutEmptyRows, function(rowData) {
