@@ -106,6 +106,10 @@ Meteor.methods({
     // INVARIANT: A single user can only have one unfinished tournament at a time.
     var tournament = Tournaments.findOne({ownerId: this.userId, finished: false});
 
-    Tournaments.update(tournament._id, {$push: {rooms: {$each: rooms}}});
+    if(_.uniq(rooms).length !== rooms.length) {
+      throw new Meteor.Error("invalidAction", "You may not have duplicate rooms.");
+    }
+
+    Tournaments.update(tournament._id, {$set: {rooms: rooms}});
   }
 });

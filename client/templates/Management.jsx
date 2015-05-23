@@ -1,6 +1,6 @@
 var REGISTER_TEAMS_HEADERS = ["Team Name", "Institution", "Debater 1", "Debater 2"];
-var REGISTER_TEAMS_SCHEMA = {teamName: null, institution: null, debater1: null, debater2: null};
-var REGISTER_TEAMS_COLUMNS = [{data: "teamName"}, {data: "institution"}, {data: "debater1"}, {data: "debater2"}];
+var REGISTER_TEAMS_SCHEMA = {name: null, institution: null, debater1: null, debater2: null};
+var REGISTER_TEAMS_COLUMNS = [{data: "name"}, {data: "institution"}, {data: "debater1"}, {data: "debater2"}];
 
 var REGISTER_JUDGES_HEADERS = ["Judge Name", "Institution"];
 var REGISTER_JUDGES_SCHEMA = {name: null, institution: null};
@@ -14,25 +14,100 @@ var TEAM_CONTEXT_TYPE = "team";
 var JUDGE_CONTEXT_TYPE = "judge";
 var ROOM_CONTEXT_TYPE = "room";
 
+var TEAM_REGISTER_METHOD_TYPE = "registerTeams";
+var JUDGE_REGISTER_METHOD_TYPE = "registerJudges";
+var ROOM_REGISTER_METHOD_TYPE = "registerRooms";
+
+var TEAM_UPDATE_METHOD_TYPE = "updateTeam";
+var JUDGE_UPDATE_METHOD_TYPE = "updateJudge";
+var ROOM_UPDATE_METHOD_TYPE = "updateRoom";
+
+var TEAM_REMOVE_METHOD_TYPE = "removeTeam";
+var JUDGE_REMOVE_METHOD_TYPE = "removeJudge";
+var ROOM_REMOVE_METHOD_TYPE = "removeRoom";
+
+
 var TEAM_CONTEXT = {
   colHeaders: REGISTER_TEAMS_HEADERS,
   dataSchema: REGISTER_TEAMS_SCHEMA,
   columns: REGISTER_TEAMS_COLUMNS,
-  type: TEAM_CONTEXT_TYPE
+  type: TEAM_CONTEXT_TYPE,
+  registerMethod: TEAM_REGISTER_METHOD_TYPE,
+  updateMethod: TEAM_UPDATE_METHOD_TYPE,
+  removeMethod: TEAM_REMOVE_METHOD_TYPE,
+  transformCollectionToTableData: function(tournament) {
+    return _.map(tournament.teams, function(team) {
+      var newTeam = {};
+      newTeam.name = team.name;
+      newTeam.institution = team.institution;
+      newTeam.debater1 = team.debaters[0].name;
+      newTeam.debater2 = team.debaters[1].name;
+      newTeam.guid = team.guid;
+
+      return newTeam;
+    });
+  },
+  transformTableDataToCollection: function(tableData) {
+    var collectionTeam = {};
+
+    if(tableData.guid) {
+      collectionTeam.guid = tableData.guid;
+    }
+    collectionTeam.name = tableData.name;
+    collectionTeam.institution = tableData.institution;
+    collectionTeam.debaters = [{name: tableData.debater1}, {name: tableData.debater2}];
+
+    return collectionTeam;
+  }
 };
 
 var JUDGE_CONTEXT = {
   colHeaders: REGISTER_JUDGES_HEADERS,
   dataSchema: REGISTER_JUDGES_SCHEMA,
   columns: REGISTER_JUDGES_COLUMNS,
-  type: JUDGE_CONTEXT_TYPE
+  type: JUDGE_CONTEXT_TYPE,
+  registerMethod: JUDGE_REGISTER_METHOD_TYPE,
+  updateMethod: JUDGE_UPDATE_METHOD_TYPE,
+  removeMethod: JUDGE_REMOVE_METHOD_TYPE,
+  transformCollectionToTableData: function(tournament) {
+    return _.map(tournament.judges, function(judge) {
+      var newJudge = {};
+      newJudge.name = judge.name;
+      newJudge.institution = judge.institution;
+      newJudge.guid = judge.guid;
+
+      return newJudge;
+    });
+  },
+  transformTableDataToCollection: function(tableData) {
+    var collectionJudge = {};
+
+    if(tableData.guid) {
+      collectionJudge.guid = tableData.guid;
+    }
+    collectionJudge.name = tableData.name;
+    collectionJudge.institution = tableData.institution;
+
+    return collectionJudge;
+  }
 };
 
 var ROOM_CONTEXT = {
   colHeaders: REGISTER_ROOMS_HEADERS,
   dataSchema: REGISTER_ROOMS_SCHEMA,
   columns: REGISTER_ROOMS_COLUMNS,
-  type: ROOM_CONTEXT_TYPE
+  type: ROOM_CONTEXT_TYPE,
+  registerMethod: ROOM_REGISTER_METHOD_TYPE,
+  updateMethod: ROOM_UPDATE_METHOD_TYPE,
+  removeMethod: ROOM_REMOVE_METHOD_TYPE,
+  transformCollectionToTableData: function(tournament) {
+    return _.map(tournament.rooms, function(room) {
+      return {location: room};
+    });
+  },
+  transformTableDataToCollection: function(tableData) {
+    return tableData.location;
+  }
 };
 
 ManagementPageContainer = ReactMeteor.createClass({
@@ -272,7 +347,7 @@ var RegistrationHotContainer = ReactMeteor.createClass({
     function registerTeams(unsanitizedFlattenedTeams) {
       var teams = _.map(unsanitizedFlattenedTeams, function(team) {
         var schemaTeam = {};
-        schemaTeam.name = team.teamName;
+        schemaTeam.name = team.name;
         schemaTeam.institution = team.institution;
         schemaTeam.debaters = [{name: team.debater1}, {name: team.debater2}];
 
@@ -334,11 +409,20 @@ var TournamentManagementContainer = ReactMeteor.createClass({
   },
 
   renderAccordingToContext: function(context) {
+    var contextType = TEAM_CONTEXT;
     switch(context) {
       case "team":
-        return <ManagementHotContainer context={TEAM_CONTEXT} />;
+        contextType = TEAM_CONTEXT;
+        break;
+      case "judge":
+        contextType = JUDGE_CONTEXT;
+        break;
+      case "room":
+        contextType = ROOM_CONTEXT;
         break;
     }
+
+    return <ManagementHotContainer context={contextType} />;
   },
 
   render: function() {
@@ -387,6 +471,10 @@ var ManagementHotContainer = ReactMeteor.createClass({
   },
 
   shouldComponentUpdate: function(nextProps, nextState) {
+    if(!this.hot || !_.isEqual(this.props, nextProps)) {
+      return true;
+    }
+
     // Only update if our table data AND current state is out of sync with nextState.
     // Updating serves only one purpose: To loadData to the table.
 
@@ -396,44 +484,174 @@ var ManagementHotContainer = ReactMeteor.createClass({
         return !this.hot.isEmptyRow(index);
     }.bind(this));
 
-    return !_.isEqual(tableData, this.transformCollectionToTableData(nextState.tournament))
+    return !_.isEqual(tableData, this.props.context.transformCollectionToTableData(nextState.tournament))
       && !_.isEqual(this.state, nextState);
   },
 
   componentDidUpdate: function (prevProps, prevState) {
-      if(this.hot) {
-        this.hot.loadData(this.transformCollectionToTableData(this.state.tournament));
+    if(!this.hot) {
+      this.initializeHot(this.props.context);
+    }
+    else{
+      if(_.isEqual(this.props, prevProps)) {
+        this.hot.loadData(this.props.context.transformCollectionToTableData(this.state.tournament));
       }
+      else {
+        this.hot.destroy();
+        this.hot = undefined;
+        this.initializeHot(this.props.context);
+      }
+    }
   },
 
-  transformCollectionToTableData: function(tournament) {
-      return _.map(tournament.teams, function(team) {
-        var newTeam = {};
-        newTeam.teamName = team.name;
-        newTeam.institution = team.institution;
-        newTeam.debater1 = team.debaters[0].name;
-        newTeam.debater2 = team.debaters[1].name;
-        newTeam.guid = team.guid;
+  initializeHot: function(context) {
+    var componentThis = this;
+    var tableData = this.props.context.transformCollectionToTableData(this.state.tournament);
+    var allowRemoveRow = false;
 
-        return newTeam;
-      });
-  },
+    this.hot = new Handsontable(this.refs.handsontable.getDOMNode(), {
+      data: tableData,
+      minCols: context.colHeaders.length,
+      startCols: context.colHeaders.length,
+      minSpareRows: 1,
+      rowHeaders: true,
+      colHeaders: context.colHeaders,
+      contextMenu: true,
+      autoWrapRow: true,
+      undo: true,
+      stretchH: "all",
+      height: 500,
+      allowRemoveColumn: false,
+      dataSchema: context.dataSchema,
+      columns: context.columns,
+      afterChange: function(changes, source) {
+        if(source === "loadData") {
+          return;
+        }
 
-  transformTableDataToCollection: function(tableData) {
-    var collectionTeam = {};
+        var context = componentThis.props.context;
 
-    if(tableData.guid) {
-      collectionTeam.guid = tableData.guid;
-    }
-    collectionTeam.name = tableData.teamName;
-    collectionTeam.institution = tableData.institution;
-    collectionTeam.debaters = [{name: tableData.debater1}, {name: tableData.debater2}];
+        var dataArray = componentThis.getDataToBeChanged(changes, this);
+        if(!dataArray) {
+          return;
+        }
 
-    if(tableData.guid) {
-      collectionTeam.guid
-    }
+        // Rooms are special, we just re-register all of them for now
+        // as they are just string arrays.
+        if(context.type === ROOM_CONTEXT_TYPE) {
 
-    return collectionTeam;
+          var data = this.getData();
+
+          var dataWithoutEmptyRows = _.filter(data, function(rowData, index) {
+              return !this.isEmptyRow(index);
+          }.bind(this));
+
+          var roomStrings = _.map(dataWithoutEmptyRows, function(rowData) {
+            return rowData.location;
+          });
+
+          Meteor.call(context.registerMethod, roomStrings, function(err, result) {
+            // TODO
+            if(err) {
+              alert(err);
+            }
+          });
+        }
+        else {
+          _.each(dataArray, function(data) {
+            if(data.guid) {
+              var collectionToSend = context.transformTableDataToCollection(data);
+
+              Meteor.call(context.updateMethod, collectionToSend, function(err, result) {
+                // TODO
+                if(err) {
+                  alert(err);
+                }
+              });
+            }
+            else {
+              var collectionToSend = [context.transformTableDataToCollection(data)];
+              Meteor.call(context.registerMethod, collectionToSend, function(err, result) {
+                // TODO
+                if(err) {
+                  alert(err);
+                }
+              });
+            }
+          });
+        }
+      },
+      beforeRemoveRow: function(index, amount) {
+        // Check if all rows to remove are empty.
+        var rowIndexes = _.range(index, amount+1);
+
+        var notEmptyRows = _.filter(rowIndexes, function(rowIndex) {
+          return !this.isEmptyRow(rowIndex);
+        }.bind(this));
+
+        if(notEmptyRows.length <= 0) {
+          return true;
+        }
+
+        var thisTable = this;
+        var context = componentThis.props.context;
+
+        if(allowRemoveRow === true) {
+          if(context.type === ROOM_CONTEXT_TYPE) {
+            var data = this.getData();
+
+            var dataWithoutEmptyRows = _.filter(data, function(rowData, index) {
+                return !this.isEmptyRow(index);
+            }.bind(this));
+
+            var roomStrings = _.map(dataWithoutEmptyRows, function(rowData) {
+              return rowData.location;
+            });
+
+            Meteor.call(context.registerMethod, roomStrings, function(err, result) {
+              // TODO
+              if(err) {
+                alert(err);
+              }
+            });
+
+            return true;
+          }
+
+          for(var i=index; i<(index+amount); i++) {
+            var data = this.getSourceDataAtRow(i);
+
+            if(!_.contains(data, null)) {
+              var collectionToSend = context.transformTableDataToCollection(data);
+              Meteor.call(context.removeMethod, collectionToSend, function(err, result) {
+                // TODO
+                if(err) {
+                  alert(err);
+                }
+              });
+            }
+            // Should we consider an 'else' case here where an incomplete thing is around?
+          }
+          return true;
+        }
+        else {
+          $(".ui.modal").modal({
+            closable: false,
+            onDeny: function() {
+              allowRemoveRow = false;
+            },
+            onApprove: function() {
+              allowRemoveRow = true;
+              thisTable.alter("remove_row", index, amount);
+            }
+          }).modal("show");
+          return false;
+        }
+      },
+      afterRemoveRow: function(index, amount) {
+        allowRemoveRow = false;
+      }
+    });
   },
 
   getDataToBeChanged: function(changes, hot) {
@@ -468,94 +686,6 @@ var ManagementHotContainer = ReactMeteor.createClass({
       .value();
 
     return dataToBeChanged.length <= 0? null : dataToBeChanged;
-  },
-
-  initializeHot: function(context) {
-    var componentThis = this;
-    var tableData = this.transformCollectionToTableData(this.state.tournament);
-    var allowRemoveRow = false;
-
-    this.hot = new Handsontable(this.refs.handsontable.getDOMNode(), {
-      data: tableData,
-      minCols: context.colHeaders.length,
-      startCols: context.colHeaders.length,
-      minSpareRows: 1,
-      rowHeaders: true,
-      colHeaders: context.colHeaders,
-      contextMenu: true,
-      autoWrapRow: true,
-      undo: true,
-      stretchH: "all",
-      height: 500,
-      allowRemoveColumn: false,
-      dataSchema: context.dataSchema,
-      columns: context.columns,
-      afterChange: function(changes, source) {
-        if(source === "loadData") {
-          return;
-        }
-
-        var dataArray = componentThis.getDataToBeChanged(changes, this);
-        if(!dataArray) {
-          return;
-        }
-
-        _.each(dataArray, function(data) {
-          if(data.guid) {
-            var collectionTeam = componentThis.transformTableDataToCollection(data);
-            Meteor.call("updateTeam", collectionTeam, function(err, result) {
-              // TODO
-              if(err) {
-                alert(err);
-              }
-            });
-          }
-          else {
-            var collectionTeam = [componentThis.transformTableDataToCollection(data)];
-            Meteor.call("registerTeams", collectionTeam, function(err, result) {
-              // TODO
-              if(err) {
-                alert(err);
-              }
-            });
-          }
-        });
-      },
-      beforeRemoveRow: function(index, amount) {
-        var thisTable = this;
-
-        if(allowRemoveRow === true) {
-          for(var i=index; i<(index+amount); i++) {
-            var guid = this.getSourceDataAtRow(i).guid;
-            if(guid) {
-              Meteor.call("removeTeam", guid, function(err, result) {
-                // TODO
-                if(err) {
-                  alert(err);
-                }
-              });
-            }
-          }
-          return true;
-        }
-        else {
-          $(".ui.modal").modal({
-            closable: false,
-            onDeny: function() {
-              allowRemoveRow = false;
-            },
-            onApprove: function() {
-              allowRemoveRow = true;
-              thisTable.alter("remove_row", index, amount);
-            }
-          }).modal("show");
-          return false;
-        }
-      },
-      afterRemoveRow: function(index, amount) {
-        allowRemoveRow = false;
-      }
-    });
   },
 
   render: function() {
