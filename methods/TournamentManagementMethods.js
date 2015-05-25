@@ -3,14 +3,6 @@ var getOwnerTournament = function() {
 };
 
 Meteor.methods({
-  enablePublicRegistration: function() {
-    var tournament = getOwnerTournament.call(this);
-
-    Tournaments.update(tournament._id, {$set: {enablePublicRegistration: true}});
-
-    return true;
-  },
-
   removeTeam: function(team) {
     var tournament = getOwnerTournament.call(this);
 
@@ -57,5 +49,14 @@ Meteor.methods({
 
   updateRoom: function(room) {
     throw new Meteor.Error("invalidAction", "Single update for rooms is not supported currently.")
+  },
+
+  togglePublicRegistration: function() {
+    var tournament = getOwnerTournament.call(this);
+
+    var newChecked = !tournament.enablePublicRegistration;
+    Tournaments.update(tournament._id, {$set: {enablePublicRegistration: newChecked}});
+
+    return newChecked;
   }
 });

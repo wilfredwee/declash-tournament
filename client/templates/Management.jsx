@@ -26,7 +26,7 @@ var TEAM_REMOVE_METHOD_TYPE = "removeTeam";
 var JUDGE_REMOVE_METHOD_TYPE = "removeJudge";
 var ROOM_REMOVE_METHOD_TYPE = "removeRoom";
 
-
+// All contexts' functions must be pure functions.
 var TEAM_CONTEXT = {
   colHeaders: REGISTER_TEAMS_HEADERS,
   dataSchema: REGISTER_TEAMS_SCHEMA,
@@ -130,60 +130,21 @@ var ManagementBody = ReactMeteor.createClass({
   },
 
   render: function() {
-    if(!this.state.tournament || this.state.tournament.rooms.length <= 0) {
-      return <RegistrationContainer tournament={this.state.tournament} />;
-    }
-    else {
-      return <TournamentManagementContainer tournament={this.state.tournament} />
-    }
-  }
-});
-
-var RegistrationContainer = ReactMeteor.createClass({
-  getMeteorState: function() {
-    return {
-      enablePublicRegistration: Session.get("enablePublicRegistration")
-    };
-  },
-
-  renderRegistrationTable: function(context) {
-    return <RegistrationHotContainer context={context} />;
-  },
-
-  render: function() {
-    if(!this.props.tournament) {
-      // render tournament registration form.
+    if(!this.state.tournament) {
       return (
         <div>
-          <Header />
-          <TournamentRegistrationForm />
+          <Header tournament={this.state.tournament} />
+          <TournamentRegistrationForm tournament={this.state.tournament} />
         </div>
       );
     }
     else {
-      // render registration tables accordingly.
-      var enablePublicRegistrationState = Session.get("enablePublicRegistration");
-
-      if(enablePublicRegistrationState === undefined) {
-        // Render choosing.
-        return <PublicRegistrationChooser />;
-      }
-      else if(enablePublicRegistrationState === true) {
-        // render rooms table.
-        return this.renderRegistrationTable(ROOM_CONTEXT);
-      }
-      else if(enablePublicRegistrationState === false) {
-        if(this.props.tournament.teams.length <= 0) {
-          return this.renderRegistrationTable(TEAM_CONTEXT);
-        }
-        if(this.props.tournament.judges.length <= 0) {
-          return this.renderRegistrationTable(JUDGE_CONTEXT);
-        }
-        if(this.props.tournament.rooms.length <= 0) {
-          return this.renderRegistrationTable(ROOM_CONTEXT);
-        }
-        // Render success with timeout here.
-      }
+      return (
+        <div>
+          <Header tournament={this.state.tournament} />
+          <TournamentManagementContainer tournament={this.state.tournament} />
+        </div>
+      );
     }
   }
 });
@@ -201,40 +162,16 @@ var Header = ReactMeteor.createClass({
 
   render: function() {
     var name = "Please login, I'll create template for you later.";
+    var tournamentString = "";
+
+    if(this.props.tournament) {
+      tournamentString = "You are now managing" + this.props.tournament.name + ".";
+    }
     if(this.state.currentUser) {
       name = this.state.currentUser.profile.name;
     }
     return (
-      <h1>Welcome, {name}</h1>
-    );
-  }
-});
-
-var PublicRegistrationChooser = ReactMeteor.createClass({
-  handleYes: function() {
-    Meteor.call("enablePublicRegistration", function(err, result) {
-      if(err) {
-        // TODO
-        alert(err.reason);
-      }
-      else {
-        Session.set("enablePublicRegistration", result);
-      }
-    })
-  },
-
-  handleNo: function() {
-    Session.set("enablePublicRegistration", false);
-  },
-
-  render: function() {
-    return (
-      <div>
-        <h2>Would you like to allow debaters and judges to register themselves?</h2>
-        <br />
-        <button onClick={this.handleYes}>Yes please. Skip to registering rooms.</button>
-        <button onClick={this.handleNo}>No thanks. I want to register them myself now.</button>
-      </div>
+      <h1>Welcome, {name + " " + " " + tournamentString}</h1>
     );
   }
 });
@@ -283,120 +220,6 @@ var TournamentRegistrationForm = ReactMeteor.createClass({
   }
 });
 
-var RegistrationHotContainer = ReactMeteor.createClass({
-  getMeteorState: function() {
-    // TODO
-  },
-
-  componentDidMount: function() {
-    if(!this.hot) {
-      this.initializeHot(this.props.context);
-    }
-  },
-
-  componentWillReceiveProps: function(nextProps) {
-    if(this.hot) {
-      // TODO: We may want to have a more performant way to render the new table.
-      this.hot.destroy();
-      this.hot = undefined;
-    }
-    this.initializeHot(nextProps.context);
-  },
-
-  initializeHot: function(context) {
-    var tableData = context.data || [];
-
-    this.hot = new Handsontable(this.refs.handsontable.getDOMNode(), {
-      data: tableData,
-      minCols: context.colHeaders.length,
-      startCols: context.colHeaders.length,
-      minSpareRows: 1,
-      rowHeaders: true,
-      colHeaders: context.colHeaders,
-      contextMenu: true,
-      allowRemoveColumn: false,
-      dataSchema: context.dataSchema,
-      columns: context.columns
-    });
-  },
-
-  handleSave: function(e) {
-    // TODO: Check for sanitize condition.
-    // TODO: Refactor logic out to something that specializes in
-    //        schema transformation.
-
-    var data = this.hot.getData();
-
-    var dataWithoutEmptyRows = _.filter(data, function(rowData, index) {
-        return !this.hot.isEmptyRow(index);
-    }.bind(this));
-
-    var contextType = this.props.context.type;
-    switch(contextType) {
-      case TEAM_CONTEXT_TYPE:
-        registerTeams(dataWithoutEmptyRows);
-        break;
-      case JUDGE_CONTEXT_TYPE:
-        registerJudges(dataWithoutEmptyRows);
-        break;
-      case ROOM_CONTEXT_TYPE:
-        registerRooms(dataWithoutEmptyRows);
-        break;
-    }
-
-    function registerTeams(unsanitizedFlattenedTeams) {
-      var teams = _.map(unsanitizedFlattenedTeams, function(team) {
-        var schemaTeam = {};
-        schemaTeam.name = team.name;
-        schemaTeam.institution = team.institution;
-        schemaTeam.debaters = [{name: team.debater1}, {name: team.debater2}];
-
-        return schemaTeam;
-      });
-
-      Meteor.call("registerTeams", teams, function(err, result) {
-        // TODO
-        if(err) {
-          alert(err.reason);
-        }
-      });
-    }
-
-    function registerJudges(unsanitizedJudges) {
-      Meteor.call("registerJudges", unsanitizedJudges, function(err, result) {
-        // TODO
-        if(err) {
-          alert(err.reason);
-        }
-      });
-    }
-
-    function registerRooms(unsanitizedRooms) {
-      var rooms = _.map(unsanitizedRooms, function(room) {
-        return room.location;
-      });
-
-
-      Meteor.call("registerRooms", rooms, function(err, result) {
-        // TODO
-        if(err) {
-          alert(err.reason);
-        }
-      });
-    }
-  },
-
-  render: function() {
-    return (
-      <div>
-        <div className="handsontable" ref="handsontable"></div>
-        <br />
-        <button className="ui positive button" onClick={this.handleSave}>Save</button>
-      </div>
-    );
-  }
-});
-
 var TournamentManagementContainer = ReactMeteor.createClass({
   getMeteorState: function() {
     return {
@@ -411,13 +234,13 @@ var TournamentManagementContainer = ReactMeteor.createClass({
   renderAccordingToContext: function(context) {
     var contextType = TEAM_CONTEXT;
     switch(context) {
-      case "team":
+      case TEAM_CONTEXT.type:
         contextType = TEAM_CONTEXT;
         break;
-      case "judge":
+      case JUDGE_CONTEXT.type:
         contextType = JUDGE_CONTEXT;
         break;
-      case "room":
+      case ROOM_CONTEXT.type:
         contextType = ROOM_CONTEXT;
         break;
     }
@@ -435,9 +258,9 @@ var TournamentManagementContainer = ReactMeteor.createClass({
               <i tabIndex="0" className="dropdown icon"></i>
               <span className="text">Management</span>
               <div tabIndex="-1" className="menu">
-                <div className="item" onClick={this.switchContainerContext.bind(this, "team")}>Teams</div>
-                <div className="item" onClick={this.switchContainerContext.bind(this, "judge")}>Judges</div>
-                <div className="item" onClick={this.switchContainerContext.bind(this, "room")}>Rooms</div>
+                <div className="item" onClick={this.switchContainerContext.bind(this, TEAM_CONTEXT.type)}>Teams</div>
+                <div className="item" onClick={this.switchContainerContext.bind(this, JUDGE_CONTEXT.type)}>Judges</div>
+                <div className="item" onClick={this.switchContainerContext.bind(this, ROOM_CONTEXT.type)}>Rooms</div>
               </div>
             </div>
             <div className="item">Round 1 TODO</div>
@@ -464,14 +287,50 @@ var ManagementHotContainer = ReactMeteor.createClass({
     };
   },
 
+  handleSelectPublicRegistration: function(e) {
+    Meteor.call("togglePublicRegistration", function(err, result) {
+      if(err) {
+        // TODO
+        alert(err.reason);
+      }
+      else {
+        // We probably don't need to lag-compensate here because Meteor methods should
+        // theoretically already do it for us.
+      }
+    }.bind(this))
+  },
+
+  render: function() {
+    return (
+      <div>
+        <div className="row">
+          <div className="ui toggle checkbox">
+            <input ref="enablePublicRegistrationCheckBox" checked={this.state.tournament.enablePublicRegistration} readOnly onClick={this.handleSelectPublicRegistration} type="checkbox">
+            <label>Public Registration of Teams/Judges is {this.state.tournament.enablePublicRegistration ? "Open" : "Closed"}.</label>
+            </input>
+          </div>
+        </div>
+        {/* We need to implement registration url here. */}
+        <br />
+        <div className="row">
+          <ManagementHot context={this.props.context} tournament={this.state.tournament} />
+        </div>
+
+
+      </div>
+    );
+  }
+});
+
+
+var ManagementHot = ReactMeteor.createClass({
   componentDidMount: function() {
     if(!this.hot) {
       this.initializeHot(this.props.context);
     }
   },
-
   shouldComponentUpdate: function(nextProps, nextState) {
-    if(!this.hot || !_.isEqual(this.props, nextProps)) {
+    if(!this.hot || !_.isEqual(this.props.context, nextProps.context)) {
       return true;
     }
 
@@ -484,17 +343,17 @@ var ManagementHotContainer = ReactMeteor.createClass({
         return !this.hot.isEmptyRow(index);
     }.bind(this));
 
-    return !_.isEqual(tableData, this.props.context.transformCollectionToTableData(nextState.tournament))
-      && !_.isEqual(this.state, nextState);
+    return !_.isEqual(tableData, this.props.context.transformCollectionToTableData(nextProps.tournament))
+      && !_.isEqual(this.props.tournament, nextProps.tournament);
   },
 
   componentDidUpdate: function (prevProps, prevState) {
     if(!this.hot) {
       this.initializeHot(this.props.context);
     }
-    else{
-      if(_.isEqual(this.props, prevProps)) {
-        this.hot.loadData(this.props.context.transformCollectionToTableData(this.state.tournament));
+    else {
+      if(_.isEqual(this.props.context, prevProps.context)) {
+        this.hot.loadData(this.props.context.transformCollectionToTableData(this.props.tournament));
       }
       else {
         this.hot.destroy();
@@ -506,7 +365,7 @@ var ManagementHotContainer = ReactMeteor.createClass({
 
   initializeHot: function(context) {
     var componentThis = this;
-    var tableData = this.props.context.transformCollectionToTableData(this.state.tournament);
+    var tableData = this.props.context.transformCollectionToTableData(this.props.tournament);
     var allowRemoveRow = false;
 
     this.hot = new Handsontable(this.refs.handsontable.getDOMNode(), {
@@ -548,6 +407,7 @@ var ManagementHotContainer = ReactMeteor.createClass({
         }
       },
       afterChange: function(changes, source) {
+        //  We might want to perform caching if source === "paste"
         if(source === "loadData") {
           return;
         }
@@ -714,7 +574,9 @@ var ManagementHotContainer = ReactMeteor.createClass({
   render: function() {
     return (
       <div>
-        <div className="handsontable" ref="handsontable"></div>
+        <div className="row">
+            <div className="handsontable" ref="handsontable"></div>
+        </div>
 
         {/*UI for the Modal we will render*/}
         <div className="ui modal">
