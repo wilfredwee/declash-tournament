@@ -125,7 +125,6 @@ var ManagementBody = ReactMeteor.createClass({
   getMeteorState: function() {
     return {
       tournament: Tournaments.findOne({ownerId: Meteor.userId()}),
-      enablePublicRegistration: Session.get("enablePublicRegistration")
     };
   },
 
@@ -199,8 +198,6 @@ var TournamentRegistrationForm = ReactMeteor.createClass({
         // TODO
       }
       else {
-        // EDGE CASE: If session is already defined, we want to clear it.
-        Session.set("enablePublicRegistration", undefined);
         // TODO - Figure out how to handle waiting for payments here. Maybe?
         // Just wait for re-render once tournament changes to true.
       }
