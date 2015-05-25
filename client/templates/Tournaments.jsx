@@ -5,7 +5,7 @@ TournamentListPageContainer = ReactMeteor.createClass({
 
   getMeteorState: function() {
     return {
-      tournaments: Tournaments.find()
+      tournaments: Tournaments.find({enablePublicRegistration: true})
     };
   },
 
