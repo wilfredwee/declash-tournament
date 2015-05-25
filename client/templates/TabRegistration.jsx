@@ -1,8 +1,13 @@
-/** @jsx React.DOM */
+TabRegistrationPageContainer = ReactMeteor.createClass({
+  templateName: "TabRegistrationPageContainer",
+
+  render: function() {
+    return <TabRegistrationForm />;
+  }
+});
+
 
 var TabRegistrationForm = ReactMeteor.createClass({
-  templateName: "TabRegistration",
-
   startMeteorSubscriptions: function() {
     Meteor.subscribe("tabUsers");
   },
@@ -39,7 +44,6 @@ var TabRegistrationForm = ReactMeteor.createClass({
       profile: {
         name: name,
         institution: institution,
-        isAdmin: true
       }
     };
 
@@ -53,7 +57,7 @@ var TabRegistrationForm = ReactMeteor.createClass({
             alert(err.reason);
           }
           else {
-            window.location.href = "/management";
+            Router.go("/management");
           }
         });
       }
