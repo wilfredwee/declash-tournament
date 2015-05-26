@@ -23,6 +23,65 @@ Meteor.methods({
     );
   },
 
+  updateTeamForRound: function(team, roundIndex, isActive) {
+    var tournament = getOwnerTournament.call(this);
+
+    // We just toggle the active state for now. Can be modified later
+    // if more complex functionality is needed.
+
+    var setObj = {};
+    var selector = "teams.$.isActiveForRound." + roundIndex;
+
+    setObj[selector] = isActive;
+
+    Tournaments.update(
+      {_id: tournament._id, "teams.guid": team.guid},
+      {$set: setObj},
+      {validate: false, filter: false}
+    );
+  },
+
+  updateJudgeForRound: function(judge, roundIndex, isActive) {
+    var tournament = getOwnerTournament.call(this);
+
+    // We just toggle the active state for now. Can be modified later
+    // if more complex functionality is needed.
+
+    var setObj = {};
+    var selector = "judges.$.isActiveForRound." + roundIndex;
+
+    setObj[selector] = isActive;
+
+    Tournaments.update(
+      {_id: tournament._id, "judges.guid": judge.guid},
+      {$set: setObj},
+      {validate: false, filter: false}
+    );
+  },
+
+  updateRoomForRound: function(roomString, roundIndex, isActive) {
+    var tournament = getOwnerTournament.call(this);
+
+    if(isActive === true) {
+      var newRoom = {
+        locationId: roomString,
+        teams: [],
+        judges: []
+      };
+
+      Tournaments.update(
+        {_id: tournament._id, "rounds.index": roundIndex},
+        {$push: {"rounds.$.rooms": newRoom}}
+      );
+    }
+    else {
+      Tournaments.update(
+        {_id: tournament._id, "rounds.index": roundIndex},
+        {$pull: {"rounds.$.rooms": {locationId: roomString}}}
+      );
+    }
+  },
+
   removeJudge: function(judge) {
     var tournament = getOwnerTournament.call(this);
 
@@ -69,13 +128,26 @@ Meteor.methods({
 
     var newRoundIndex = oldRound.index + 1;
 
-    var roundRooms = _.map(tournament.rooms, function(roomString) {
+    var roundRooms = [];
+
+    if(tournament.rounds[(newRoundIndex-1)]) {
+      roundRooms = _.map(tournament.rounds[(newRoundIndex-1)].rooms, function(room) {
+        return {
+          locationId: room.locationId,
+          teams: [],
+          judges: []
+        };
+      });
+    }
+    else {
+      roundRooms = _.map(tournament.rooms, function(roomString) {
         return {
           locationId: roomString,
           teams: [],
           judges: []
         };
       });
+    }
 
     var newRound = {
       index: newRoundIndex,
@@ -87,11 +159,7 @@ Meteor.methods({
 
 
     var newTeams = _.map(tournament.teams, function(team) {
-
-      var isActiveThisRound = true;
-      if(team.isActiveForRound[(newRoundIndex-1).toString()] === false) {
-        isActiveThisRound = false;
-      }
+      var isActiveThisRound = !(team.isActiveForRound[(newRoundIndex-1).toString()] === false)
 
       team.isActiveForRound[newRoundIndex.toString()] = isActiveThisRound;
 

@@ -297,13 +297,13 @@ var Header = ReactMeteor.createClass({
     var tournamentString = "";
 
     if(this.props.tournament) {
-      tournamentString = "You are now managing" + this.props.tournament.name + ".";
+      tournamentString = "You are now managing " + this.props.tournament.name + ".";
     }
     if(this.state.currentUser) {
       name = this.state.currentUser.profile.name;
     }
     return (
-      <h1>Welcome, {name + " " + " " + tournamentString}</h1>
+      <h1>Welcome, {name + "! " + " " + tournamentString}</h1>
     );
   }
 });
@@ -790,6 +790,9 @@ var RoundHotContainer = ReactMeteor.createClass({
     return (
       <div>
         <div className="row">
+          <h3>Managing Round {(this.props.roundIndex + 1).toString()}.</h3>
+        </div>
+        <div className="row">
           <RoundHot roundIndex={this.props.roundIndex} context={this.props.context} tournament={this.state.tournament} />
         </div>
       </div>
@@ -817,7 +820,7 @@ var RoundHot = ReactMeteor.createClass({
         return !this.hot.isEmptyRow(index);
     }.bind(this));
 
-    return !_.isEqual(tableData, this.props.context.transformCollectionToTableData(nextProps.tournament))
+    return !_.isEqual(tableData, this.props.context.transformCollectionToTableData(nextProps.tournament, nextProps.roundIndex))
       && !_.isEqual(this.props.tournament, nextProps.tournament);
   },
 
@@ -827,7 +830,7 @@ var RoundHot = ReactMeteor.createClass({
     }
     else {
       if(_.isEqual(this.props.context, prevProps.context)) {
-        this.hot.loadData(this.props.context.transformCollectionToTableData(this.props.tournament));
+        this.hot.loadData(this.props.context.transformCollectionToTableData(this.props.tournament, this.props.roundIndex));
       }
       else {
         this.hot.destroy();
@@ -855,6 +858,7 @@ var RoundHot = ReactMeteor.createClass({
       minCols: context.colHeaders.length,
       startCols: context.colHeaders.length,
       minSpareRows: 0,
+      maxRows: tableData.length,
       rowHeaders: true,
       colHeaders: context.colHeaders,
       autoWrapRow: true,
@@ -871,7 +875,23 @@ var RoundHot = ReactMeteor.createClass({
           return;
         }
 
-        console.log(changes);
+        _.each(changes, function(change) {
+          if(change[1] !== "isActive") {
+            throw new Meteor.Error("invalidAction",
+              "You may only change active status here. Please go to the Management tab to change information about teams.");
+          }
+
+          var data = this.getSourceDataAtRow(change[0]);
+
+          var collectionToSend = context.transformTableDataRowToCollection(data);
+
+          Meteor.call(context.updateMethod, collectionToSend, roundIndex, change[3], function(err, result) {
+            if(err) {
+              // TODO
+              alert(err.reason);
+            }
+          });
+        }.bind(this))
       }
     });
   },
