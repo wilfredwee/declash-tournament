@@ -96,6 +96,7 @@ Meteor.methods({
     _.each(judges, function(judge) {
       judge.guid = createGuid();
       judge.isChairForRound = {};
+      judge.isActiveForRound = {};
     });
 
     Tournaments.update(tournament._id, {$push: {judges: {$each: judges}}});

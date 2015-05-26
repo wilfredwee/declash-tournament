@@ -98,8 +98,19 @@ Meteor.methods({
       return team;
     });
 
+    var newJudges = _.map(tournament.judges, function(judge) {
+      var isActiveThisRound = true;
+      if(judge.isActiveForRound[(newRoundIndex-1).toString()] === false) {
+        isActiveThisRound = false;
+      }
+
+      judge.isActiveForRound[newRoundIndex.toString()] = isActiveThisRound;
+
+      return judge;
+    });
+
     //TODO: Need to validate this.
-    Tournaments.update(tournament._id, {$set: {teams: newTeams}}, {validate:false, filter: false});
+    Tournaments.update(tournament._id, {$set: {teams: newTeams, judges: newJudges}}, {validate:false, filter: false});
 
     return newRoundIndex;
   }

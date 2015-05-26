@@ -102,12 +102,27 @@ var JUDGE_CONTEXT = {
   registerMethod: JUDGE_REGISTER_METHOD_TYPE,
   updateMethod: JUDGE_UPDATE_METHOD_TYPE,
   removeMethod: JUDGE_REMOVE_METHOD_TYPE,
-  transformCollectionToTableData: function(tournament) {
+  transformCollectionToTableData: function(tournament, currentRoundIndex) {
     return _.map(tournament.judges, function(judge) {
       var newJudge = {};
 
       _.each(judge, function(value, key) {
-        newJudge[key] = value;
+        if(key === "isActiveForRound") {
+          if(typeof currentRoundIndex === "number") {
+            var isActiveForCurrentRound = value[currentRoundIndex.toString()];
+
+            if(typeof isActiveForCurrentRound !== "boolean") {
+              throw new Meteor.Error("unableToFind", "Unable To Find the Round you're looking for.")
+            }
+            newJudge.isActive = isActiveForCurrentRound;
+          }
+        }
+        else if(key === "isChairForRound") {
+          // TODO
+        }
+        else {
+          newJudge[key] = value;
+        }
       });
 
       return newJudge;
@@ -133,7 +148,7 @@ var ROOM_CONTEXT = {
   updateMethod: ROOM_UPDATE_METHOD_TYPE,
   removeMethod: ROOM_REMOVE_METHOD_TYPE,
   transformCollectionToTableData: function(tournament, currentRoundIndex) {
-    if(currentRoundIndex) {
+    if(typeof currentRoundIndex === "number") {
       var currentRound = _.find(tournament.rounds, function(round) {
         return round.index === currentRoundIndex;
       });
@@ -167,7 +182,7 @@ var ROOM_CONTEXT = {
 
 var TEAM_ROUND_CONTEXT = _.extend({}, TEAM_CONTEXT, {
   colHeaders: ["Active"].concat(_.clone(TEAM_CONTEXT.colHeaders)),
-  dataSchema: _.extend(TEAM_CONTEXT.dataSchema, {isActive: null}),
+  dataSchema: _.extend({isActive: null}, TEAM_CONTEXT.dataSchema),
   columns: (function () {
     var newColumns = _.map(TEAM_CONTEXT.columns, _.clone);
 
@@ -188,7 +203,7 @@ var TEAM_ROUND_CONTEXT = _.extend({}, TEAM_CONTEXT, {
 
 var JUDGE_ROUND_CONTEXT = _.extend({}, JUDGE_CONTEXT, {
   colHeaders: ["Active"].concat(_.clone(JUDGE_CONTEXT.colHeaders)),
-  dataSchema: _.extend(JUDGE_CONTEXT.dataSchema, {isActive: true}),
+  dataSchema: _.extend({isActive: true}, JUDGE_CONTEXT.dataSchema),
   columns: (function () {
     var newColumns = _.map(JUDGE_CONTEXT.columns, _.clone);
 
@@ -209,7 +224,7 @@ var JUDGE_ROUND_CONTEXT = _.extend({}, JUDGE_CONTEXT, {
 
 var ROOM_ROUND_CONTEXT = _.extend({}, ROOM_CONTEXT, {
   colHeaders: ["Active"].concat(_.clone(ROOM_CONTEXT.colHeaders)),
-  dataSchema: _.extend(ROOM_CONTEXT.dataSchema, {isActive: true}),
+  dataSchema: _.extend({isActive: true}, ROOM_CONTEXT.dataSchema),
   columns: (function () {
     var newColumns = _.map(ROOM_CONTEXT.columns, _.clone);
 
@@ -338,42 +353,46 @@ var TournamentRegistrationForm = ReactMeteor.createClass({
 var TournamentManagementContainer = ReactMeteor.createClass({
   getMeteorState: function() {
     return {
-      containerContext: Session.get("containerContext")
+      containerContextType: Session.get("containerContextType"),
+      currentRoundIndex: Session.get("currentRoundIndex")
     };
   },
 
-  switchContainerContext: function(context) {
-    Session.set("containerContext", context);
+  switchContainerContextType: function(contextType, roundIndex) {
+    Session.set("containerContextType", contextType);
+    if(typeof roundIndex === "number") {
+      Session.set("currentRoundIndex", roundIndex);
+    }
   },
 
-  renderAccordingToContext: function(context) {
-    var contextType = TEAM_CONTEXT;
-    switch(context) {
+  renderAccordingToContextType: function(contextType, roundIndex) {
+    var contextToRender = TEAM_CONTEXT;
+    switch(contextType) {
       case TEAM_CONTEXT.type:
-        contextType = TEAM_CONTEXT;
+        contextToRender = TEAM_CONTEXT;
         break;
       case JUDGE_CONTEXT.type:
-        contextType = JUDGE_CONTEXT;
+        contextToRender = JUDGE_CONTEXT;
         break;
       case ROOM_CONTEXT.type:
-        contextType = ROOM_CONTEXT;
+        contextToRender = ROOM_CONTEXT;
         break;
       case TEAM_ROUND_CONTEXT.type:
-        contextType = TEAM_ROUND_CONTEXT;
+        contextToRender = TEAM_ROUND_CONTEXT;
         break;
       case JUDGE_ROUND_CONTEXT.type:
-        contextType = JUDGE_ROUND_CONTEXT;
+        contextToRender = JUDGE_ROUND_CONTEXT;
         break;
       case ROOM_ROUND_CONTEXT.type:
-        contextType = ROOM_ROUND_CONTEXT;
+        contextToRender = ROOM_ROUND_CONTEXT;
         break;
     }
 
-    if(_.contains([TEAM_CONTEXT.type, JUDGE_CONTEXT.type, ROOM_CONTEXT.type], contextType.type)) {
-      return <ManagementHotContainer context={contextType} />;
+    if(_.contains([TEAM_CONTEXT.type, JUDGE_CONTEXT.type, ROOM_CONTEXT.type], contextToRender.type)) {
+      return <ManagementHotContainer context={contextToRender} />;
     }
     else {
-      return <RoundHotContainer context={contextType} />;
+      return <RoundHotContainer roundIndex={roundIndex} context={contextToRender} />;
     }
   },
 
@@ -387,7 +406,7 @@ var TournamentManagementContainer = ReactMeteor.createClass({
   },
 
   render: function() {
-    var content = this.renderAccordingToContext(this.state.containerContext);
+    var content = this.renderAccordingToContextType(this.state.containerContextType, this.state.currentRoundIndex);
     return (
       <div>
         <div className="row">
@@ -396,9 +415,9 @@ var TournamentManagementContainer = ReactMeteor.createClass({
               <i tabIndex="0" className="dropdown icon"></i>
               <span className="text">Management</span>
               <div tabIndex="-1" className="menu">
-                <div className="item" onClick={this.switchContainerContext.bind(this, TEAM_CONTEXT.type)}>Teams</div>
-                <div className="item" onClick={this.switchContainerContext.bind(this, JUDGE_CONTEXT.type)}>Judges</div>
-                <div className="item" onClick={this.switchContainerContext.bind(this, ROOM_CONTEXT.type)}>Rooms</div>
+                <div className="item" onClick={this.switchContainerContextType.bind(this, TEAM_CONTEXT.type)}>Teams</div>
+                <div className="item" onClick={this.switchContainerContextType.bind(this, JUDGE_CONTEXT.type)}>Judges</div>
+                <div className="item" onClick={this.switchContainerContextType.bind(this, ROOM_CONTEXT.type)}>Rooms</div>
               </div>
             </div>
             {this.props.tournament.rounds.map(function(round) {
@@ -407,9 +426,9 @@ var TournamentManagementContainer = ReactMeteor.createClass({
                   <i tabIndex="0" className="dropdown icon"></i>
                   <span className="text">Round {round.index + 1}</span>
                   <div tabIndex="-1" className="menu">
-                    <div className="item" onClick={this.switchContainerContext.bind(this, TEAM_ROUND_CONTEXT.type, round.index)}>Teams</div>
-                    <div className="item" onClick={this.switchContainerContext.bind(this, JUDGE_ROUND_CONTEXT.type, round.index)}>Judges</div>
-                    <div className="item" onClick={this.switchContainerContext.bind(this, ROOM_ROUND_CONTEXT.type, round.index)}>Rooms</div>
+                    <div className="item" onClick={this.switchContainerContextType.bind(this, TEAM_ROUND_CONTEXT.type, round.index)}>Teams</div>
+                    <div className="item" onClick={this.switchContainerContextType.bind(this, JUDGE_ROUND_CONTEXT.type, round.index)}>Judges</div>
+                    <div className="item" onClick={this.switchContainerContextType.bind(this, ROOM_ROUND_CONTEXT.type, round.index)}>Rooms</div>
                   </div>
                 </div>
               );
@@ -510,6 +529,13 @@ var ManagementHot = ReactMeteor.createClass({
         this.hot = undefined;
         this.initializeHot(this.props.context);
       }
+    }
+  },
+
+  componentWillUnmount: function () {
+    if(this.hot) {
+      this.hot.destroy();
+      this.hot = undefined;
     }
   },
 
@@ -764,7 +790,7 @@ var RoundHotContainer = ReactMeteor.createClass({
     return (
       <div>
         <div className="row">
-          <RoundHot context={this.props.context} tournament={this.state.tournament} />
+          <RoundHot roundIndex={this.props.roundIndex} context={this.props.context} tournament={this.state.tournament} />
         </div>
       </div>
     );
@@ -774,15 +800,57 @@ var RoundHotContainer = ReactMeteor.createClass({
 var RoundHot = ReactMeteor.createClass({
   componentDidMount: function () {
     if(!this.hot) {
-      this.initializeHot(this.props.context);
+      this.initializeHot();
     }
   },
-  initializeHot: function(context) {
-    var componentThis = this;
-    var tableData = this.props.context.transformCollectionToTableData(this.props.tournament, 47);
-    var allowRemoveRow = false;
+  shouldComponentUpdate: function(nextProps, nextState) {
+    if(!this.hot || !_.isEqual(this.props.context, nextProps.context) || !_.isEqual(this.props.roundIndex, nextProps.roundIndex)) {
+      return true;
+    }
 
-    this.hot = new Handsontable(this.refs.handsontable2.getDOMNode(), {
+    // Only update if our table data AND current state is out of sync with nextState.
+    // Updating serves only one purpose: To loadData to the table.
+
+    // Why check for both conditions: Because this can be called even if
+    // current state === nextState.
+    var tableData = _.filter(this.hot.getData(), function(rowData, index) {
+        return !this.hot.isEmptyRow(index);
+    }.bind(this));
+
+    return !_.isEqual(tableData, this.props.context.transformCollectionToTableData(nextProps.tournament))
+      && !_.isEqual(this.props.tournament, nextProps.tournament);
+  },
+
+  componentDidUpdate: function (prevProps, prevState) {
+    if(!this.hot) {
+      this.initializeHot();
+    }
+    else {
+      if(_.isEqual(this.props.context, prevProps.context)) {
+        this.hot.loadData(this.props.context.transformCollectionToTableData(this.props.tournament));
+      }
+      else {
+        this.hot.destroy();
+        this.hot = undefined;
+        this.initializeHot();
+      }
+    }
+  },
+
+  componentWillUnmount: function () {
+    if(this.hot) {
+      this.hot.destroy();
+      this.hot = undefined;
+    }
+  },
+
+  initializeHot: function() {
+    var context = this.props.context;
+    var roundIndex = this.props.roundIndex;
+    var componentThis = this;
+    var tableData = this.props.context.transformCollectionToTableData(this.props.tournament, roundIndex);
+
+    this.hot = new Handsontable(this.refs.handsontable.getDOMNode(), {
       data: tableData,
       minCols: context.colHeaders.length,
       startCols: context.colHeaders.length,
@@ -803,57 +871,7 @@ var RoundHot = ReactMeteor.createClass({
           return;
         }
 
-        var context = componentThis.props.context;
-
-        var dataArray = componentThis.getDataToBeChanged(changes, this);
-        if(!dataArray) {
-          return;
-        }
-
-        // Rooms are special, we just re-register all of them for now
-        // as they are just string arrays.
-        if(context.type === ROOM_CONTEXT_TYPE) {
-
-          var data = this.getData();
-
-          var dataWithoutEmptyRows = _.filter(data, function(rowData, index) {
-              return !this.isEmptyRow(index);
-          }.bind(this));
-
-          var roomStrings = _.map(dataWithoutEmptyRows, function(rowData) {
-            return rowData.location;
-          });
-
-          Meteor.call(context.registerMethod, roomStrings, function(err, result) {
-            // TODO
-            if(err) {
-              alert(err);
-            }
-          });
-        }
-        else {
-          _.each(dataArray, function(data) {
-            if(data.guid) {
-              var collectionToSend = context.transformTableDataRowToCollection(data);
-
-              Meteor.call(context.updateMethod, collectionToSend, function(err, result) {
-                // TODO
-                if(err) {
-                  alert(err);
-                }
-              });
-            }
-            else {
-              var collectionToSend = [context.transformTableDataRowToCollection(data)];
-              Meteor.call(context.registerMethod, collectionToSend, function(err, result) {
-                // TODO
-                if(err) {
-                  alert(err);
-                }
-              });
-            }
-          });
-        }
+        console.log(changes);
       }
     });
   },
@@ -861,7 +879,7 @@ var RoundHot = ReactMeteor.createClass({
   render: function() {
     return (
       <div className="row">
-        <div className="SOMETABLE" ref="handsontable2"></div>
+        <div className="SOMETABLE" ref="handsontable"></div>
       </div>
     );
 
