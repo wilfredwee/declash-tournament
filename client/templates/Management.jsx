@@ -10,9 +10,9 @@ var REGISTER_ROOMS_HEADERS = ["Room Location"];
 var REGISTER_ROOMS_SCHEMA = {location: null};
 var REGISTER_ROOMS_COLUMNS = [{data: "location"}];
 
-var TEAM_CONTEXT_TYPE = "team";
-var JUDGE_CONTEXT_TYPE = "judge";
-var ROOM_CONTEXT_TYPE = "room";
+var TEAM_CONTEXT_TYPE = "team_management";
+var JUDGE_CONTEXT_TYPE = "judge_management";
+var ROOM_CONTEXT_TYPE = "room_management";
 
 var TEAM_REGISTER_METHOD_TYPE = "registerTeams";
 var JUDGE_REGISTER_METHOD_TYPE = "registerJudges";
@@ -35,27 +35,60 @@ var TEAM_CONTEXT = {
   registerMethod: TEAM_REGISTER_METHOD_TYPE,
   updateMethod: TEAM_UPDATE_METHOD_TYPE,
   removeMethod: TEAM_REMOVE_METHOD_TYPE,
-  transformCollectionToTableData: function(tournament) {
+  transformCollectionToTableData: function(tournament, currentRoundIndex) {
     return _.map(tournament.teams, function(team) {
       var newTeam = {};
-      newTeam.name = team.name;
-      newTeam.institution = team.institution;
-      newTeam.debater1 = team.debaters[0].name;
-      newTeam.debater2 = team.debaters[1].name;
-      newTeam.guid = team.guid;
+
+      _.each(team, function(value, key) {
+        if(key === "debaters") {
+          newTeam.debater1 = value[0].name;
+          newTeam.debater2 = value[1].name;
+        }
+        else if(key === "isActiveForRound") {
+          if(typeof currentRoundIndex === "number") {
+            var isActiveForCurrentRound = value[currentRoundIndex.toString()];
+
+            if(typeof isActiveForCurrentRound !== "boolean") {
+              throw new Meteor.Error("unableToFind", "Unable To Find the Round you're looking for.")
+            }
+            newTeam.isActive = isActiveForCurrentRound;
+
+          }
+        }
+        else if(key === "resultForRound") {
+          // TODO
+        }
+        else if(key === "roleForRound") {
+          // TODO
+        }
+        else {
+          newTeam[key] = value;
+        }
+      });
 
       return newTeam;
     });
   },
-  transformTableDataToCollection: function(tableData) {
+  transformTableDataRowToCollection: function(tableData) {
     var collectionTeam = {};
+    collectionTeam.debaters = [];
 
-    if(tableData.guid) {
-      collectionTeam.guid = tableData.guid;
-    }
-    collectionTeam.name = tableData.name;
-    collectionTeam.institution = tableData.institution;
-    collectionTeam.debaters = [{name: tableData.debater1}, {name: tableData.debater2}];
+    _.each(tableData, function(value, key) {
+      if(key === "debater1") {
+        collectionTeam.debaters[0] = {};
+        collectionTeam.debaters[0].name = value;
+      }
+      else if(key === "debater2") {
+        collectionTeam.debaters[1] = {};
+        collectionTeam.debaters[1].name = value;
+      }
+      else if(key === "isActive") {
+        // do nothing?
+      }
+      else {
+        collectionTeam[key] = value;
+      }
+    });
 
     return collectionTeam;
   }
@@ -72,21 +105,20 @@ var JUDGE_CONTEXT = {
   transformCollectionToTableData: function(tournament) {
     return _.map(tournament.judges, function(judge) {
       var newJudge = {};
-      newJudge.name = judge.name;
-      newJudge.institution = judge.institution;
-      newJudge.guid = judge.guid;
+
+      _.each(judge, function(value, key) {
+        newJudge[key] = value;
+      });
 
       return newJudge;
     });
   },
-  transformTableDataToCollection: function(tableData) {
+  transformTableDataRowToCollection: function(tableData) {
     var collectionJudge = {};
 
-    if(tableData.guid) {
-      collectionJudge.guid = tableData.guid;
-    }
-    collectionJudge.name = tableData.name;
-    collectionJudge.institution = tableData.institution;
+    _.each(tableData, function(value, key) {
+      collectionJudge[key] = value;
+    });
 
     return collectionJudge;
   }
@@ -100,15 +132,101 @@ var ROOM_CONTEXT = {
   registerMethod: ROOM_REGISTER_METHOD_TYPE,
   updateMethod: ROOM_UPDATE_METHOD_TYPE,
   removeMethod: ROOM_REMOVE_METHOD_TYPE,
-  transformCollectionToTableData: function(tournament) {
-    return _.map(tournament.rooms, function(room) {
-      return {location: room};
-    });
+  transformCollectionToTableData: function(tournament, currentRoundIndex) {
+    if(currentRoundIndex) {
+      var currentRound = _.find(tournament.rounds, function(round) {
+        return round.index === currentRoundIndex;
+      });
+
+      if(!currentRound) {
+        throw new Meteor.Error("unableToFind", "Unable To Find the Round you're looking for.")
+      }
+
+      var currentRoundRoomLocations = _.map(currentRound.rooms, function(room) {
+        return room.locationId;
+      });
+
+      return _.map(tournament.rooms, function(room) {
+        var isActive = _.contains(currentRoundRoomLocations, room);
+
+        return {location: room, isActive: isActive};
+      });
+    }
+    else {
+      return _.map(tournament.rooms, function(room) {
+        return {location: room};
+      });
+    }
+
   },
-  transformTableDataToCollection: function(tableData) {
+  transformTableDataRowToCollection: function(tableData) {
+    // This is currently unused
     return tableData.location;
   }
 };
+
+var TEAM_ROUND_CONTEXT = _.extend({}, TEAM_CONTEXT, {
+  colHeaders: ["Active"].concat(_.clone(TEAM_CONTEXT.colHeaders)),
+  dataSchema: _.extend(TEAM_CONTEXT.dataSchema, {isActive: null}),
+  columns: (function () {
+    var newColumns = _.map(TEAM_CONTEXT.columns, _.clone);
+
+    newColumns = _.map(newColumns, function(obj) {
+      obj.readOnly = true;
+      return obj;
+    });
+
+    newColumns.unshift({data: "isActive", readOnly: false, type: "checkbox", width:20});
+
+    return newColumns;
+  })(),
+  registerMethod: null,
+  removeMethod: null,
+  updateMethod: "updateTeamForRound",
+  type: "team_round"
+});
+
+var JUDGE_ROUND_CONTEXT = _.extend({}, JUDGE_CONTEXT, {
+  colHeaders: ["Active"].concat(_.clone(JUDGE_CONTEXT.colHeaders)),
+  dataSchema: _.extend(JUDGE_CONTEXT.dataSchema, {isActive: true}),
+  columns: (function () {
+    var newColumns = _.map(JUDGE_CONTEXT.columns, _.clone);
+
+    newColumns = _.map(newColumns, function(obj) {
+      obj.readOnly = true;
+      return obj;
+    });
+
+    newColumns.unshift({data: "isActive", readOnly: false, type: "checkbox", width:20});
+
+    return newColumns;
+  })(),
+  registerMethod: null,
+  removeMethod: null,
+  updateMethod: "updateJudgeForRound",
+  type: "judge_round"
+});
+
+var ROOM_ROUND_CONTEXT = _.extend({}, ROOM_CONTEXT, {
+  colHeaders: ["Active"].concat(_.clone(ROOM_CONTEXT.colHeaders)),
+  dataSchema: _.extend(ROOM_CONTEXT.dataSchema, {isActive: true}),
+  columns: (function () {
+    var newColumns = _.map(ROOM_CONTEXT.columns, _.clone);
+
+    newColumns = _.map(newColumns, function(obj) {
+      obj.readOnly = true;
+      return obj;
+    });
+
+    newColumns.unshift({data: "isActive", readOnly: false, type: "checkbox", width:20});
+
+    return newColumns;
+  })(),
+  registerMethod: null,
+  removeMethod: null,
+  updateMethod: "updateRoomForRound",
+  type: "room_round"
+});
 
 ManagementPageContainer = ReactMeteor.createClass({
   render: function() {
@@ -240,9 +358,32 @@ var TournamentManagementContainer = ReactMeteor.createClass({
       case ROOM_CONTEXT.type:
         contextType = ROOM_CONTEXT;
         break;
+      case TEAM_ROUND_CONTEXT.type:
+        contextType = TEAM_ROUND_CONTEXT;
+        break;
+      case JUDGE_ROUND_CONTEXT.type:
+        contextType = JUDGE_ROUND_CONTEXT;
+        break;
+      case ROOM_ROUND_CONTEXT.type:
+        contextType = ROOM_ROUND_CONTEXT;
+        break;
     }
 
-    return <ManagementHotContainer context={contextType} />;
+    if(_.contains([TEAM_CONTEXT.type, JUDGE_CONTEXT.type, ROOM_CONTEXT.type], contextType.type)) {
+      return <ManagementHotContainer context={contextType} />;
+    }
+    else {
+      return <RoundHotContainer context={contextType} />;
+    }
+  },
+
+  createRound: function(e) {
+    Meteor.call("createRound", function(err, result) {
+      // TODO
+      if(err) {
+        alert(err.reason);
+      }
+    });
   },
 
   render: function() {
@@ -260,8 +401,20 @@ var TournamentManagementContainer = ReactMeteor.createClass({
                 <div className="item" onClick={this.switchContainerContext.bind(this, ROOM_CONTEXT.type)}>Rooms</div>
               </div>
             </div>
-            <div className="item">Round 1 TODO</div>
-            <div className="item">Round 2 TODO</div>
+            {this.props.tournament.rounds.map(function(round) {
+              return (
+                <div key={round.index} tabIndex="-1" className="ui simple pointing dropdown link item">
+                  <i tabIndex="0" className="dropdown icon"></i>
+                  <span className="text">Round {round.index + 1}</span>
+                  <div tabIndex="-1" className="menu">
+                    <div className="item" onClick={this.switchContainerContext.bind(this, TEAM_ROUND_CONTEXT.type, round.index)}>Teams</div>
+                    <div className="item" onClick={this.switchContainerContext.bind(this, JUDGE_ROUND_CONTEXT.type, round.index)}>Judges</div>
+                    <div className="item" onClick={this.switchContainerContext.bind(this, ROOM_ROUND_CONTEXT.type, round.index)}>Rooms</div>
+                  </div>
+                </div>
+              );
+            }.bind(this))}
+            <div onClick={this.createRound} className="ui link item">Create a Round</div>
           </div>
         </div>
         <br /><br />
@@ -440,7 +593,7 @@ var ManagementHot = ReactMeteor.createClass({
         else {
           _.each(dataArray, function(data) {
             if(data.guid) {
-              var collectionToSend = context.transformTableDataToCollection(data);
+              var collectionToSend = context.transformTableDataRowToCollection(data);
 
               Meteor.call(context.updateMethod, collectionToSend, function(err, result) {
                 // TODO
@@ -450,7 +603,7 @@ var ManagementHot = ReactMeteor.createClass({
               });
             }
             else {
-              var collectionToSend = [context.transformTableDataToCollection(data)];
+              var collectionToSend = [context.transformTableDataRowToCollection(data)];
               Meteor.call(context.registerMethod, collectionToSend, function(err, result) {
                 // TODO
                 if(err) {
@@ -502,7 +655,7 @@ var ManagementHot = ReactMeteor.createClass({
             var data = this.getSourceDataAtRow(i);
 
             if(!_.contains(data, null)) {
-              var collectionToSend = context.transformTableDataToCollection(data);
+              var collectionToSend = context.transformTableDataRowToCollection(data);
               Meteor.call(context.removeMethod, collectionToSend, function(err, result) {
                 // TODO
                 if(err) {
@@ -594,4 +747,124 @@ var ManagementHot = ReactMeteor.createClass({
       </div>
     );
   }
+});
+
+var RoundHotContainer = ReactMeteor.createClass({
+  startMeteorSubscriptions: function() {
+    Meteor.subscribe("unfinishedTournaments");
+  },
+
+  getMeteorState: function() {
+    return {
+      tournament: Tournaments.findOne({ownerId: Meteor.userId()})
+    };
+  },
+
+  render: function() {
+    return (
+      <div>
+        <div className="row">
+          <RoundHot context={this.props.context} tournament={this.state.tournament} />
+        </div>
+      </div>
+    );
+  }
+});
+
+var RoundHot = ReactMeteor.createClass({
+  componentDidMount: function () {
+    if(!this.hot) {
+      this.initializeHot(this.props.context);
+    }
+  },
+  initializeHot: function(context) {
+    var componentThis = this;
+    var tableData = this.props.context.transformCollectionToTableData(this.props.tournament, 47);
+    var allowRemoveRow = false;
+
+    this.hot = new Handsontable(this.refs.handsontable2.getDOMNode(), {
+      data: tableData,
+      minCols: context.colHeaders.length,
+      startCols: context.colHeaders.length,
+      minSpareRows: 0,
+      rowHeaders: true,
+      colHeaders: context.colHeaders,
+      autoWrapRow: true,
+      stretchH: "all",
+      height: 500,
+      allowRemoveColumn: false,
+      allowInsertColumn: false,
+      allowInsertRow: false,
+      allowRemoveRow: false,
+      dataSchema: context.dataSchema,
+      columns: context.columns,
+      afterChange: function(changes, source) {
+        if(source === "loadData") {
+          return;
+        }
+
+        var context = componentThis.props.context;
+
+        var dataArray = componentThis.getDataToBeChanged(changes, this);
+        if(!dataArray) {
+          return;
+        }
+
+        // Rooms are special, we just re-register all of them for now
+        // as they are just string arrays.
+        if(context.type === ROOM_CONTEXT_TYPE) {
+
+          var data = this.getData();
+
+          var dataWithoutEmptyRows = _.filter(data, function(rowData, index) {
+              return !this.isEmptyRow(index);
+          }.bind(this));
+
+          var roomStrings = _.map(dataWithoutEmptyRows, function(rowData) {
+            return rowData.location;
+          });
+
+          Meteor.call(context.registerMethod, roomStrings, function(err, result) {
+            // TODO
+            if(err) {
+              alert(err);
+            }
+          });
+        }
+        else {
+          _.each(dataArray, function(data) {
+            if(data.guid) {
+              var collectionToSend = context.transformTableDataRowToCollection(data);
+
+              Meteor.call(context.updateMethod, collectionToSend, function(err, result) {
+                // TODO
+                if(err) {
+                  alert(err);
+                }
+              });
+            }
+            else {
+              var collectionToSend = [context.transformTableDataRowToCollection(data)];
+              Meteor.call(context.registerMethod, collectionToSend, function(err, result) {
+                // TODO
+                if(err) {
+                  alert(err);
+                }
+              });
+            }
+          });
+        }
+      }
+    });
+  },
+
+  render: function() {
+    return (
+      <div className="row">
+        <div className="SOMETABLE" ref="handsontable2"></div>
+      </div>
+    );
+
+  }
+
 });

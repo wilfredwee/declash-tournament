@@ -43,10 +43,15 @@ var JudgeSchema = new SimpleSchema({
     max: 100
   },
 
-  scoreForRound: {
+  rankForRound: {
     type: Object,
-    label:"All scores for a judge. They are a key-value pair. Key: Round index, Value: score",
+    label: "All scores for a judge. They are a key-value pair. Key: Round index, Value: score",
     optional: true
+  },
+
+  isActiveForRound: {
+    type: Object,
+    label: "All active status for a judge. They are a key-value pair. Key:Round index. Value: isActive(Boolean)"
   },
 
   isChairForRound: {

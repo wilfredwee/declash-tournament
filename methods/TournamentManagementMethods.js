@@ -58,5 +58,49 @@ Meteor.methods({
     Tournaments.update(tournament._id, {$set: {enablePublicRegistration: newChecked}});
 
     return newChecked;
+  },
+
+  createRound: function() {
+    var tournament = getOwnerTournament.call(this);
+
+    var oldRound = _.reduce(tournament.rounds, function(prevRound, currRound) {
+      return currRound.index >= prevRound.index? currRound : prevRound;
+    }, {index: -1});
+
+    var newRoundIndex = oldRound.index + 1;
+
+    var roundRooms = _.map(tournament.rooms, function(roomString) {
+        return {
+          locationId: roomString,
+          teams: [],
+          judges: []
+        };
+      });
+
+    var newRound = {
+      index: newRoundIndex,
+      motion: "",
+      rooms: roundRooms
+    };
+
+    Tournaments.update(tournament._id, {$push: {rounds: newRound}});
+
+
+    var newTeams = _.map(tournament.teams, function(team) {
+
+      var isActiveThisRound = true;
+      if(team.isActiveForRound[(newRoundIndex-1).toString()] === false) {
+        isActiveThisRound = false;
+      }
+
+      team.isActiveForRound[newRoundIndex.toString()] = isActiveThisRound;
+
+      return team;
+    });
+
+    //TODO: Need to validate this.
+    Tournaments.update(tournament._id, {$set: {teams: newTeams}}, {validate:false, filter: false});
+
+    return newRoundIndex;
   }
 });
