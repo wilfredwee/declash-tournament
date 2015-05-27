@@ -13,7 +13,7 @@ var Home = ReactMeteor.createClass({
           <h1>Welcome to DeClash! This is the homepage!</h1>
         </div>
         <div className="row">
-          <a className="header" style={fontStyle} href="/register">Register as Tab Director</a>
+          <a className="header" style={fontStyle} href="/tournaments">Register as a participant for a Tournament.</a>
         </div>
       </div>
     );

@@ -21,7 +21,7 @@ var NavBar = ReactMeteor.createClass({
           <div className="ui inverted fixed menu navbar page grid">
             <a href="/" className="brand item">DeClash</a>
             <div className="right menu">
-              <UserLoginButtons />
+              <UserManagementButtons />
             </div>
           </div>
         </div>
@@ -30,7 +30,7 @@ var NavBar = ReactMeteor.createClass({
   }
 });
 
-var UserLoginButtons = ReactMeteor.createClass({
+var UserManagementButtons = ReactMeteor.createClass({
   getMeteorState: function() {
     return {
       user: Meteor.user()
@@ -53,7 +53,7 @@ var UserLoginButtons = ReactMeteor.createClass({
     var logins = <a className="active item" href="" onClick={this.handleLogins}>{message}</a>;
     if(this.state.user) {
       return (
-        <div>{logins}</div>
+        <div><a className="item" href="/management">Management</a>{logins}</div>
       );
     }
     return (
