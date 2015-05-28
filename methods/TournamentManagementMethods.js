@@ -152,7 +152,8 @@ Meteor.methods({
     var newRound = {
       index: newRoundIndex,
       motion: "",
-      rooms: roundRooms
+      rooms: roundRooms,
+      state: "initial"
     };
 
     Tournaments.update(tournament._id, {$push: {rounds: newRound}});
@@ -180,6 +181,23 @@ Meteor.methods({
     //TODO: Need to validate this.
     Tournaments.update(tournament._id, {$set: {teams: newTeams, judges: newJudges}}, {validate:false, filter: false});
 
+    Tracker.autorun(function(computation) {
+      var trackedTournament = getOwnerTournament.call(this);
+
+      var currRound = _.find(trackedTournament.rounds, function(round) {
+        return round.index === newRoundIndex;
+      };
+
+      if(currRound.state === "finished") {
+        computation.stop();
+      }
+      else {
+        var invariantChecker = new InvariantChecker(trackedTournament, currRound);
+
+        Session.set("violatedInvariants", invariantChecker.getViolatedInvariants());
+      }
+
+    }.bind(this));
     return newRoundIndex;
   }
 });

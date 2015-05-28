@@ -144,6 +144,12 @@ var RoundSchema = new SimpleSchema({
     type:[RoomSchema],
     label: "All rooms for a round.",
     minCount: 0
+  },
+
+  state: {
+    type: String,
+    label: "Whether a round is active.",
+    allowedValues: ["initial", "active", "finished"]
   }
 });
 

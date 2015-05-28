@@ -39,6 +39,18 @@ Meteor.methods({
 
     Tournaments.insert(tournament);
 
+    Tracker.autorun(function(c) {
+      var trackedTournament = Tournaments.find({ownerId: this.userId});
+
+      if(trackedTournament.rounds.length > 0) {
+        c.stop();
+      }
+      else {
+        var invariantChecker = new InvariantChecker(trackedTournament);
+        Session.set("violatedInvariants", InvariantChecker.getInitialVioldatedInvariants());
+      }
+    });
+
     return tournament;
   },
 
