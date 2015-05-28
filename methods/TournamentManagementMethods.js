@@ -192,7 +192,7 @@ Meteor.methods({
         computation.stop();
       }
       else {
-        var invariantChecker = new InvariantChecker(trackedTournament, currRound);
+        var invariantChecker = new APPGLOBALS.InvariantChecker(trackedTournament, currRound);
 
         Session.set("violatedInvariants", invariantChecker.getViolatedInvariants());
       }
