@@ -186,7 +186,7 @@ Meteor.methods({
 
       var currRound = _.find(trackedTournament.rounds, function(round) {
         return round.index === newRoundIndex;
-      };
+      });
 
       if(currRound.state === "finished") {
         computation.stop();

@@ -1,4 +1,4 @@
-LoginPageContainer = ReactMeteor.createClass({
+APPGLOBALS.LoginPageContainer = ReactMeteor.createClass({
   render: function() {
     return <LoginComponent />;
   }

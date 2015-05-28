@@ -243,7 +243,7 @@ var ROOM_ROUND_CONTEXT = _.extend({}, ROOM_CONTEXT, {
   type: "room_round"
 });
 
-ManagementPageContainer = ReactMeteor.createClass({
+APPGLOBALS.ManagementPageContainer = ReactMeteor.createClass({
   render: function() {
     return <ManagementBody />;
   }

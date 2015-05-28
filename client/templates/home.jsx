@@ -1,4 +1,4 @@
-HomePageContainer = ReactMeteor.createClass({
+APPGLOBALS.HomePageContainer = ReactMeteor.createClass({
   render: function() {
     return <Home />;
   }

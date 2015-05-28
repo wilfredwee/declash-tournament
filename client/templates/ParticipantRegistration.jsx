@@ -5,7 +5,7 @@ var REGISTRATION_STATES = {
   success: "success"
 };
 
-ParticipantRegistrationPageContainer = ReactMeteor.createClass({
+APPGLOBALS.ParticipantRegistrationPageContainer = ReactMeteor.createClass({
   startMeteorSubscriptions: function() {
     // TODO: Maybe
   },

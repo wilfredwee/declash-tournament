@@ -1,4 +1,4 @@
-TabRegistrationPageContainer = ReactMeteor.createClass({
+APPGLOBALS.TabRegistrationPageContainer = ReactMeteor.createClass({
   templateName: "TabRegistrationPageContainer",
 
   render: function() {

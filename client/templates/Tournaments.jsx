@@ -1,4 +1,4 @@
-TournamentListPageContainer = ReactMeteor.createClass({
+APPGLOBALS.TournamentListPageContainer = ReactMeteor.createClass({
   startMeteorSubscriptions: function() {
     Meteor.subscribe("unfinishedTournaments");
   },
