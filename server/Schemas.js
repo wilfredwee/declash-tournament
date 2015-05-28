@@ -220,6 +220,12 @@ var TournamentSchema = new SimpleSchema({
     type:[RoundSchema],
     label: "All rounds created in a tournament.",
     minCount: 0
+  },
+
+  currentInvariantViolations: {
+    type: [String],
+    label: "List of invariant violation types",
+    minCount: 0
   }
 });
 

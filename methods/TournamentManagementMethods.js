@@ -2,11 +2,14 @@ var getOwnerTournament = function() {
   return Tournaments.findOne({ownerId: this.userId, finished: false});
 };
 
+var checkInvariants = APPGLOBALS.checkInvariants;
+
 Meteor.methods({
   removeTeam: function(team) {
     var tournament = getOwnerTournament.call(this);
 
     Tournaments.update(tournament._id, {$pull: {teams: {guid: team.guid}}});
+    checkInvariants.call(this);
   },
 
   updateTeam: function(team) {
@@ -21,6 +24,7 @@ Meteor.methods({
         "teams.$.debaters.1.name": team.debaters[1].name
       }}
     );
+    checkInvariants.call(this);
   },
 
   updateTeamForRound: function(team, roundIndex, isActive) {
@@ -39,6 +43,7 @@ Meteor.methods({
       {$set: setObj},
       {validate: false, filter: false}
     );
+    checkInvariants.call(this);
   },
 
   updateJudgeForRound: function(judge, roundIndex, isActive) {
@@ -57,6 +62,7 @@ Meteor.methods({
       {$set: setObj},
       {validate: false, filter: false}
     );
+    checkInvariants.call(this);
   },
 
   updateRoomForRound: function(roomString, roundIndex, isActive) {
@@ -80,12 +86,14 @@ Meteor.methods({
         {$pull: {"rounds.$.rooms": {locationId: roomString}}}
       );
     }
+    checkInvariants.call(this);
   },
 
   removeJudge: function(judge) {
     var tournament = getOwnerTournament.call(this);
 
     Tournaments.update(tournament._id, {$pull: {judges: {guid: judge.guid}}});
+    checkInvariants.call(this);
   },
 
   updateJudge: function(judge) {
@@ -98,12 +106,14 @@ Meteor.methods({
         "judges.$.institution": judge.institution
       }}
     );
+    checkInvariants.call(this);
   },
 
   removeRoom: function(room) {
     var tournament = getOwnerTournament.call(this);
 
     Tournaments.update(tournament._id, {$pull: {rooms: room}});
+    checkInvariants.call(this);
   },
 
   updateRoom: function(room) {
@@ -116,6 +126,7 @@ Meteor.methods({
     var newChecked = !tournament.enablePublicRegistration;
     Tournaments.update(tournament._id, {$set: {enablePublicRegistration: newChecked}});
 
+    checkInvariants.call(this);
     return newChecked;
   },
 
@@ -180,24 +191,8 @@ Meteor.methods({
 
     //TODO: Need to validate this.
     Tournaments.update(tournament._id, {$set: {teams: newTeams, judges: newJudges}}, {validate:false, filter: false});
+    checkInvariants.call(this);
 
-    Tracker.autorun(function(computation) {
-      var trackedTournament = getOwnerTournament.call(this);
-
-      var currRound = _.find(trackedTournament.rounds, function(round) {
-        return round.index === newRoundIndex;
-      });
-
-      if(currRound.state === "finished") {
-        computation.stop();
-      }
-      else {
-        var invariantChecker = new APPGLOBALS.InvariantChecker(trackedTournament, currRound);
-
-        Session.set("violatedInvariants", invariantChecker.getViolatedInvariants());
-      }
-
-    }.bind(this));
     return newRoundIndex;
   }
 });

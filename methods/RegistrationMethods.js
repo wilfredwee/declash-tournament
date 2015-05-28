@@ -9,6 +9,8 @@ var createGuid = function() {
     s4() + "-" + s4() + s4() + s4();
 };
 
+var checkInvariants = APPGLOBALS.checkInvariants;
+
 Meteor.methods({
   registerTabUser: function(options) {
     check(options, Object);
@@ -35,21 +37,10 @@ Meteor.methods({
     tournament.judges = [];
     tournament.rooms = [];
     tournament.rounds = [];
+    tournament.currentInvariantViolations = [];
 
 
     Tournaments.insert(tournament);
-
-    Tracker.autorun(function(c) {
-      var trackedTournament = Tournaments.find({ownerId: this.userId});
-
-      if(trackedTournament.rounds.length > 0) {
-        c.stop();
-      }
-      else {
-        var invariantChecker = new APPGLOBALS.InvariantChecker(trackedTournament);
-        Session.set("violatedInvariants", InvariantChecker.getInitialVioldatedInvariants());
-      }
-    });
 
     return tournament;
   },
@@ -87,6 +78,7 @@ Meteor.methods({
     }.bind(this));
 
     Tournaments.update(tournament._id, {$push: {teams: {$each: validTeams}}});
+    checkInvariants.call(this);
   },
 
   registerJudges: function(judges, tournamentId) {
@@ -113,6 +105,7 @@ Meteor.methods({
 
     Tournaments.update(tournament._id, {$push: {judges: {$each: judges}}});
 
+    checkInvariants.call(this);
   },
 
   registerRooms: function(rooms) {
@@ -124,5 +117,6 @@ Meteor.methods({
     }
 
     Tournaments.update(tournament._id, {$set: {rooms: rooms}});
+    checkInvariants.call(this);
   }
 });
