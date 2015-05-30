@@ -11,6 +11,10 @@ APPGLOBALS.InvariantChecker = (function() {
       return team.isActiveForRound[this.currentRound.index] === true;
     }.bind(this));
 
+    this._activeJudges = _.filter(this.tournament.judges, function(judge) {
+      return judge.isActiveForRound[this.currentRound.index] === true;
+    }.bind(this));
+
     this._activeRooms = this.currentRound.rooms;
   };
 
@@ -21,12 +25,13 @@ APPGLOBALS.InvariantChecker = (function() {
 
   InvariantChecker.prototype.getViolatedInvariants = function() {
     this.checkHasNoLeftOverTeams();
-    this.checkEnoughRooms()
+    this.checkEnoughRooms();
+    this.checkEnoughJudges();
     return this.violations;
   };
 
   InvariantChecker.prototype.checkHasNoLeftOverTeams = function() {
-    if(this._activeTeams % this.noOfTeamsPerRoom !== 0) {
+    if(this._activeTeams.length % this.noOfTeamsPerRoom !== 0) {
       this.violations.push({
         type: InvariantChecker.types.HAS_LEFTOVER_TEAMS,
         message: "You have rooms that are not complete. " +
@@ -37,17 +42,30 @@ APPGLOBALS.InvariantChecker = (function() {
   };
 
   InvariantChecker.prototype.checkEnoughRooms = function() {
-    var capacity = this.noOfTeamsPerRoom * this._activeRooms.length;
+    var roomsNeeded = Math.ceil(this._activeTeams.length / this.noOfTeamsPerRoom);
 
-    if(this._activeTeams.length > capacity) {
+    if(this._activeRooms.length < roomsNeeded) {
       this.violations.push({
         type: InvariantChecker.types.NOT_ENOUGH_ROOMS,
         message: "Not enough active rooms. You need " +
-        Math.ceil(this._activeTeams/this.noOfTeamsPerRoom).toString() +
+        Math.ceil(roomsNeeded - this._activeRooms.length).toString() +
         " more rooms."
       });
     }
   }
+
+  InvariantChecker.prototype.checkEnoughJudges = function() {
+    var judgesNeeded = Math.ceil(this._activeTeams.length / this.noOfTeamsPerRoom);
+
+    if(this._activeJudges.length < judgesNeeded) {
+      this.violations.push({
+        type: InvariantChecker.types.NOT_ENOUGH_JUDGES,
+        message: "Not enough active judges. You need " +
+        (judgesNeeded - this._activeJudges.length).toString() +
+        " more judges."
+      });
+    }
+  };
 
   return InvariantChecker;
 })();

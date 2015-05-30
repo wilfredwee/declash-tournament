@@ -22,6 +22,7 @@ var DebaterSchema = new SimpleSchema({
   scoreForRound: {
     type: Object,
     label: "All scores for a debater. They are a key-value pair. Key:Round index. Value: score",
+    blackbox: true
   }
 });
 
@@ -46,17 +47,20 @@ var JudgeSchema = new SimpleSchema({
   rankForRound: {
     type: Object,
     label: "All scores for a judge. They are a key-value pair. Key: Round index, Value: score",
-    optional: true
+    optional: true,
+    blackbox: true
   },
 
   isActiveForRound: {
     type: Object,
-    label: "All active status for a judge. They are a key-value pair. Key:Round index. Value: isActive(Boolean)"
+    label: "All active status for a judge. They are a key-value pair. Key:Round index. Value: isActive(Boolean)",
+    blackbox: true
   },
 
   isChairForRound: {
     type: Object,
-    label: "All isChar for a judge. They are a key-value pair. Key:Round index, Value: score"
+    label: "All isChar for a judge. They are a key-value pair. Key:Round index, Value: score",
+    blackbox: true
   }
 });
 
@@ -114,16 +118,19 @@ var TeamSchema = new SimpleSchema({
   resultForRound: {
     type: Object,
     label: "All results for a team. They are a key-value pair. Key:Round index. Value: result",
+    blackbox: true
   },
 
   roleForRound: {
     type: Object,
-    label: "All roles for a team. They are a key-value pair. Key:Round index. Value: role(String)"
+    label: "All roles for a team. They are a key-value pair. Key:Round index. Value: role(String)",
+    blackbox: true
   },
 
   isActiveForRound: {
     type: Object,
-    label: "All active status for a team. They are a key-value pair. Key:Round index. Value: isActive(Boolean)"
+    label: "All active status for a team. They are a key-value pair. Key:Round index. Value: isActive(Boolean)",
+    blackbox: true
   }
 });
 
@@ -137,7 +144,8 @@ var RoundSchema = new SimpleSchema({
   motion: {
     type: String,
     label: "Motion for a round.",
-    max: 1000
+    max: 1000,
+    optional: true
   },
 
   rooms: {
@@ -152,7 +160,6 @@ var RoundSchema = new SimpleSchema({
     allowedValues: ["initial", "active", "finished"]
   }
 });
-
 
 var TournamentSchema = new SimpleSchema({
   createdAt: {
@@ -219,14 +226,36 @@ var TournamentSchema = new SimpleSchema({
   rounds: {
     type:[RoundSchema],
     label: "All rounds created in a tournament.",
-    minCount: 0
+    minCount: 0,
   },
 
   currentInvariantViolations: {
-    type: [String],
+    type: [Object],
     label: "List of invariant violation types",
-    minCount: 0
+    minCount: 0,
+    blackbox: true
   }
+});
+
+// Initial implementation of the validator, which disallows user from
+// creating a round if the last round is not finished.
+// More needs to be added here, and the validator component should be exportable
+// so that we can do the same validation in the client.
+SimpleSchema.addValidator(function() {
+  if(this.isUpdate) {
+    if(this.genericKey === "rounds.$" && this.value.index !== 0) {
+      var lastTournament = Tournaments.findOne({ownerId: this.userId, finished:false});
+
+      var lastRound = _.find(lastTournament.rounds, function(round) {
+        return round.index === this.value.index - 1;
+      }.bind(this));
+
+      if(lastRound.state !== "finished") {
+        return "notAllowed";
+      }
+    }
+  }
+
 });
 
 Tournaments.attachSchema(TournamentSchema);

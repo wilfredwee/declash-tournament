@@ -406,7 +406,39 @@ var TournamentManagementContainer = ReactMeteor.createClass({
   },
 
   render: function() {
-    var content = this.renderAccordingToContextType(this.state.containerContextType, this.state.currentRoundIndex);
+    var contentContainer = this.renderAccordingToContextType(this.state.containerContextType, this.state.currentRoundIndex);
+
+    var warningMessage = (function() {
+      if(this.props.tournament.currentInvariantViolations.length > 0) {
+        return (
+          <div className="ui warning message">
+            <div className="header">
+              Warning! These errors must be resolved before your can further proceed.
+            </div>
+            <ul className="list">
+              {this.props.tournament.currentInvariantViolations.map(function(violation, index) {
+                return <li key={index}>{violation.message}</li>;
+              })}
+            </ul>
+          </div>
+        );
+      }
+      return undefined;
+    }.bind(this))();
+
+    var createRoundClassName = (function() {
+      if(this.props.tournament.rounds.length === 0) {
+        return "ui link item";
+      }
+      var lastRoundIndex = this.props.tournament.rounds.length - 1;
+      var lastRoundState = this.props.tournament.rounds[lastRoundIndex].state;
+
+      if(lastRoundState !== "finished") {
+        return "ui disabled item";
+      }
+      return "ui link item";
+    }.bind(this))();
+
     return (
       <div>
         <div className="row">
@@ -433,12 +465,16 @@ var TournamentManagementContainer = ReactMeteor.createClass({
                 </div>
               );
             }.bind(this))}
-            <div onClick={this.createRound} className="ui link item">Create a Round</div>
+            <div onClick={createRoundClassName.indexOf("disabled") >= 0? undefined : this.createRound} className={createRoundClassName}>Create a Round</div>
           </div>
         </div>
-        <br /><br />
+        <br />
         <div className="row">
-          {content}
+          {warningMessage}
+        </div>
+        <br />
+        <div className="row">
+          {contentContainer}
         </div>
       </div>
     );

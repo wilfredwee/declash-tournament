@@ -20,16 +20,12 @@ APPGLOBALS.checkInvariants = function() {
 
     var currViolations = invariantChecker.getViolatedInvariants();
 
-    var currViolationsTypes = _.map(currViolations, function(violation) {
-      return violation.type;
-    });
-
     if(currViolations.length === 0) {
       Tournaments.update(trackedTournament._id, {$set: {currentInvariantViolations: []}});
     }
     else {
-      if(_.difference(currViolationsTypes, trackedTournament.currentInvariantViolations).length > 0) {
-        Tournaments.update(trackedTournament._id, {$set: {currentInvariantViolations: currViolationsTypes}});
+      if(_.difference(currViolations, trackedTournament.currentInvariantViolations).length > 0) {
+        Tournaments.update(trackedTournament._id, {$set: {currentInvariantViolations: currViolations}}, {validate: false, filter: false});
       }
     }
   }
