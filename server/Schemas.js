@@ -244,13 +244,9 @@ var TournamentSchema = new SimpleSchema({
 SimpleSchema.addValidator(function() {
   if(this.isUpdate) {
     if(this.genericKey === "rounds.$" && this.value.index !== 0) {
-      var lastTournament = Tournaments.findOne({ownerId: this.userId, finished:false});
+      var tournament = Tournaments.findOne({ownerId: this.userId, finished:false});
 
-      var lastRound = _.find(lastTournament.rounds, function(round) {
-        return round.index === this.value.index - 1;
-      }.bind(this));
-
-      if(lastRound.state !== "finished") {
+      if(!APPGLOBALS.ValidatorHelper.canCreateNextRound(tournament)) {
         return "notAllowed";
       }
     }

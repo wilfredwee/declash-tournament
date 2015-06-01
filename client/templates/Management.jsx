@@ -430,10 +430,8 @@ var TournamentManagementContainer = ReactMeteor.createClass({
       if(this.props.tournament.rounds.length === 0) {
         return "ui link item";
       }
-      var lastRoundIndex = this.props.tournament.rounds.length - 1;
-      var lastRoundState = this.props.tournament.rounds[lastRoundIndex].state;
 
-      if(lastRoundState !== "finished") {
+      if(!APPGLOBALS.ValidatorHelper.canCreateNextRound(this.props.tournament)) {
         return "ui disabled item";
       }
       return "ui link item";
