@@ -7,6 +7,26 @@ APPGLOBALS.ValidatorHelper = (function() {
       }
       var lastRound = tournament.rounds[tournament.rounds.length - 1];
       return lastRound.state === "finished";
+    },
+
+    canAssignRound: function(tournament, currentRoundIndex) {
+      // TODO: In the future, if necessary, check for specific violations.
+      var round = tournament.rounds[currentRoundIndex];
+
+      if(!round) {
+        return false;
+      }
+      return tournament.currentInvariantViolations.length === 0 &&
+        tournament.rounds[currentRoundIndex].state === "initial";
+    },
+
+    canDeleteRound: function(tournament, currentRoundIndex) {
+      var acceptableStates = ["initial", "assigned"];
+      var round = tournament.rounds[currentRoundIndex];
+      if(!round) {
+        return false;
+      }
+      return _.contains(acceptableStates, tournament.rounds[currentRoundIndex].state);
     }
   };
 

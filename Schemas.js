@@ -84,7 +84,7 @@ var RoomSchema = new SimpleSchema({
   },
 
   motion: {
-    type:String,
+    type: String,
     label: "Room-specific motions for a round.",
     max: 1000,
     optional: true
@@ -149,7 +149,7 @@ var RoundSchema = new SimpleSchema({
   },
 
   rooms: {
-    type:[RoomSchema],
+    type: [RoomSchema],
     label: "All rooms for a round.",
     minCount: 0
   },
@@ -157,7 +157,7 @@ var RoundSchema = new SimpleSchema({
   state: {
     type: String,
     label: "Whether a round is active.",
-    allowedValues: ["initial", "active", "finished"]
+    allowedValues: ["initial", "assigned", "active", "finished"]
   }
 });
 
@@ -224,7 +224,7 @@ var TournamentSchema = new SimpleSchema({
   },
 
   rounds: {
-    type:[RoundSchema],
+    type: [RoundSchema],
     label: "All rounds created in a tournament.",
     minCount: 0,
   },
@@ -251,6 +251,8 @@ SimpleSchema.addValidator(function() {
       }
     }
   }
+
+  return true;
 
 });
 

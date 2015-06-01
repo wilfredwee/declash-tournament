@@ -182,5 +182,41 @@ Meteor.methods({
     Tournaments.update(tournament._id, {$set: {teams: newTeams, judges: newJudges}});
 
     return newRoundIndex;
+  },
+
+  assignRound: function(tournament, roundIndex) {
+    var roundToAssign = tournament.rounds[roundIndex];
+
+    if(!APPGLOBALS.ValidatorHelper.canAssignRound(tournament, roundIndex)) {
+      throw new Meteor.Error("invalidAction", "Cannot assign this round. Make sure you have the proper conditions.");
+    }
+
+    // TODO: Perhaps something more elegant here?
+    if(roundToAssign.index !== roundIndex) {
+      throw new Meteor.Error("fatalError", "FATAL: The round assignments do not match.");
+    }
+
+    if(roundToAssign.index === 0) {
+      var assignedRound = APPGLOBALS.AssignmentAlgorithm.getAssignedFirstRound(tournament, roundToAssign);
+
+      assignedRound.state = "assigned";
+
+      Tournaments.update({_id: tournament._id, "rounds.index": assignedRound.index}, {$set: {"rounds.$": assignedRound}}, {validate: false, filter: false});
+    }
+  },
+
+  deleteRound: function(tournament, roundIndex) {
+    var roundToDelete = tournament.rounds[roundIndex];
+
+    if(!APPGLOBALS.ValidatorHelper.canDeleteRound(tournament, roundIndex)) {
+      throw new Meteor.Error("invalidAction", "Cannot delete this round. Make sure you have the prper conditions.");
+    }
+
+    // TODO: Perhaps something more elegant here?
+    if(roundToDelete.index !== roundIndex) {
+      throw new Meteor.Error("fatalError", "FATAL: The round assignments do not match.");
+    }
+
+    Tournaments.update(tournament._id, {$pull: {"rounds": {index: roundIndex}}});
   }
 });

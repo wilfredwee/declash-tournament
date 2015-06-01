@@ -191,7 +191,7 @@ var TEAM_ROUND_CONTEXT = _.extend({}, TEAM_CONTEXT, {
       return obj;
     });
 
-    newColumns.unshift({data: "isActive", readOnly: false, type: "checkbox", width:20});
+    newColumns.unshift({data: "isActive", type: "checkbox", width:20});
 
     return newColumns;
   })(),
@@ -212,7 +212,7 @@ var JUDGE_ROUND_CONTEXT = _.extend({}, JUDGE_CONTEXT, {
       return obj;
     });
 
-    newColumns.unshift({data: "isActive", readOnly: false, type: "checkbox", width:20});
+    newColumns.unshift({data: "isActive", type: "checkbox", width:20});
 
     return newColumns;
   })(),
@@ -233,7 +233,7 @@ var ROOM_ROUND_CONTEXT = _.extend({}, ROOM_CONTEXT, {
       return obj;
     });
 
-    newColumns.unshift({data: "isActive", readOnly: false, type: "checkbox", width:20});
+    newColumns.unshift({data: "isActive", type: "checkbox", width:20});
 
     return newColumns;
   })(),
@@ -408,24 +408,6 @@ var TournamentManagementContainer = ReactMeteor.createClass({
   render: function() {
     var contentContainer = this.renderAccordingToContextType(this.state.containerContextType, this.state.currentRoundIndex);
 
-    var warningMessage = (function() {
-      if(this.props.tournament.currentInvariantViolations.length > 0) {
-        return (
-          <div className="ui warning message">
-            <div className="header">
-              Warning! These errors must be resolved before your can further proceed.
-            </div>
-            <ul className="list">
-              {this.props.tournament.currentInvariantViolations.map(function(violation, index) {
-                return <li key={index}>{violation.message}</li>;
-              })}
-            </ul>
-          </div>
-        );
-      }
-      return undefined;
-    }.bind(this))();
-
     var createRoundClassName = (function() {
       if(this.props.tournament.rounds.length === 0) {
         return "ui link item";
@@ -465,10 +447,6 @@ var TournamentManagementContainer = ReactMeteor.createClass({
             }.bind(this))}
             <div onClick={createRoundClassName.indexOf("disabled") >= 0? undefined : this.createRound} className={createRoundClassName}>Create a Round</div>
           </div>
-        </div>
-        <br />
-        <div className="row">
-          {warningMessage}
         </div>
         <br />
         <div className="row">
@@ -820,11 +798,72 @@ var RoundHotContainer = ReactMeteor.createClass({
     };
   },
 
+  assignCurrentRound: function() {
+    Meteor.call("assignRound", this.state.tournament, this.props.roundIndex, function(err, result) {
+      // TODO
+      if(err) {
+        alert(err.reason);
+      }
+    });
+  },
+
+  deleteCurrentRound: function() {
+    Meteor.call("deleteRound", this.state.tournament, this.props.roundIndex, function(err, result) {
+      // TODO
+      if(err) {
+        alert(err.reason);
+      }
+    })
+  },
+
   render: function() {
+    if(!this.state.tournament.rounds[this.props.roundIndex]) {
+      // Do we want to set the session? Somehow it complains but works fine.
+      // Session.set("containerContextType", TEAM_CONTEXT.type);
+      return false;
+    }
+
+    var warningMessage = (function() {
+      if(this.state.tournament.currentInvariantViolations.length > 0) {
+        return (
+          <div className="ui warning message">
+            <div className="header">
+              Warning! These errors must be resolved before your can further proceed.
+            </div>
+            <ul className="list">
+              {this.state.tournament.currentInvariantViolations.map(function(violation, index) {
+                return <li key={index}>{violation.message}</li>;
+              })}
+            </ul>
+          </div>
+        );
+      }
+      return undefined;
+    }.bind(this))();
+
+    var assignButton = APPGLOBALS.ValidatorHelper.canAssignRound(this.state.tournament, this.props.roundIndex)?
+      <button className="ui primary button" onClick={this.assignCurrentRound}>Assign</button>
+      : undefined;
+
+    var deleteRoundButton = APPGLOBALS.ValidatorHelper.canDeleteRound(this.state.tournament, this.props.roundIndex)?
+      <button className="ui negative button" onClick={this.deleteCurrentRound}>Delete Round</button>
+      : undefined;
+
     return (
       <div>
         <div className="row">
           <h3>Managing Round {(this.props.roundIndex + 1).toString()}.</h3>
+        </div>
+        <br />
+        <div className="row">
+          {warningMessage}
+        </div>
+        <br />
+        <div className="row">
+          {assignButton}
+        </div>
+        <div className="row">
+          {deleteRoundButton}
         </div>
         <div className="row">
           <RoundHot roundIndex={this.props.roundIndex} context={this.props.context} tournament={this.state.tournament} />
@@ -841,7 +880,11 @@ var RoundHot = ReactMeteor.createClass({
     }
   },
   shouldComponentUpdate: function(nextProps, nextState) {
-    if(!this.hot || !_.isEqual(this.props.context, nextProps.context) || !_.isEqual(this.props.roundIndex, nextProps.roundIndex)) {
+    if(!this.hot ||
+      !_.isEqual(this.props.context, nextProps.context) ||
+      !_.isEqual(this.props.roundIndex, nextProps.roundIndex) ||
+      !_.isEqual(this.props.tournament.rounds[this.props.roundIndex].state, nextProps.tournament.rounds[this.props.roundIndex].state)
+    ) {
       return true;
     }
 
@@ -864,6 +907,14 @@ var RoundHot = ReactMeteor.createClass({
     }
     else {
       if(_.isEqual(this.props.context, prevProps.context)) {
+        var currRoundState = this.props.tournament.rounds[this.props.roundIndex].state;
+
+        var isActiveReadOnly = currRoundState === "initial"? false : true;
+
+        this.hot.updateSettings({
+          readOnly: isActiveReadOnly
+        });
+
         this.hot.loadData(this.props.context.transformCollectionToTableData(this.props.tournament, this.props.roundIndex));
       }
       else {
@@ -887,6 +938,13 @@ var RoundHot = ReactMeteor.createClass({
     var componentThis = this;
     var tableData = this.props.context.transformCollectionToTableData(this.props.tournament, roundIndex);
 
+    var isActiveReadOnly = (function() {
+      var round = this.props.tournament.rounds[roundIndex]
+
+      return round.state !== "initial";
+
+    }.bind(this))();
+
     this.hot = new Handsontable(this.refs.handsontable.getDOMNode(), {
       data: tableData,
       minCols: context.colHeaders.length,
@@ -902,6 +960,7 @@ var RoundHot = ReactMeteor.createClass({
       allowInsertColumn: false,
       allowInsertRow: false,
       allowRemoveRow: false,
+      readOnly: isActiveReadOnly,
       dataSchema: context.dataSchema,
       columns: context.columns,
       afterChange: function(changes, source) {
