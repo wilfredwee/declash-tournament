@@ -9,8 +9,6 @@ var createGuid = function() {
     s4() + "-" + s4() + s4() + s4();
 };
 
-var checkInvariants = APPGLOBALS.checkInvariants;
-
 Meteor.methods({
   registerTabUser: function(options) {
     check(options, Object);
@@ -22,7 +20,9 @@ Meteor.methods({
 
     user = Accounts.createUser(options);
 
-    Roles.addUsersToRoles(user, "tab");
+    if(Meteor.isServer) {
+      Roles.addUsersToRoles(user, "tab");
+    }
 
     return user;
   },
@@ -90,7 +90,6 @@ Meteor.methods({
     }.bind(this));
 
     Tournaments.update(tournament._id, {$push: {teams: {$each: validTeams}}});
-    checkInvariants.call(this);
   },
 
   registerJudges: function(judges, tournamentId) {
@@ -128,8 +127,6 @@ Meteor.methods({
     });
 
     Tournaments.update(tournament._id, {$push: {judges: {$each: judges}}});
-
-    checkInvariants.call(this);
   },
 
   registerRooms: function(rooms) {
@@ -156,8 +153,5 @@ Meteor.methods({
 
 
     Tournaments.update(tournament._id, {$set: {rooms: rooms, rounds: newRounds}});
-
-    // Add rooms to rounds.
-    checkInvariants.call(this);
   }
 });

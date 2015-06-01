@@ -1,5 +1,5 @@
-APPGLOBALS.checkInvariants = function() {
-  var trackedTournament = Tournaments.findOne({ownerId: this.userId, finished: false});
+APPGLOBALS.checkInvariants = function(tournament) {
+  var trackedTournament = tournament;
 
   if(trackedTournament.rounds.length <= 0) {
     return;
@@ -25,7 +25,7 @@ APPGLOBALS.checkInvariants = function() {
     }
     else {
       if(_.difference(currViolations, trackedTournament.currentInvariantViolations).length > 0) {
-        Tournaments.update(trackedTournament._id, {$set: {currentInvariantViolations: currViolations}}, {validate: false, filter: false});
+        Tournaments.update(trackedTournament._id, {$set: {currentInvariantViolations: currViolations}});
       }
     }
   }
