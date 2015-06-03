@@ -1,3 +1,6 @@
+var MANAGE_CONTEXT_TYPE = "manage"
+
+
 var REGISTER_TEAMS_HEADERS = ["Team Name", "Institution", "Debater 1", "Debater 2"];
 var REGISTER_TEAMS_SCHEMA = {name: null, institution: null, debater1: null, debater2: null};
 var REGISTER_TEAMS_COLUMNS = [{data: "name"}, {data: "institution"}, {data: "debater1"}, {data: "debater2"}];
@@ -386,13 +389,19 @@ var TournamentManagementContainer = ReactMeteor.createClass({
       case ROOM_ROUND_CONTEXT.type:
         contextToRender = ROOM_ROUND_CONTEXT;
         break;
+      case MANAGE_CONTEXT_TYPE:
+        contextToRender = {type: null};
+        break;
     }
 
     if(_.contains([TEAM_CONTEXT.type, JUDGE_CONTEXT.type, ROOM_CONTEXT.type], contextToRender.type)) {
       return <ManagementHotContainer context={contextToRender} />;
     }
-    else {
+    else if(_.contains([TEAM_ROUND_CONTEXT.type, JUDGE_ROUND_CONTEXT.type, ROOM_ROUND_CONTEXT.type]), contextToRender.type){
       return <RoundHotContainer roundIndex={roundIndex} context={contextToRender} />;
+    }
+    else {
+      return <RoundRoomsContainer roundIndex={roundIndex} />;
     }
   },
 
@@ -441,6 +450,7 @@ var TournamentManagementContainer = ReactMeteor.createClass({
                     <div className="item" onClick={this.switchContainerContextType.bind(this, TEAM_ROUND_CONTEXT.type, round.index)}>Teams</div>
                     <div className="item" onClick={this.switchContainerContextType.bind(this, JUDGE_ROUND_CONTEXT.type, round.index)}>Judges</div>
                     <div className="item" onClick={this.switchContainerContextType.bind(this, ROOM_ROUND_CONTEXT.type, round.index)}>Rooms</div>
+                    {round.state !== "initial" ? <div className="item" onClick={this.switchContainerContextType.bind(this, MANAGE_CONTEXT_TYPE, round.index)}><div strong>Manage Assignment</div></div> : null}
                   </div>
                 </div>
               );
@@ -998,4 +1008,96 @@ var RoundHot = ReactMeteor.createClass({
 
   }
 
+});
+
+var RoundRoomsContainer = ReactMeteor.createClass({
+  startMeteorSubscriptions: function() {
+    Meteor.subscribe("unfinishedTournaments");
+  },
+  getMeteorState: function() {
+    var tournament = Tournaments.findOne({ownerId: Meteor.userId()})
+    return {
+      tournament: tournament,
+      schemaInjectedRounds: this.getSchemaInjectedRounds(tournament)
+    };
+  },
+
+  getSchemaInjectedRounds: function(tournament) {
+    return _.map(tournament.rounds, function(round) {
+      round.rooms = _.map(round.rooms, function(room) {
+        room.teams = _.map(room.teams, function(teamGuid) {
+          return _.find(tournament.teams, function(tournamentTeam) {
+            return tournamentTeam.guid === teamGuid;
+          });
+        });
+
+        room.judges = _.map(room.judges, function(judgeGuid) {
+          return _.find(tournament.judges, function(tournamentJudge) {
+            return tournamentJudge.guid === judgeGuid;
+          });
+        });
+
+        return room;
+      });
+
+      return round;
+    });
+  },
+
+  renderTeamsForRoom: function(room) {
+    function getTeamForRole(role) {
+      _.find(room.teams, function(team) {
+        return team.roleForRound === role;
+      });
+    }
+
+    var OGTeam = getTeamForRole("OG");
+    var OOTeam = getTeamForRole("OO");
+    var CGTeam = getTeamForRole("CG");
+    var COTeam = getTeamForRole("CO");
+
+    return (
+      <div>
+        <div className="two column row">
+          <div className="column"><p>{OGTeam? OGTeam.name : OGTeam}</p></div>
+          <div className="column"><p>{OOTeam? OOTeam.name : OOTeam}</p></div>
+        </div>
+        <div className="two column row">
+          <div className="column"><p>{CGTeam? CGTeam.name : CGTeam}</p></div>
+          <div className="column"><p>{COTeam? COTeam.name : COTeam}</p></div>
+        </div>
+      </div>
+    );
+  },
+
+  render: function() {
+    return (
+      <div className="ui stackable two column grid">
+        {
+          _.map(this.state.schemaInjectedRounds[this.props.roundIndex].rooms, function(room, roomIndex) {
+            return (
+              <div key={roomIndex} className="column">
+                <div className="ui segment">
+                  <h4 className="ui horizontal header divider">{room.locationId}</h4>
+                  <div className="ui stackable two column celled grid">
+                    {this.renderTeamsForRoom(room)}
+                  </div>
+                  <h5 className="ui horizontal header divider">Judges</h5>
+                  <div className="ui celled vertically divided grid">
+                    {_.map(room.judges, function(judge, judgeIndex) {
+                      return (
+                        <div key={judgeIndex} className="row">
+                          <div className="column"><p>{judge.name}</p></div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            );
+          }.bind(this))
+        }
+      </div>
+    );
+  }
 });
