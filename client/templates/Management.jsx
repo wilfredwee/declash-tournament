@@ -583,6 +583,7 @@ var ManagementHot = ReactMeteor.createClass({
       allowInvalid: false,
       dataSchema: context.dataSchema,
       columns: context.columns,
+      columnSorting: true,
       afterCreateRow: function() {
         this.validateCells(function() {
           // do nothing.
@@ -973,6 +974,7 @@ var RoundHot = ReactMeteor.createClass({
       readOnly: isActiveReadOnly,
       dataSchema: context.dataSchema,
       columns: context.columns,
+      columnSorting: true,
       afterChange: function(changes, source) {
         if(source === "loadData") {
           return;
