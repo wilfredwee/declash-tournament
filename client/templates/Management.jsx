@@ -450,7 +450,7 @@ var TournamentManagementContainer = ReactMeteor.createClass({
                     <div className="item" onClick={this.switchContainerContextType.bind(this, TEAM_ROUND_CONTEXT.type, round.index)}>Teams</div>
                     <div className="item" onClick={this.switchContainerContextType.bind(this, JUDGE_ROUND_CONTEXT.type, round.index)}>Judges</div>
                     <div className="item" onClick={this.switchContainerContextType.bind(this, ROOM_ROUND_CONTEXT.type, round.index)}>Rooms</div>
-                    {round.state !== "initial" ? <div className="item" onClick={this.switchContainerContextType.bind(this, MANAGE_CONTEXT_TYPE, round.index)}><div strong>Manage Assignment</div></div> : null}
+                    {round.state !== "initial" ? <div className="item" onClick={this.switchContainerContextType.bind(this, MANAGE_CONTEXT_TYPE, round.index)}><div><strong>Manage Assignment</strong></div></div> : null}
                   </div>
                 </div>
               );
@@ -1016,16 +1016,23 @@ var RoundRoomsContainer = ReactMeteor.createClass({
   startMeteorSubscriptions: function() {
     Meteor.subscribe("unfinishedTournaments");
   },
+
   getMeteorState: function() {
     var tournament = Tournaments.findOne({ownerId: Meteor.userId()})
+    Session.setDefault("filteredRoomIds", ["", ""]);
     return {
       tournament: tournament,
-      schemaInjectedRounds: this.getSchemaInjectedRounds(tournament)
+      schemaInjectedRounds: this.getSchemaInjectedRounds(tournament, Session.get("filteredRoomIds")),
+      filteredRooms: Session.get("filteredRoomIds")
     };
   },
 
-  getSchemaInjectedRounds: function(tournament) {
-    return _.map(tournament.rounds, function(round) {
+  getSchemaInjectedRounds: function(tournament, filteredRoomIds) {
+    return _.map(_.map(tournament.rounds, _.clone), function(round) {
+      round.rooms = _.filter(round.rooms, function(room) {
+        return _.contains(filteredRoomIds, room.locationId) || _.contains(filteredRoomIds, "");
+      });
+
       round.rooms = _.map(round.rooms, function(room) {
         room.teams = _.map(room.teams, function(teamGuid) {
           return _.find(tournament.teams, function(tournamentTeam) {
@@ -1043,6 +1050,20 @@ var RoundRoomsContainer = ReactMeteor.createClass({
       });
 
       return round;
+    });
+  },
+
+  componentDidMount: function () {
+    var that = this;
+    $("#" + this.refs.selectOne.getDOMNode().id).dropdown({
+      onChange: function() {
+        that.handleFilter();
+      }
+    });
+    $("#" + this.refs.selectTwo.getDOMNode().id).dropdown({
+      onChange: function() {
+        that.handleFilter();
+      }
     });
   },
 
@@ -1088,25 +1109,70 @@ var RoundRoomsContainer = ReactMeteor.createClass({
     });
   },
 
+  handleFilter: function(e, index) {
+    var firstFilteredRoom = React.findDOMNode(this.refs.selectOne).value;
+    var secondFilteredRoom = React.findDOMNode(this.refs.selectTwo).value;
+
+    Session.set("filteredRoomIds", [firstFilteredRoom, secondFilteredRoom]);
+  },
+
+  clearFilter: function() {
+    Session.set("filteredRoomIds", ["", ""]);
+
+    $("#" + this.refs.selectOne.getDOMNode().id).dropdown("clear");
+    $("#" + this.refs.selectTwo.getDOMNode().id).dropdown("clear");
+  },
+
   render: function() {
     return (
-      <div className="ui stackable two column grid">
-        {
-          _.map(this.state.schemaInjectedRounds[this.props.roundIndex].rooms, function(room, roomIndex) {
-            return (
-              <div key={roomIndex} className="column">
-                <div className="ui segment">
-                  <h3 className="ui horizontal header divider">{room.locationId}</h3>
-                  {this.renderTeamsForRoom(room, this.props.roundIndex)}
-                  <h5 className="ui horizontal header divider">Judges</h5>
-                  <div className="ui celled vertically divided grid">
-                    {this.renderJudgesForRoom(room, this.props.roundIndex)}
+      <div>
+        <div className="row">
+          <div className="ui three column grid">
+            <div className="column">
+              <select ref="selectOne" onChange={this.handleFilter.bind(this, 0)} className="ui search selection dropdown" id="filterOne">
+                <option value="">Filter 1</option>
+                {_.map(this.state.tournament.rounds[this.props.roundIndex].rooms, function(room, roomIndex) {
+                  return (
+                    <option key={roomIndex} value={room.locationId}>{room.locationId}</option>
+                  );
+                })}
+              </select>
+            </div>
+            <div className="column">
+              <select ref="selectTwo" onChange={this.handleFilter.bind(this, 1)} className="ui search selection dropdown" id="filterTwo">
+                <option value="">Filter 2</option>
+                {_.map(this.state.tournament.rounds[this.props.roundIndex].rooms, function(room, roomIndex) {
+                  return (
+                    <option key={roomIndex} value={room.locationId}>{room.locationId}</option>
+                  );
+                })}
+              </select>
+            </div>
+            <div className="column">
+              <button onClick={this.clearFilter} className="ui button">Clear Filter</button>
+            </div>
+          </div>
+        </div>
+        <div className="row">
+          <div className="ui stackable three column grid">
+            {
+              _.map(this.state.schemaInjectedRounds[this.props.roundIndex].rooms, function(room, roomIndex) {
+                return (
+                  <div key={roomIndex} className="column">
+                    <div className="ui segment">
+                      <h3 className="ui horizontal header divider">{room.locationId}</h3>
+                      {this.renderTeamsForRoom(room, this.props.roundIndex)}
+                      <h5 className="ui horizontal header divider">Judges</h5>
+                      <div className="ui celled vertically divided grid">
+                        {this.renderJudgesForRoom(room, this.props.roundIndex)}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            );
-          }.bind(this))
-        }
+                );
+              }.bind(this))
+            }
+          </div>
+        </div>
       </div>
     );
   }
