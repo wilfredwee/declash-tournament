@@ -197,11 +197,19 @@ Meteor.methods({
     }
 
     if(roundToAssign.index === 0) {
+      // assignedRound assigns teams and judges to rooms.
       var assignedRound = APPGLOBALS.AssignmentAlgorithm.getAssignedFirstRound(tournament, roundToAssign);
+
+      // assignedTeams has their roles for a round assigned
+      var assignedTeams = APPGLOBALS.AssignmentAlgorithm.getAssignedTeams(tournament.teams, assignedRound);
+
+      // assignedJudges has their roles for a round assigned (is chair or not)
+      var assignedJudges = APPGLOBALS.AssignmentAlgorithm.getAssignedJudges(tournament.judges, assignedRound);
 
       assignedRound.state = "assigned";
 
       Tournaments.update({_id: tournament._id, "rounds.index": assignedRound.index}, {$set: {"rounds.$": assignedRound}}, {validate: false, filter: false});
+      Tournaments.update(tournament._id, {$set: {teams: assignedTeams, judges: assignedJudges}});
     }
   },
 

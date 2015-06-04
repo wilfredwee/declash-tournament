@@ -12,10 +12,6 @@ APPGLOBALS.AssignmentAlgorithm = (function() {
         return round.index === roundToAssign.index;
       }));
 
-      // Since this is the first round, we're not concerned with the nested
-      // data structure of teams and judges as we'll replace them anyway.
-      var currentRoundRooms = _.map(currentRound.rooms, _.clone);
-
       var shuffledActiveTeams = _.shuffle(_.filter(tournament.teams, function(team) {
         return team.isActiveForRound[currentRound.index] === true;
       }));
@@ -23,9 +19,15 @@ APPGLOBALS.AssignmentAlgorithm = (function() {
       // TODO: Assign judges based on proper strategy.
       var shuffledActiveJudges = _.shuffle(_.filter(tournament.judges, function(judge) {
         return judge.isActiveForRound[currentRound.index] === true;
-      }))
+      }));
+
+
+      // Since this is the first round, we're not concerned with the nested
+      // data structure of teams and judges as we'll replace them anyway.
+      var currentRoundRooms = _.map(_.first(currentRound.rooms, (shuffledActiveTeams.length/4)), _.clone);
 
       var roomIndex = 0;
+      var POSITIONS = ["OG", "OO", "CG", "CO"];
       _.each(shuffledActiveTeams, function(team, index) {
         if(currentRoundRooms[roomIndex].teams.length === 4) {
           roomIndex++;
@@ -45,8 +47,56 @@ APPGLOBALS.AssignmentAlgorithm = (function() {
 
       currentRound.rooms = currentRoundRooms;
       return currentRound;
+    },
 
+    getAssignedTeams: function(teams, round) {
+      // Clone to avoid mutating input.
+      var clonedTeams = _.map(teams, _.clone);
 
+      var assignedTeams = _.flatten(_.map(round.rooms, function(room) {
+        // This is an array of teams from clonedTeams
+        var roomTeams = _.map(room.teams, function(teamGuid) {
+          return _.find(clonedTeams, function(team) {
+            return team.guid === teamGuid;
+          });
+        });
+
+        if(roomTeams.length !== 4) {
+          throw new Meteor.Error("fatalError", "FATAL: Assigned room does not have the required amount of teams.")
+        }
+
+        if(round.index !== 0) {
+          throw new Meteor.Error("unimplemented", "Round 2 and above is not implemented yet.");
+        }
+
+        roomTeams[0].roleForRound[round.index] = "OG";
+        roomTeams[1].roleForRound[round.index] = "OO";
+        roomTeams[2].roleForRound[round.index] = "CG";
+        roomTeams[3].roleForRound[round.index] = "CO";
+
+        return roomTeams;
+      }), true);
+
+      return assignedTeams;
+    },
+
+    getAssignedJudges: function(judges, round) {
+      // Properly assign judges.
+      var clonedJudges = _.map(judges, _.clone);
+
+      var assignedJudges = _.flatten(_.map(round.rooms, function(room) {
+        var roomJudges = _.map(room.judges, function(judgeGuid) {
+          return _.find(clonedJudges, function(judge) {
+            return judge.guid === judgeGuid;
+          });
+        });
+
+        roomJudges[0].isChairForRound[round.index] = true;
+
+        return roomJudges;
+      }), true);
+
+      return assignedJudges;
     }
   };
 

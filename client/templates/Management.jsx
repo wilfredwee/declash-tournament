@@ -1044,10 +1044,10 @@ var RoundRoomsContainer = ReactMeteor.createClass({
     });
   },
 
-  renderTeamsForRoom: function(room) {
+  renderTeamsForRoom: function(room, roundIndex) {
     function getTeamForRole(role) {
-      _.find(room.teams, function(team) {
-        return team.roleForRound === role;
+      return _.find(room.teams, function(team) {
+        return team.roleForRound[roundIndex] === role;
       });
     }
 
@@ -1057,17 +1057,33 @@ var RoundRoomsContainer = ReactMeteor.createClass({
     var COTeam = getTeamForRole("CO");
 
     return (
-      <div>
+      <div className="ui stackable two column celled grid">
         <div className="two column row">
-          <div className="column"><p>{OGTeam? OGTeam.name : OGTeam}</p></div>
-          <div className="column"><p>{OOTeam? OOTeam.name : OOTeam}</p></div>
+          <div className="column"><span><strong>Opening Gov: </strong>{OGTeam.name}</span></div>
+          <div className="column"><span><strong>Opening Opp: </strong>{OOTeam.name}</span></div>
         </div>
         <div className="two column row">
-          <div className="column"><p>{CGTeam? CGTeam.name : CGTeam}</p></div>
-          <div className="column"><p>{COTeam? COTeam.name : COTeam}</p></div>
+          <div className="column"><span><strong>Closing Gov: </strong>{CGTeam.name}</span></div>
+          <div className="column"><span><strong>Closing Opp: </strong>{COTeam.name}</span></div>
         </div>
       </div>
     );
+  },
+
+  renderJudgesForRoom: function(room, roundIndex) {
+    return _.map(room.judges, function(judge, judgeIndex) {
+      var judgeName = judge.name;
+
+      if(judge.isChairForRound[roundIndex]) {
+        judgeName = "(Chair) ".concat(judgeName);
+      }
+
+      return (
+        <div key={judgeIndex} className="row">
+          <div className="column"><p>{judgeName}</p></div>
+        </div>
+      );
+    });
   },
 
   render: function() {
@@ -1078,19 +1094,11 @@ var RoundRoomsContainer = ReactMeteor.createClass({
             return (
               <div key={roomIndex} className="column">
                 <div className="ui segment">
-                  <h4 className="ui horizontal header divider">{room.locationId}</h4>
-                  <div className="ui stackable two column celled grid">
-                    {this.renderTeamsForRoom(room)}
-                  </div>
+                  <h3 className="ui horizontal header divider">{room.locationId}</h3>
+                  {this.renderTeamsForRoom(room, this.props.roundIndex)}
                   <h5 className="ui horizontal header divider">Judges</h5>
                   <div className="ui celled vertically divided grid">
-                    {_.map(room.judges, function(judge, judgeIndex) {
-                      return (
-                        <div key={judgeIndex} className="row">
-                          <div className="column"><p>{judge.name}</p></div>
-                        </div>
-                      );
-                    })}
+                    {this.renderJudgesForRoom(room, this.props.roundIndex)}
                   </div>
                 </div>
               </div>
