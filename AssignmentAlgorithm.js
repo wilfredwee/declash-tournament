@@ -53,6 +53,10 @@ APPGLOBALS.AssignmentAlgorithm = (function() {
       // Clone to avoid mutating input.
       var clonedTeams = _.map(teams, _.clone);
 
+      if(round.index !== 0) {
+        throw new Meteor.Error("unimplemented", "Round 2 and above is not implemented yet.");
+      }
+
       var assignedTeams = _.flatten(_.map(round.rooms, function(room) {
         // This is an array of teams from clonedTeams
         var roomTeams = _.map(room.teams, function(teamGuid) {
@@ -77,6 +81,14 @@ APPGLOBALS.AssignmentAlgorithm = (function() {
         return roomTeams;
       }), true);
 
+      var assignedTeamsGuid = _.pluck(assignedTeams, "guid");
+
+      _.each(clonedTeams, function(team) {
+        if(!_.contains(assignedTeamsGuid, team.guid)) {
+          assignedTeams.push(team);
+        }
+      });
+
       return assignedTeams;
     },
 
@@ -99,6 +111,13 @@ APPGLOBALS.AssignmentAlgorithm = (function() {
 
         return roomJudges;
       }), true);
+
+      var assignedJudgesGuid = _.pluck(assignedJudges, "guid");
+      _.each(clonedJudges, function(judge) {
+        if(!_.contains(assignedJudgesGuid, judge.guid)) {
+          assignedJudges.push(judge);
+        }
+      });
 
       return assignedJudges;
     }
