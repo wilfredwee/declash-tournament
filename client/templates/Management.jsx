@@ -1,255 +1,9 @@
-var MANAGE_CONTEXT_TYPE = "manage"
-
-
-var REGISTER_TEAMS_HEADERS = ["Team Name", "Institution", "Debater 1", "Debater 2"];
-var REGISTER_TEAMS_SCHEMA = {name: null, institution: null, debater1: null, debater2: null};
-var REGISTER_TEAMS_COLUMNS = [{data: "name"}, {data: "institution"}, {data: "debater1"}, {data: "debater2"}];
-
-var REGISTER_JUDGES_HEADERS = ["Judge Name", "Institution"];
-var REGISTER_JUDGES_SCHEMA = {name: null, institution: null};
-var REGISTER_JUDGES_COLUMNS = [{data: "name"}, {data: "institution"}];
-
-var REGISTER_ROOMS_HEADERS = ["Room Location"];
-var REGISTER_ROOMS_SCHEMA = {location: null};
-var REGISTER_ROOMS_COLUMNS = [{data: "location"}];
-
-var TEAM_CONTEXT_TYPE = "team_management";
-var JUDGE_CONTEXT_TYPE = "judge_management";
-var ROOM_CONTEXT_TYPE = "room_management";
-
-var TEAM_REGISTER_METHOD_TYPE = "registerTeams";
-var JUDGE_REGISTER_METHOD_TYPE = "registerJudges";
-var ROOM_REGISTER_METHOD_TYPE = "registerRooms";
-
-var TEAM_UPDATE_METHOD_TYPE = "updateTeam";
-var JUDGE_UPDATE_METHOD_TYPE = "updateJudge";
-var ROOM_UPDATE_METHOD_TYPE = "updateRoom";
-
-var TEAM_REMOVE_METHOD_TYPE = "removeTeam";
-var JUDGE_REMOVE_METHOD_TYPE = "removeJudge";
-var ROOM_REMOVE_METHOD_TYPE = "removeRoom";
-
-// All contexts' functions must be pure functions.
-var TEAM_CONTEXT = {
-  colHeaders: REGISTER_TEAMS_HEADERS,
-  dataSchema: REGISTER_TEAMS_SCHEMA,
-  columns: REGISTER_TEAMS_COLUMNS,
-  type: TEAM_CONTEXT_TYPE,
-  registerMethod: TEAM_REGISTER_METHOD_TYPE,
-  updateMethod: TEAM_UPDATE_METHOD_TYPE,
-  removeMethod: TEAM_REMOVE_METHOD_TYPE,
-  transformCollectionToTableData: function(tournament, currentRoundIndex) {
-    return _.map(tournament.teams, function(team) {
-      var newTeam = {};
-
-      _.each(team, function(value, key) {
-        if(key === "debaters") {
-          newTeam.debater1 = value[0].name;
-          newTeam.debater2 = value[1].name;
-        }
-        else if(key === "isActiveForRound") {
-          if(typeof currentRoundIndex === "number") {
-            var isActiveForCurrentRound = value[currentRoundIndex.toString()];
-
-            if(typeof isActiveForCurrentRound !== "boolean") {
-              throw new Meteor.Error("unableToFind", "Unable To Find the Round you're looking for.")
-            }
-            newTeam.isActive = isActiveForCurrentRound;
-
-          }
-        }
-        else if(key === "resultForRound") {
-          // TODO
-        }
-        else if(key === "roleForRound") {
-          // TODO
-        }
-        else {
-          newTeam[key] = value;
-        }
-      });
-
-      return newTeam;
-    });
-  },
-  transformTableDataRowToCollection: function(tableData) {
-    var collectionTeam = {};
-    collectionTeam.debaters = [];
-
-    _.each(tableData, function(value, key) {
-      if(key === "debater1") {
-        collectionTeam.debaters[0] = {};
-        collectionTeam.debaters[0].name = value;
-      }
-      else if(key === "debater2") {
-        collectionTeam.debaters[1] = {};
-        collectionTeam.debaters[1].name = value;
-      }
-      else if(key === "isActive") {
-        // do nothing?
-      }
-      else {
-        collectionTeam[key] = value;
-      }
-    });
-
-    return collectionTeam;
-  }
-};
-
-var JUDGE_CONTEXT = {
-  colHeaders: REGISTER_JUDGES_HEADERS,
-  dataSchema: REGISTER_JUDGES_SCHEMA,
-  columns: REGISTER_JUDGES_COLUMNS,
-  type: JUDGE_CONTEXT_TYPE,
-  registerMethod: JUDGE_REGISTER_METHOD_TYPE,
-  updateMethod: JUDGE_UPDATE_METHOD_TYPE,
-  removeMethod: JUDGE_REMOVE_METHOD_TYPE,
-  transformCollectionToTableData: function(tournament, currentRoundIndex) {
-    return _.map(tournament.judges, function(judge) {
-      var newJudge = {};
-
-      _.each(judge, function(value, key) {
-        if(key === "isActiveForRound") {
-          if(typeof currentRoundIndex === "number") {
-            var isActiveForCurrentRound = value[currentRoundIndex.toString()];
-
-            if(typeof isActiveForCurrentRound !== "boolean") {
-              throw new Meteor.Error("unableToFind", "Unable To Find the Round you're looking for.")
-            }
-            newJudge.isActive = isActiveForCurrentRound;
-          }
-        }
-        else if(key === "isChairForRound") {
-          // TODO
-        }
-        else {
-          newJudge[key] = value;
-        }
-      });
-
-      return newJudge;
-    });
-  },
-  transformTableDataRowToCollection: function(tableData) {
-    var collectionJudge = {};
-
-    _.each(tableData, function(value, key) {
-      collectionJudge[key] = value;
-    });
-
-    return collectionJudge;
-  }
-};
-
-var ROOM_CONTEXT = {
-  colHeaders: REGISTER_ROOMS_HEADERS,
-  dataSchema: REGISTER_ROOMS_SCHEMA,
-  columns: REGISTER_ROOMS_COLUMNS,
-  type: ROOM_CONTEXT_TYPE,
-  registerMethod: ROOM_REGISTER_METHOD_TYPE,
-  updateMethod: ROOM_UPDATE_METHOD_TYPE,
-  removeMethod: ROOM_REMOVE_METHOD_TYPE,
-  transformCollectionToTableData: function(tournament, currentRoundIndex) {
-    if(typeof currentRoundIndex === "number") {
-      var currentRound = _.find(tournament.rounds, function(round) {
-        return round.index === currentRoundIndex;
-      });
-
-      if(!currentRound) {
-        throw new Meteor.Error("unableToFind", "Unable To Find the Round you're looking for.")
-      }
-
-      var currentRoundRoomLocations = _.map(currentRound.rooms, function(room) {
-        return room.locationId;
-      });
-
-      return _.map(tournament.rooms, function(room) {
-        var isActive = _.contains(currentRoundRoomLocations, room);
-
-        return {location: room, isActive: isActive};
-      });
-    }
-    else {
-      return _.map(tournament.rooms, function(room) {
-        return {location: room};
-      });
-    }
-
-  },
-  transformTableDataRowToCollection: function(tableData) {
-    // This is currently unused
-    return tableData.location;
-  }
-};
-
-var TEAM_ROUND_CONTEXT = _.extend({}, TEAM_CONTEXT, {
-  colHeaders: ["Active"].concat(_.clone(TEAM_CONTEXT.colHeaders)),
-  dataSchema: _.extend({isActive: null}, TEAM_CONTEXT.dataSchema),
-  columns: (function () {
-    var newColumns = _.map(TEAM_CONTEXT.columns, _.clone);
-
-    newColumns = _.map(newColumns, function(obj) {
-      obj.readOnly = true;
-      return obj;
-    });
-
-    newColumns.unshift({data: "isActive", type: "checkbox", width:20});
-
-    return newColumns;
-  })(),
-  registerMethod: null,
-  removeMethod: null,
-  updateMethod: "updateTeamForRound",
-  type: "team_round"
-});
-
-var JUDGE_ROUND_CONTEXT = _.extend({}, JUDGE_CONTEXT, {
-  colHeaders: ["Active"].concat(_.clone(JUDGE_CONTEXT.colHeaders)),
-  dataSchema: _.extend({isActive: true}, JUDGE_CONTEXT.dataSchema),
-  columns: (function () {
-    var newColumns = _.map(JUDGE_CONTEXT.columns, _.clone);
-
-    newColumns = _.map(newColumns, function(obj) {
-      obj.readOnly = true;
-      return obj;
-    });
-
-    newColumns.unshift({data: "isActive", type: "checkbox", width:20});
-
-    return newColumns;
-  })(),
-  registerMethod: null,
-  removeMethod: null,
-  updateMethod: "updateJudgeForRound",
-  type: "judge_round"
-});
-
-var ROOM_ROUND_CONTEXT = _.extend({}, ROOM_CONTEXT, {
-  colHeaders: ["Active"].concat(_.clone(ROOM_CONTEXT.colHeaders)),
-  dataSchema: _.extend({isActive: true}, ROOM_CONTEXT.dataSchema),
-  columns: (function () {
-    var newColumns = _.map(ROOM_CONTEXT.columns, _.clone);
-
-    newColumns = _.map(newColumns, function(obj) {
-      obj.readOnly = true;
-      return obj;
-    });
-
-    newColumns.unshift({data: "isActive", type: "checkbox", width:20});
-
-    return newColumns;
-  })(),
-  registerMethod: null,
-  removeMethod: null,
-  updateMethod: "updateRoomForRound",
-  type: "room_round"
-});
-
 // Initialize variables from DeclashApp namespace.
 var ValidatorHelper;
+var ManagementContextConstants;
 Meteor.startup(function() {
   ValidatorHelper = DeclashApp.helpers.ValidatorHelper;
+  ManagementContextConstants = DeclashApp.client.constants.ManagementContextConstants;
 });
 
 DeclashApp.ManagementPageContainer = ReactMeteor.createClass({
@@ -367,35 +121,35 @@ var TournamentManagementContainer = ReactMeteor.createClass({
   },
 
   renderAccordingToContextType: function(contextType, roundIndex) {
-    var contextToRender = TEAM_CONTEXT;
+    var contextToRender = ManagementContextConstants.TEAM_CONTEXT;
     switch(contextType) {
-      case TEAM_CONTEXT.type:
-        contextToRender = TEAM_CONTEXT;
+      case ManagementContextConstants.TEAM_CONTEXT.type:
+        contextToRender = ManagementContextConstants.TEAM_CONTEXT;
         break;
-      case JUDGE_CONTEXT.type:
-        contextToRender = JUDGE_CONTEXT;
+      case ManagementContextConstants.JUDGE_CONTEXT.type:
+        contextToRender = ManagementContextConstants.JUDGE_CONTEXT;
         break;
-      case ROOM_CONTEXT.type:
-        contextToRender = ROOM_CONTEXT;
+      case ManagementContextConstants.ROOM_CONTEXT.type:
+        contextToRender = ManagementContextConstants.ROOM_CONTEXT;
         break;
-      case TEAM_ROUND_CONTEXT.type:
-        contextToRender = TEAM_ROUND_CONTEXT;
+      case ManagementContextConstants.TEAM_ROUND_CONTEXT.type:
+        contextToRender = ManagementContextConstants.TEAM_ROUND_CONTEXT;
         break;
-      case JUDGE_ROUND_CONTEXT.type:
-        contextToRender = JUDGE_ROUND_CONTEXT;
+      case ManagementContextConstants.JUDGE_ROUND_CONTEXT.type:
+        contextToRender = ManagementContextConstants.JUDGE_ROUND_CONTEXT;
         break;
-      case ROOM_ROUND_CONTEXT.type:
-        contextToRender = ROOM_ROUND_CONTEXT;
+      case ManagementContextConstants.ROOM_ROUND_CONTEXT.type:
+        contextToRender = ManagementContextConstants.ROOM_ROUND_CONTEXT;
         break;
-      case MANAGE_CONTEXT_TYPE:
+      case ManagementContextConstants.MANAGE_CONTEXT_TYPE:
         contextToRender = {type: null};
         break;
     }
 
-    if(_.contains([TEAM_CONTEXT.type, JUDGE_CONTEXT.type, ROOM_CONTEXT.type], contextToRender.type)) {
+    if(_.contains([ManagementContextConstants.TEAM_CONTEXT.type, ManagementContextConstants.JUDGE_CONTEXT.type, ManagementContextConstants.ROOM_CONTEXT.type], contextToRender.type)) {
       return <ManagementHotContainer context={contextToRender} />;
     }
-    else if(_.contains([TEAM_ROUND_CONTEXT.type, JUDGE_ROUND_CONTEXT.type, ROOM_ROUND_CONTEXT.type]), contextToRender.type){
+    else if(_.contains([ManagementContextConstants.TEAM_ROUND_CONTEXT.type, ManagementContextConstants.JUDGE_ROUND_CONTEXT.type, ManagementContextConstants.ROOM_ROUND_CONTEXT.type]), contextToRender.type){
       return <RoundHotContainer roundIndex={roundIndex} context={contextToRender} />;
     }
     else {
@@ -434,9 +188,9 @@ var TournamentManagementContainer = ReactMeteor.createClass({
               <i tabIndex="0" className="dropdown icon"></i>
               <span className="text">Management</span>
               <div tabIndex="-1" className="menu">
-                <div className="item" onClick={this.switchContainerContextType.bind(this, TEAM_CONTEXT.type)}>Teams</div>
-                <div className="item" onClick={this.switchContainerContextType.bind(this, JUDGE_CONTEXT.type)}>Judges</div>
-                <div className="item" onClick={this.switchContainerContextType.bind(this, ROOM_CONTEXT.type)}>Rooms</div>
+                <div className="item" onClick={this.switchContainerContextType.bind(this, ManagementContextConstants.TEAM_CONTEXT.type)}>Teams</div>
+                <div className="item" onClick={this.switchContainerContextType.bind(this, ManagementContextConstants.JUDGE_CONTEXT.type)}>Judges</div>
+                <div className="item" onClick={this.switchContainerContextType.bind(this, ManagementContextConstants.ROOM_CONTEXT.type)}>Rooms</div>
               </div>
             </div>
             {this.props.tournament.rounds.map(function(round) {
@@ -445,10 +199,10 @@ var TournamentManagementContainer = ReactMeteor.createClass({
                   <i tabIndex="0" className="dropdown icon"></i>
                   <span className="text">Round {round.index + 1}</span>
                   <div tabIndex="-1" className="menu">
-                    <div className="item" onClick={this.switchContainerContextType.bind(this, TEAM_ROUND_CONTEXT.type, round.index)}>Teams</div>
-                    <div className="item" onClick={this.switchContainerContextType.bind(this, JUDGE_ROUND_CONTEXT.type, round.index)}>Judges</div>
-                    <div className="item" onClick={this.switchContainerContextType.bind(this, ROOM_ROUND_CONTEXT.type, round.index)}>Rooms</div>
-                    {round.state !== "initial" ? <div className="item" onClick={this.switchContainerContextType.bind(this, MANAGE_CONTEXT_TYPE, round.index)}><div><strong>Manage Assignment</strong></div></div> : null}
+                    <div className="item" onClick={this.switchContainerContextType.bind(this, ManagementContextConstants.TEAM_ROUND_CONTEXT.type, round.index)}>Teams</div>
+                    <div className="item" onClick={this.switchContainerContextType.bind(this, ManagementContextConstants.JUDGE_ROUND_CONTEXT.type, round.index)}>Judges</div>
+                    <div className="item" onClick={this.switchContainerContextType.bind(this, ManagementContextConstants.ROOM_ROUND_CONTEXT.type, round.index)}>Rooms</div>
+                    {round.state !== "initial" ? <div className="item" onClick={this.switchContainerContextType.bind(this, ManagementContextConstants.MANAGE_CONTEXT_TYPE, round.index)}><div><strong>Manage Assignment</strong></div></div> : null}
                   </div>
                 </div>
               );
@@ -614,7 +368,7 @@ var ManagementHot = ReactMeteor.createClass({
 
         // Rooms are special, we just re-register all of them for now
         // as they are just string arrays.
-        if(context.type === ROOM_CONTEXT_TYPE) {
+        if(context.type === ManagementContextConstants.ROOM_CONTEXT_TYPE) {
 
           var data = this.getData();
 
@@ -673,7 +427,7 @@ var ManagementHot = ReactMeteor.createClass({
         var context = componentThis.props.context;
 
         if(allowRemoveRow === true) {
-          if(context.type === ROOM_CONTEXT_TYPE) {
+          if(context.type === ManagementContextConstants.ROOM_CONTEXT_TYPE) {
             var data = this.getData();
 
             var dataWithoutEmptyRows = _.filter(data, function(rowData, rowIndex) {
