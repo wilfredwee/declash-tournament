@@ -9,7 +9,7 @@ Meteor.startup(function() {
         return;
       }
 
-      DeclashApp.checkInvariantsBeforeAssign(newDocument);
+      DeclashApp.helpers.checkInvariantsBeforeAssign(newDocument);
     }
   });
 });
