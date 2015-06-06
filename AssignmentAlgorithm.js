@@ -1,4 +1,4 @@
-APPGLOBALS.AssignmentAlgorithm = (function() {
+DeclashApp.AssignmentAlgorithm = (function() {
   var AssignmentAlgorithm = {
     getAssignedFirstRound: function(tournament, roundToAssign) {
       // Strategy:

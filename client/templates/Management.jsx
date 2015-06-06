@@ -246,7 +246,7 @@ var ROOM_ROUND_CONTEXT = _.extend({}, ROOM_CONTEXT, {
   type: "room_round"
 });
 
-APPGLOBALS.ManagementPageContainer = ReactMeteor.createClass({
+DeclashApp.ManagementPageContainer = ReactMeteor.createClass({
   render: function() {
     return <ManagementBody />;
   }
@@ -414,7 +414,7 @@ var TournamentManagementContainer = ReactMeteor.createClass({
         return "ui link item";
       }
 
-      if(!APPGLOBALS.ValidatorHelper.canCreateNextRound(this.props.tournament)) {
+      if(!DeclashApp.ValidatorHelper.canCreateNextRound(this.props.tournament)) {
         return "ui disabled item";
       }
       return "ui link item";
@@ -836,11 +836,11 @@ var RoundHotContainer = ReactMeteor.createClass({
       return undefined;
     }.bind(this))();
 
-    var assignButton = APPGLOBALS.ValidatorHelper.canAssignRound(this.state.tournament, this.props.roundIndex)?
+    var assignButton = DeclashApp.ValidatorHelper.canAssignRound(this.state.tournament, this.props.roundIndex)?
       <button className="ui primary button" onClick={this.assignCurrentRound}>Assign</button>
       : undefined;
 
-    var deleteRoundButton = APPGLOBALS.ValidatorHelper.canDeleteRound(this.state.tournament, this.props.roundIndex)?
+    var deleteRoundButton = DeclashApp.ValidatorHelper.canDeleteRound(this.state.tournament, this.props.roundIndex)?
       <button className="ui negative button" onClick={this.deleteCurrentRound}>Delete Round</button>
       : undefined;
 

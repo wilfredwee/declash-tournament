@@ -188,7 +188,7 @@ Meteor.methods({
     var tournament = getOwnerTournament.call(this);
     var roundToAssign = tournament.rounds[roundIndex];
 
-    if(!APPGLOBALS.ValidatorHelper.canAssignRound(tournament, roundIndex)) {
+    if(!DeclashApp.ValidatorHelper.canAssignRound(tournament, roundIndex)) {
       throw new Meteor.Error("invalidAction", "Cannot assign this round. Make sure you have the proper conditions.");
     }
 
@@ -199,13 +199,13 @@ Meteor.methods({
 
     if(roundToAssign.index === 0) {
       // assignedRound assigns teams and judges to rooms.
-      var assignedRound = APPGLOBALS.AssignmentAlgorithm.getAssignedFirstRound(tournament, roundToAssign);
+      var assignedRound = DeclashApp.AssignmentAlgorithm.getAssignedFirstRound(tournament, roundToAssign);
 
       // assignedTeams has their roles for a round assigned
-      var assignedTeams = APPGLOBALS.AssignmentAlgorithm.getAssignedTeams(tournament.teams, assignedRound);
+      var assignedTeams = DeclashApp.AssignmentAlgorithm.getAssignedTeams(tournament.teams, assignedRound);
 
       // assignedJudges has their roles for a round assigned (is chair or not)
-      var assignedJudges = APPGLOBALS.AssignmentAlgorithm.getAssignedJudges(tournament.judges, assignedRound);
+      var assignedJudges = DeclashApp.AssignmentAlgorithm.getAssignedJudges(tournament.judges, assignedRound);
 
       assignedRound.state = "assigned";
 
@@ -218,7 +218,7 @@ Meteor.methods({
     var tournament = getOwnerTournament.call(this);
     var roundToDelete = tournament.rounds[roundIndex];
 
-    if(!APPGLOBALS.ValidatorHelper.canDeleteRound(tournament, roundIndex)) {
+    if(!DeclashApp.ValidatorHelper.canDeleteRound(tournament, roundIndex)) {
       throw new Meteor.Error("invalidAction", "Cannot delete this round. Make sure you have the prper conditions.");
     }
 
@@ -252,7 +252,7 @@ Meteor.methods({
 
     var newRoom = getNewRoom(tournament);
 
-    if(!APPGLOBALS.ValidatorHelper.canChangeJudgeRoom(originRoom, newRoom, transferringJudge)) {
+    if(!DeclashApp.ValidatorHelper.canChangeJudgeRoom(originRoom, newRoom, transferringJudge)) {
       // We silently fail for this for now.
       return;
     }
@@ -269,7 +269,7 @@ Meteor.methods({
           return judge.guid === judgeGuid;
         });
 
-        judge.averageRank = APPGLOBALS.SchemaHelpers.getAverageRankForJudge(judge);
+        judge.averageRank = DeclashApp.SchemaHelpers.getAverageRankForJudge(judge);
 
         return judge;
       });

@@ -1,4 +1,4 @@
-APPGLOBALS.SchemaHelpers = (function(){
+DeclashApp.SchemaHelpers = (function(){
   var SchemaHelpers = {
     getAverageRankForJudge: function(judge) {
       var totalRank = 0;
@@ -15,4 +15,4 @@ APPGLOBALS.SchemaHelpers = (function(){
   }
 
   return SchemaHelpers;
-})()
+})();

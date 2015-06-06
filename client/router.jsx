@@ -13,7 +13,7 @@ Router.onBeforeAction(function() {
     this.next();
   }
   else if(!Meteor.userId()) {
-    renderReactPage(<APPGLOBALS.LoginPageContainer />);
+    renderReactPage(<DeclashApp.LoginPageContainer />);
   }
   else {
     this.next();
@@ -21,12 +21,12 @@ Router.onBeforeAction(function() {
 });
 
 Router.route("/register", function() {
-  renderReactPage(<APPGLOBALS.TabRegistrationPageContainer />);
+  renderReactPage(<DeclashApp.TabRegistrationPageContainer />);
 });
 
 Router.route("/login", function() {
   if(!Meteor.user()) {
-    renderReactPage(<APPGLOBALS.LoginPageContainer />);
+    renderReactPage(<DeclashApp.LoginPageContainer />);
   }
   else {
     this.redirect("/");
@@ -34,17 +34,17 @@ Router.route("/login", function() {
 });
 
 Router.route("/management", function() {
-  renderReactPage(<APPGLOBALS.ManagementPageContainer />);
+  renderReactPage(<DeclashApp.ManagementPageContainer />);
 });
 
 Router.route("/", function() {
-  renderReactPage(<APPGLOBALS.HomePageContainer />);
+  renderReactPage(<DeclashApp.HomePageContainer />);
 });
 
 Router.route("/tournaments", function() {
-  renderReactPage(<APPGLOBALS.TournamentListPageContainer />);
+  renderReactPage(<DeclashApp.TournamentListPageContainer />);
 });
 
 Router.route("/registerParticipants/:tournamentId", function() {
-  renderReactPage(<APPGLOBALS.ParticipantRegistrationPageContainer tournamentId={this.params.tournamentId} />);
+  renderReactPage(<DeclashApp.ParticipantRegistrationPageContainer tournamentId={this.params.tournamentId} />);
 });

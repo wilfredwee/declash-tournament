@@ -1,4 +1,4 @@
-APPGLOBALS.InvariantChecker = (function() {
+DeclashApp.InvariantChecker = (function() {
   var InvariantChecker = function(tournament, currentRound) {
     this.tournament = tournament;
     this.currentRound = currentRound;

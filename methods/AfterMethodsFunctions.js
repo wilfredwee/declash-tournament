@@ -1,4 +1,4 @@
-APPGLOBALS.checkInvariantsBeforeAssign = function(tournament) {
+DeclashApp.checkInvariantsBeforeAssign = function(tournament) {
   var trackedTournament = tournament;
 
   if(trackedTournament.rounds.length <= 0) {
@@ -16,7 +16,7 @@ APPGLOBALS.checkInvariantsBeforeAssign = function(tournament) {
     return;
   }
   else {
-    var invariantChecker = new APPGLOBALS.InvariantChecker(trackedTournament, currRound);
+    var invariantChecker = new DeclashApp.InvariantChecker(trackedTournament, currRound);
 
     var currViolations = invariantChecker.getViolatedInvariants();
 
