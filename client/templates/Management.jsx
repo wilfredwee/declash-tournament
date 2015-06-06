@@ -810,7 +810,7 @@ var RoundHotContainer = ReactMeteor.createClass({
   },
 
   assignCurrentRound: function() {
-    Meteor.call("assignRound", this.state.tournament, this.props.roundIndex, function(err, result) {
+    Meteor.call("assignRound", this.props.roundIndex, function(err, result) {
       // TODO
       if(err) {
         alert(err.reason);
@@ -819,7 +819,7 @@ var RoundHotContainer = ReactMeteor.createClass({
   },
 
   deleteCurrentRound: function() {
-    Meteor.call("deleteRound", this.state.tournament, this.props.roundIndex, function(err, result) {
+    Meteor.call("deleteRound", this.props.roundIndex, function(err, result) {
       // TODO
       if(err) {
         alert(err.reason);

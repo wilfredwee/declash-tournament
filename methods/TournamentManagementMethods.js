@@ -198,7 +198,8 @@ Meteor.methods({
     return newRoundIndex;
   },
 
-  assignRound: function(tournament, roundIndex) {
+  assignRound: function(roundIndex) {
+    var tournament = getOwnerTournament.call(this);
     var roundToAssign = tournament.rounds[roundIndex];
 
     if(!APPGLOBALS.ValidatorHelper.canAssignRound(tournament, roundIndex)) {
@@ -231,7 +232,8 @@ Meteor.methods({
     }
   },
 
-  deleteRound: function(tournament, roundIndex) {
+  deleteRound: function(roundIndex) {
+    var tournament = getOwnerTournament.call(this);
     var roundToDelete = tournament.rounds[roundIndex];
 
     if(!APPGLOBALS.ValidatorHelper.canDeleteRound(tournament, roundIndex)) {
