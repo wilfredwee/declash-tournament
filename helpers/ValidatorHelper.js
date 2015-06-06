@@ -1,5 +1,5 @@
 // For now, a static class with self-contained helper functions.
-DeclashApp.ValidatorHelper = (function() {
+DeclashApp.helpers.ValidatorHelper = (function() {
   var ValidatorHelper = {
     canCreateNextRound: function(tournament) {
       if(tournament.rounds.length === 0) {

@@ -247,7 +247,7 @@ SimpleSchema.addValidator(function() {
     if(this.genericKey === "rounds.$" && this.value.index !== 0) {
       var tournament = Tournaments.findOne({ownerId: this.userId, finished:false});
 
-      if(!DeclashApp.ValidatorHelper.canCreateNextRound(tournament)) {
+      if(!DeclashApp.helpers.ValidatorHelper.canCreateNextRound(tournament)) {
         return "notAllowed";
       }
     }

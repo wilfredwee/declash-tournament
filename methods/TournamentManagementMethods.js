@@ -1,3 +1,12 @@
+
+// Initialize variables from DeclashApp namespace.
+var ValidatorHelper;
+var SchemaHelpers;
+Meteor.startup(function() {
+  ValidatorHelper = DeclashApp.helpers.ValidatorHelper;
+  SchemaHelpers = DeclashApp.helpers.SchemaHelpers;
+});
+
 var getOwnerTournament = function() {
   return Tournaments.findOne({ownerId: this.userId, finished: false});
 };
@@ -188,7 +197,7 @@ Meteor.methods({
     var tournament = getOwnerTournament.call(this);
     var roundToAssign = tournament.rounds[roundIndex];
 
-    if(!DeclashApp.ValidatorHelper.canAssignRound(tournament, roundIndex)) {
+    if(!ValidatorHelper.canAssignRound(tournament, roundIndex)) {
       throw new Meteor.Error("invalidAction", "Cannot assign this round. Make sure you have the proper conditions.");
     }
 
@@ -218,7 +227,7 @@ Meteor.methods({
     var tournament = getOwnerTournament.call(this);
     var roundToDelete = tournament.rounds[roundIndex];
 
-    if(!DeclashApp.ValidatorHelper.canDeleteRound(tournament, roundIndex)) {
+    if(!ValidatorHelper.canDeleteRound(tournament, roundIndex)) {
       throw new Meteor.Error("invalidAction", "Cannot delete this round. Make sure you have the prper conditions.");
     }
 
@@ -252,7 +261,7 @@ Meteor.methods({
 
     var newRoom = getNewRoom(tournament);
 
-    if(!DeclashApp.ValidatorHelper.canChangeJudgeRoom(originRoom, newRoom, transferringJudge)) {
+    if(!ValidatorHelper.canChangeJudgeRoom(originRoom, newRoom, transferringJudge)) {
       // We silently fail for this for now.
       return;
     }
@@ -269,7 +278,7 @@ Meteor.methods({
           return judge.guid === judgeGuid;
         });
 
-        judge.averageRank = DeclashApp.SchemaHelpers.getAverageRankForJudge(judge);
+        judge.averageRank = SchemaHelpers.getAverageRankForJudge(judge);
 
         return judge;
       });

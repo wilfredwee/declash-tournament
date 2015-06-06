@@ -246,6 +246,12 @@ var ROOM_ROUND_CONTEXT = _.extend({}, ROOM_CONTEXT, {
   type: "room_round"
 });
 
+// Initialize variables from DeclashApp namespace.
+var ValidatorHelper;
+Meteor.startup(function() {
+  ValidatorHelper = DeclashApp.helpers.ValidatorHelper;
+});
+
 DeclashApp.ManagementPageContainer = ReactMeteor.createClass({
   render: function() {
     return <ManagementBody />;
@@ -414,7 +420,7 @@ var TournamentManagementContainer = ReactMeteor.createClass({
         return "ui link item";
       }
 
-      if(!DeclashApp.ValidatorHelper.canCreateNextRound(this.props.tournament)) {
+      if(!ValidatorHelper.canCreateNextRound(this.props.tournament)) {
         return "ui disabled item";
       }
       return "ui link item";
@@ -836,11 +842,11 @@ var RoundHotContainer = ReactMeteor.createClass({
       return undefined;
     }.bind(this))();
 
-    var assignButton = DeclashApp.ValidatorHelper.canAssignRound(this.state.tournament, this.props.roundIndex)?
+    var assignButton = ValidatorHelper.canAssignRound(this.state.tournament, this.props.roundIndex)?
       <button className="ui primary button" onClick={this.assignCurrentRound}>Assign</button>
       : undefined;
 
-    var deleteRoundButton = DeclashApp.ValidatorHelper.canDeleteRound(this.state.tournament, this.props.roundIndex)?
+    var deleteRoundButton = ValidatorHelper.canDeleteRound(this.state.tournament, this.props.roundIndex)?
       <button className="ui negative button" onClick={this.deleteCurrentRound}>Delete Round</button>
       : undefined;
 
