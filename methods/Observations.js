@@ -1,13 +1,15 @@
 Meteor.startup(function() {
   var query = Tournaments.find();
 
-  var handle = query.observeChanges({
-    changed: function(id, fieldChanges) {
-      if(Array.isArray(fieldChanges.currentInvariantViolations)) {
+  var handle = query.observe({
+    changed: function(newDocument, oldDocument) {
+      if(!_.some(newDocument.rounds, function(round) {
+        return round.state === "initial";
+      })) {
         return;
       }
 
-      APPGLOBALS.checkInvariantsBeforeAssign(Tournaments.findOne(id));
+      APPGLOBALS.checkInvariantsBeforeAssign(newDocument);
     }
   });
 });
