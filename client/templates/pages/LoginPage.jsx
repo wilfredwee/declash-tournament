@@ -1,4 +1,4 @@
-DeclashApp.LoginPageContainer = (function() {
+DeclashApp.client.templates.pages.LoginPageContainer = (function() {
   var LoginPageContainer = ReactMeteor.createClass({
     render: function() {
       return <LoginComponent />;

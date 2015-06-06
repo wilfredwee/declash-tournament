@@ -1,4 +1,4 @@
-DeclashApp.HomePageContainer = (function() {
+DeclashApp.client.templates.pages.HomePageContainer = (function() {
   var HomePageContainer = ReactMeteor.createClass({
     render: function() {
       return <Home />;

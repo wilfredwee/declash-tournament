@@ -1,11 +1,11 @@
-var REGISTRATION_STATES = {
-  choosing: "choosing",
-  registerTeam: "registerTeam",
-  registerJudge: "registerJudge",
-  success: "success"
-};
+DeclashApp.client.templates.pages.ParticipantRegistrationPageContainer = (function() {
+  var REGISTRATION_STATES = {
+    choosing: "choosing",
+    registerTeam: "registerTeam",
+    registerJudge: "registerJudge",
+    success: "success"
+  };
 
-DeclashApp.ParticipantRegistrationPageContainer = (function() {
   var ParticipantRegistrationPageContainer = ReactMeteor.createClass({
     render: function() {
       return <ParticipantRegistrationPageBody tournamentId={this.props.tournamentId} />;

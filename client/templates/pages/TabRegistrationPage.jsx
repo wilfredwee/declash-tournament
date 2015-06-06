@@ -1,4 +1,4 @@
-DeclashApp.TabRegistrationPageContainer = (function() {
+DeclashApp.client.templates.pages.TabRegistrationPageContainer = (function() {
   var TabRegistrationPageContainer = ReactMeteor.createClass({
     templateName: "TabRegistrationPageContainer",
 

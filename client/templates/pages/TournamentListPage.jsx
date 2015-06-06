@@ -1,4 +1,4 @@
-DeclashApp.TournamentListPageContainer = (function() {
+DeclashApp.client.templates.pages.TournamentListPageContainer = (function() {
   var TournamentListPageContainer = ReactMeteor.createClass({
     getMeteorState: function() {
       return {
