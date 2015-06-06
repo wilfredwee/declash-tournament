@@ -1020,10 +1020,11 @@ var RoundRoomsContainer = ReactMeteor.createClass({
   getMeteorState: function() {
     var tournament = Tournaments.findOne({ownerId: Meteor.userId()})
     Session.setDefault("filteredRoomIds", ["", ""]);
+    Session.setDefault("currentDraggedJudgeData", null);
     return {
       tournament: tournament,
       schemaInjectedRounds: this.getSchemaInjectedRounds(tournament, Session.get("filteredRoomIds")),
-      filteredRooms: Session.get("filteredRoomIds")
+      currentDraggedJudgeData: Session.get("currentDraggedJudgeData")
     };
   },
 
@@ -1067,46 +1068,47 @@ var RoundRoomsContainer = ReactMeteor.createClass({
     });
   },
 
-  renderTeamsForRoom: function(room, roundIndex) {
-    function getTeamForRole(role) {
-      return _.find(room.teams, function(team) {
-        return team.roleForRound[roundIndex] === role;
-      });
-    }
-
-    var OGTeam = getTeamForRole("OG");
-    var OOTeam = getTeamForRole("OO");
-    var CGTeam = getTeamForRole("CG");
-    var COTeam = getTeamForRole("CO");
-
-    return (
-      <div className="ui stackable two column celled grid">
-        <div className="two column row">
-          <div className="column"><span><strong>Opening Gov: </strong>{OGTeam.name}</span></div>
-          <div className="column"><span><strong>Opening Opp: </strong>{OOTeam.name}</span></div>
-        </div>
-        <div className="two column row">
-          <div className="column"><span><strong>Closing Gov: </strong>{CGTeam.name}</span></div>
-          <div className="column"><span><strong>Closing Opp: </strong>{COTeam.name}</span></div>
-        </div>
-      </div>
-    );
+  setCurrentDraggedJudge: function(judge, roundIndex) {
+    Session.set("currentDraggedJudgeData", {
+      judge: judge,
+      roundIndex: roundIndex
+    });
   },
 
-  renderJudgesForRoom: function(room, roundIndex) {
-    return _.map(room.judges, function(judge, judgeIndex) {
-      var judgeName = judge.name;
+  clearCurrentDraggedJudge: function(){
+    Session.set("currentDraggedJudgeData", null);
+  },
 
-      if(judge.isChairForRound[roundIndex]) {
-        judgeName = "(Chair) ".concat(judgeName);
+  getDragData: function() {
+    return Session.get("currentDraggedJudgeData");
+  },
+
+  onDrop: function(room) {
+    var judge = this.getDragData().judge;
+    var roundIndex = this.props.roundIndex;
+
+    Meteor.call("changeJudgeRoom", judge, room.locationId, roundIndex, function(err, result) {
+      // TODO
+      if(err) {
+        alert(err.reason);
       }
-
-      return (
-        <div key={judgeIndex} className="row">
-          <div className="column"><p>{judgeName}</p></div>
-        </div>
-      );
     });
+  },
+
+  renderRooms: function(room) {
+    return _.map(this.state.schemaInjectedRounds[this.props.roundIndex].rooms, function(room, roomIndex) {
+      return (
+          <RoomComponent
+            key={roomIndex}
+            onDragStart={this.setCurrentDraggedJudge}
+            onDragStop={this.clearCurrentDraggedJudge}
+            getDragData={this.getDragData}
+            onDrop={this.onDrop.bind(null, room)}
+            room={room}
+            roundIndex={this.props.roundIndex}/>
+      );
+    }.bind(this))
+
   },
 
   handleFilter: function(e, index) {
@@ -1155,25 +1157,286 @@ var RoundRoomsContainer = ReactMeteor.createClass({
         </div>
         <div className="row">
           <div className="ui stackable three column grid">
-            {
-              _.map(this.state.schemaInjectedRounds[this.props.roundIndex].rooms, function(room, roomIndex) {
-                return (
-                  <div key={roomIndex} className="column">
-                    <div className="ui segment">
-                      <h3 className="ui horizontal header divider">{room.locationId}</h3>
-                      {this.renderTeamsForRoom(room, this.props.roundIndex)}
-                      <h5 className="ui horizontal header divider">Judges</h5>
-                      <div className="ui celled vertically divided grid">
-                        {this.renderJudgesForRoom(room, this.props.roundIndex)}
-                      </div>
-                    </div>
-                  </div>
-                );
-              }.bind(this))
-            }
+            {this.renderRooms()}
           </div>
         </div>
       </div>
     );
   }
 });
+
+
+// Contract for Draggable Connector:
+// 1. A Component must be passed it.
+// 2. This connector provides three props:
+//      i:   onMouseDown
+//      ii:  onMouseMove
+//      iii: style
+var connectDraggable = function(Component) {
+  var DraggableComponent = ReactMeteor.createClass({
+    getInitialState: function () {
+      return {
+          mouseDown: false,
+          dragging: false
+      };
+    },
+    render: function() {
+      var combinedProps = {
+          onMouseDown: this.onMouseDown,
+          style: this.getStyle()
+      };
+      _.extend(combinedProps, this.props);
+      return <Component {...combinedProps} />;
+    },
+
+    getStyle: function() {
+      // To set a style, we build an object accordingly.
+
+      var styleObj = {
+        cursor: "move"
+      };
+
+      // We're currently dragging something.
+      if(this.props.getDragData()) {
+
+        // We're dealing with an object that's being dragged.
+        if(this.state.dragging) {
+          _.extend(styleObj, {
+            position: "absolute",
+            left: this.state.left,
+            top: this.state.top,
+            zIndex: 10,
+            pointerEvents: "none"
+          });
+        }
+      }
+      return styleObj;
+    },
+
+    onMouseDown: function(event) {
+      // 0 is left-button
+      if(event.button === 0) {
+        event.stopPropagation();
+        event.preventDefault();
+        this.addDragEvents();
+        var pageOffset = this.getDOMNode().getBoundingClientRect();
+        return this.setState({
+          mouseDown: true,
+          originX: event.pageX,
+          originY: event.pageY,
+          elementX: pageOffset.left,
+          elementY: pageOffset.top
+        })
+      }
+    },
+
+    onMouseMove: function(event) {
+
+      var deltaX = event.pageX - this.state.originX;
+      var deltaY = event.pageY - this.state.originY;
+      var distance = Math.abs(deltaX) + Math.abs(deltaY);
+
+      var DRAG_TRESHOLD = 3;
+
+      if(!this.state.dragging && distance > DRAG_TRESHOLD) {
+        this.setState({
+          dragging: true
+        });
+
+        if(typeof this.props.onDragStart === "function") {
+          var dragData = typeof this.props.getDragData === "function"
+            ? this.props.getDragData()
+            : undefined;
+
+          this.props.onDragStart(dragData);
+        }
+      }
+
+      if(this.state.dragging) {
+        return this.setState({
+          left: this.state.elementX + deltaX + document.body.scrollLeft,
+          top: this.state.elementY + deltaY + document.body.scrollTop
+        });
+      }
+
+    },
+
+    onMouseUp: function(event) {
+      this.removeDragEvents();
+
+      if(this.state.dragging) {
+        this.props.onDragStop();
+
+        return this.setState({
+          dragging: false,
+        })
+      }
+    },
+
+    addDragEvents: function() {
+      document.addEventListener("mousemove", this.onMouseMove);
+      return document.addEventListener("mouseup", this.onMouseUp);
+    },
+
+    removeDragEvents: function() {
+      document.removeEventListener("mousemove", this.onMouseMove);
+      return document.removeEventListener("mouseup", this.onMouseUp);
+    }
+  });
+
+  return DraggableComponent;
+};
+
+// Contract for Droppable Connector:
+// 1. A Component must be passed it.
+// 2. This connector provides four props:
+//      i:   onMouseEnter
+//      ii:  onMouseLeave
+//      iii: onMouseUp
+//      iv:  style
+var connectDroppable = function(Component) {
+  var DroppableComponent = ReactMeteor.createClass({
+    getInitialState: function() {
+      return {
+          hover: false
+      };
+    },
+
+    getStyle: function() {
+      var styleObj = {};
+
+      if(this.state.hover && this.props.getDragData()) {
+        _.extend(styleObj, {background: "green"});
+      }
+
+      return styleObj;
+    },
+
+    onMouseEnter: function(event) {
+      return this.setState({
+        hover: true
+      });
+    },
+
+    onMouseLeave: function(event) {
+      return this.setState({
+        hover: false
+      });
+    },
+
+    onMouseUp: function(event) {
+      if(this.props.getDragData()) {
+        this.props.onDrop();
+      }
+    },
+
+    render: function() {
+      var props = {
+        onMouseEnter: this.onMouseEnter,
+        onMouseLeave: this.onMouseLeave,
+        onMouseUp: this.onMouseUp,
+        style: this.getStyle()
+      };
+
+      _.extend(props, this.props);
+
+      return <Component {...props} />;
+    }
+  });
+
+  return DroppableComponent;
+};
+
+var RoomComponent = connectDroppable(
+  ReactMeteor.createClass({
+    onDrop: function() {
+      this.props.onDrop(this.props.room, this.props.roundIndex);
+    },
+
+    renderTeamsForRoom: function(room, roundIndex) {
+      function getTeamForRole(role) {
+        return _.find(room.teams, function(team) {
+          return team.roleForRound[roundIndex] === role;
+        });
+      }
+
+      var OGTeam = getTeamForRole("OG");
+      var OOTeam = getTeamForRole("OO");
+      var CGTeam = getTeamForRole("CG");
+      var COTeam = getTeamForRole("CO");
+
+      return (
+        <div className="ui stackable two column celled grid">
+          <div className="two column row">
+            <div className="column"><span><strong>Opening Gov: </strong>{OGTeam.name}</span></div>
+            <div className="column"><span><strong>Opening Opp: </strong>{OOTeam.name}</span></div>
+          </div>
+          <div className="two column row">
+            <div className="column"><span><strong>Closing Gov: </strong>{CGTeam.name}</span></div>
+            <div className="column"><span><strong>Closing Opp: </strong>{COTeam.name}</span></div>
+          </div>
+        </div>
+      );
+    },
+
+    renderJudgesForRoom: function(room, roundIndex) {
+      return _.map(room.judges, function(judge, judgeIndex) {
+        return (
+          <JudgeComponent
+            key={judgeIndex}
+            onDragStart={this.props.onDragStart.bind(null, judge, roundIndex)}
+            onDragStop={this.props.onDragStop}
+            getDragData={this.props.getDragData}
+            judge={judge}
+            roundIndex={roundIndex}
+          />
+        );
+      }.bind(this));
+    },
+
+    render: function() {
+      return (
+        <div className="column">
+          <div className="ui segment"
+            onMouseEnter={this.props.onMouseEnter}
+            onMouseLeave={this.props.onMouseLeave}
+            onMouseUp={this.props.onMouseUp}
+            style={this.props.style}
+          >
+            <h3 className="ui horizontal header divider">{this.props.room.locationId}</h3>
+            {this.renderTeamsForRoom(this.props.room, this.props.roundIndex)}
+            <h5 className="ui horizontal header divider">Judges</h5>
+            <div className="ui celled vertically divided grid">
+              {this.renderJudgesForRoom(this.props.room, this.props.roundIndex)}
+            </div>
+          </div>
+        </div>
+      );
+    }
+  })
+);
+
+var JudgeComponent = connectDraggable(
+  ReactMeteor.createClass({
+    render: function() {
+      var judgeName = this.props.judge.name;
+
+      if(this.props.judge.isChairForRound[this.props.roundIndex]) {
+        judgeName = "(Chair) ".concat(judgeName);
+      }
+
+      return (
+        <div className="row"
+          onMouseDown={this.props.onMouseDown}
+          style={this.props.style}
+        >
+          <div className="column">
+            <div>{judgeName}</div>
+          </div>
+        </div>
+      );
+    }
+  })
+);
+
+

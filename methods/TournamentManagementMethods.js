@@ -2,6 +2,8 @@ var getOwnerTournament = function() {
   return Tournaments.findOne({ownerId: this.userId, finished: false});
 };
 
+var INVARIANTCHECK_HANDLE = null;
+
 Meteor.methods({
   removeTeam: function(team) {
     var tournament = getOwnerTournament.call(this);
@@ -120,6 +122,18 @@ Meteor.methods({
   },
 
   createRound: function() {
+    var query = Tournaments.find();
+
+    INVARIANTCHECK_HANDLE = query.observeChanges({
+      changed: function(id, fieldChanges) {
+        if(Array.isArray(fieldChanges.currentInvariantViolations)) {
+          return;
+        }
+
+        APPGLOBALS.checkInvariantsBeforeAssign(Tournaments.findOne(id));
+      }
+    });
+
     var tournament = getOwnerTournament.call(this);
 
     var oldRound = _.reduce(tournament.rounds, function(prevRound, currRound) {
@@ -211,6 +225,10 @@ Meteor.methods({
       Tournaments.update({_id: tournament._id, "rounds.index": assignedRound.index}, {$set: {"rounds.$": assignedRound}}, {validate: false, filter: false});
       Tournaments.update(tournament._id, {$set: {teams: assignedTeams, judges: assignedJudges}});
     }
+
+    if(typeof INVARIANTCHECK_HANDLE.stop === "function") {
+      INVARIANTCHECK_HANDLE.stop();
+    }
   },
 
   deleteRound: function(tournament, roundIndex) {
@@ -226,5 +244,84 @@ Meteor.methods({
     }
 
     Tournaments.update(tournament._id, {$pull: {"rounds": {index: roundIndex}}});
+  },
+
+  changeJudgeRoom: function(transferringJudge, destinationRoomString, roundIndex) {
+    // Assumption: every room will always have a chair.
+    var tournament = getOwnerTournament.call(this);
+
+    function getNewRoom(passedTournament) {
+      return _.find(passedTournament.rounds[roundIndex].rooms, function(room) {
+        return room.locationId === destinationRoomString;
+      });
+    }
+
+    function getOriginRoom(passedTournament) {
+      return _.find(passedTournament.rounds[roundIndex].rooms, function(room) {
+        return _.find(room.judges, function(judgeGuid) {
+          return judgeGuid === transferringJudge.guid;
+        });
+      });
+    }
+
+    var originRoom = getOriginRoom(tournament);
+
+    var newRoom = getNewRoom(tournament);
+
+    if(!APPGLOBALS.ValidatorHelper.canChangeJudgeRoom(originRoom, newRoom, transferringJudge)) {
+      // We silently fail for this for now.
+      return;
+    }
+
+    var newOriginRoomJudges = _.filter(originRoom.judges, function(judgeGuid) {
+      return judgeGuid !== transferringJudge.guid;
+    });
+
+    // Set a new chair for the origin room.
+    // and, set the transferring judge to NOT be chair.
+    if(transferringJudge.isChairForRound[roundIndex]) {
+      var judgesWithAverageRank = _.map(newOriginRoomJudges, function(judgeGuid) {
+        var judge = _.find(tournament.judges, function(judge) {
+          return judge.guid === judgeGuid;
+        });
+
+        judge.averageRank = APPGLOBALS.SchemaHelpers.getAverageRankForJudge(judge);
+
+        return judge;
+      });
+
+      var highestRankJudge = _.max(judgesWithAverageRank, function(judge) {
+        return judge.averageRank;
+      });
+
+      var setObj = {};
+      setObj["judges.$.isChairForRound." + roundIndex.toString()] = true;
+
+      Tournaments.update(
+        {_id: tournament._id, "judges.guid": highestRankJudge.guid},
+        {$set: setObj},
+        {validate: false, filter: false}
+      );
+
+      setObj["judges.$.isChairForRound." + roundIndex.toString()] = false;
+      Tournaments.update(
+        {_id: tournament._id, "judges.guid": transferringJudge.guid},
+        {$set: setObj},
+        {validate: false, filter: false}
+      );
+
+      // re-get our tournament, since it is changed.
+      tournament = getOwnerTournament.call(this);
+    }
+
+    newRoom = getNewRoom(tournament);
+    originRoom = getOriginRoom(tournament);
+
+    newRoom.judges.push(transferringJudge.guid);
+    originRoom.judges = newOriginRoomJudges;
+
+    Tournaments.update(
+      {_id: tournament._id, "rounds.index": roundIndex},
+      {$set: {"rounds.$.rooms": tournament.rounds[roundIndex].rooms}});
   }
 });

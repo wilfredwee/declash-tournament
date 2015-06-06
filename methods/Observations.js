@@ -7,7 +7,7 @@ Meteor.startup(function() {
         return;
       }
 
-      APPGLOBALS.checkInvariants(Tournaments.findOne(id));
+      APPGLOBALS.checkInvariantsBeforeAssign(Tournaments.findOne(id));
     }
   });
 });

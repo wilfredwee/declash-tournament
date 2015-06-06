@@ -27,6 +27,20 @@ APPGLOBALS.ValidatorHelper = (function() {
         return false;
       }
       return _.contains(acceptableStates, tournament.rounds[currentRoundIndex].state);
+    },
+
+    canChangeJudgeRoom: function(originRoom, newRoom, transferringJudge) {
+      // rooms must be different.
+      if(originRoom.locationId === newRoom.locationId) {
+        return false;
+      }
+
+      // originRoom must have at least 2 judges.
+      if(originRoom.judges.length <= 1) {
+        return false;
+      }
+
+      return true;
     }
   };
 

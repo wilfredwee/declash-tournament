@@ -91,7 +91,11 @@ APPGLOBALS.AssignmentAlgorithm = (function() {
           });
         });
 
-        roomJudges[0].isChairForRound[round.index] = true;
+        _.first(roomJudges).isChairForRound[round.index] = true;
+
+        _.each(_.rest(roomJudges), function(judge) {
+          judge.isChairForRound[round.index] = false;
+        });
 
         return roomJudges;
       }), true);

@@ -1,4 +1,4 @@
-APPGLOBALS.checkInvariants = function(tournament) {
+APPGLOBALS.checkInvariantsBeforeAssign = function(tournament) {
   var trackedTournament = tournament;
 
   if(trackedTournament.rounds.length <= 0) {

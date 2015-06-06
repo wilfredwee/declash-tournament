@@ -58,6 +58,7 @@ var JudgeSchema = new SimpleSchema({
   },
 
   isChairForRound: {
+
     type: Object,
     label: "All isChar for a judge. They are a key-value pair. Key:Round index, Value: score",
     blackbox: true
