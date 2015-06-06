@@ -2,8 +2,6 @@ var getOwnerTournament = function() {
   return Tournaments.findOne({ownerId: this.userId, finished: false});
 };
 
-var INVARIANTCHECK_HANDLE = null;
-
 Meteor.methods({
   removeTeam: function(team) {
     var tournament = getOwnerTournament.call(this);
@@ -122,18 +120,6 @@ Meteor.methods({
   },
 
   createRound: function() {
-    var query = Tournaments.find();
-
-    INVARIANTCHECK_HANDLE = query.observeChanges({
-      changed: function(id, fieldChanges) {
-        if(Array.isArray(fieldChanges.currentInvariantViolations)) {
-          return;
-        }
-
-        APPGLOBALS.checkInvariantsBeforeAssign(Tournaments.findOne(id));
-      }
-    });
-
     var tournament = getOwnerTournament.call(this);
 
     var oldRound = _.reduce(tournament.rounds, function(prevRound, currRound) {
@@ -225,10 +211,6 @@ Meteor.methods({
 
       Tournaments.update({_id: tournament._id, "rounds.index": assignedRound.index}, {$set: {"rounds.$": assignedRound}}, {validate: false, filter: false});
       Tournaments.update(tournament._id, {$set: {teams: assignedTeams, judges: assignedJudges}});
-    }
-
-    if(typeof INVARIANTCHECK_HANDLE.stop === "function") {
-      INVARIANTCHECK_HANDLE.stop();
     }
   },
 
