@@ -8,9 +8,6 @@ APPGLOBALS.TabRegistrationPageContainer = ReactMeteor.createClass({
 
 
 var TabRegistrationForm = ReactMeteor.createClass({
-  startMeteorSubscriptions: function() {
-    Meteor.subscribe("tabUsers");
-  },
   getMeteorState: function() {
     // TODO
     // Stub:

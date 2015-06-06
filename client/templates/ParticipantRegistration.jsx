@@ -6,21 +6,12 @@ var REGISTRATION_STATES = {
 };
 
 APPGLOBALS.ParticipantRegistrationPageContainer = ReactMeteor.createClass({
-  startMeteorSubscriptions: function() {
-    // TODO: Maybe
-  },
-
   render: function() {
     return <ParticipantRegistrationPageBody tournamentId={this.props.tournamentId} />;
   }
 });
 
 var ParticipantRegistrationPageBody = ReactMeteor.createClass({
-  startMeteorSubscriptions: function() {
-    // Not strictly necessary, but helps client simulation when registering.
-    Meteor.subscribe("unfinishedTournaments");
-  },
-
   getMeteorState: function() {
     var registrationState = Session.get("registrationState") || REGISTRATION_STATES.choosing;
     return {

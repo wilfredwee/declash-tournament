@@ -254,10 +254,6 @@ APPGLOBALS.ManagementPageContainer = ReactMeteor.createClass({
 
 
 var ManagementBody = ReactMeteor.createClass({
-  startMeteorSubscriptions: function() {
-    Meteor.subscribe("unfinishedTournaments");
-  },
-
   getMeteorState: function() {
     return {
       tournament: Tournaments.findOne({ownerId: Meteor.userId()}),
@@ -285,10 +281,6 @@ var ManagementBody = ReactMeteor.createClass({
 });
 
 var Header = ReactMeteor.createClass({
-  startMeteorSubscriptions: function() {
-    // TODO
-  },
-
   getMeteorState: function() {
     return {
       currentUser: Meteor.user()
@@ -468,10 +460,6 @@ var TournamentManagementContainer = ReactMeteor.createClass({
 });
 
 var ManagementHotContainer = ReactMeteor.createClass({
-  startMeteorSubscriptions: function() {
-    Meteor.subscribe("unfinishedTournaments");
-  },
-
   getMeteorState: function() {
     return {
       tournament: Tournaments.findOne({ownerId: Meteor.userId()})
@@ -799,10 +787,6 @@ var ManagementHot = ReactMeteor.createClass({
 });
 
 var RoundHotContainer = ReactMeteor.createClass({
-  startMeteorSubscriptions: function() {
-    Meteor.subscribe("unfinishedTournaments");
-  },
-
   getMeteorState: function() {
     return {
       tournament: Tournaments.findOne({ownerId: Meteor.userId()})
@@ -1013,10 +997,6 @@ var RoundHot = ReactMeteor.createClass({
 });
 
 var RoundRoomsContainer = ReactMeteor.createClass({
-  startMeteorSubscriptions: function() {
-    Meteor.subscribe("unfinishedTournaments");
-  },
-
   getMeteorState: function() {
     var tournament = Tournaments.findOne({ownerId: Meteor.userId()})
     Session.setDefault("filteredRoomIds", ["", ""]);

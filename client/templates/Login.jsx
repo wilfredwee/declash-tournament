@@ -5,10 +5,6 @@ APPGLOBALS.LoginPageContainer = ReactMeteor.createClass({
 });
 
 var LoginComponent = ReactMeteor.createClass({
-  startMeteorSubscriptions: function() {
-    // TODO
-  },
-
   getMeteorState: function() {
     return {
       isLoggedIn: !!Meteor.user()

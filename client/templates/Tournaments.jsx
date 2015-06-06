@@ -1,8 +1,4 @@
 APPGLOBALS.TournamentListPageContainer = ReactMeteor.createClass({
-  startMeteorSubscriptions: function() {
-    Meteor.subscribe("unfinishedTournaments");
-  },
-
   getMeteorState: function() {
     return {
       tournaments: Tournaments.find({enablePublicRegistration: true})
