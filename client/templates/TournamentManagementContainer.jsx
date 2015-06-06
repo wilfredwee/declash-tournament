@@ -22,35 +22,54 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
     },
 
     renderAccordingToContextType: function(contextType, roundIndex) {
-      var contextToRender = ManagementContextConstants.TEAM_CONTEXT;
+      // Shortening our variable to avoid insanity.
+      var MANAGE_CONTEXT_TYPE = ManagementContextConstants.MANAGE_CONTEXT_TYPE;
+      var TEAM_CONTEXT = ManagementContextConstants.TEAM_CONTEXT;
+      var JUDGE_CONTEXT = ManagementContextConstants.JUDGE_CONTEXT;
+      var ROOM_CONTEXT = ManagementContextConstants.ROOM_CONTEXT;
+      var TEAM_ROUND_CONTEXT = ManagementContextConstants.TEAM_ROUND_CONTEXT;
+      var JUDGE_ROUND_CONTEXT = ManagementContextConstants.JUDGE_ROUND_CONTEXT;
+      var ROOM_ROUND_CONTEXT = ManagementContextConstants.ROOM_ROUND_CONTEXT;
+
+      var contextToRender = TEAM_CONTEXT;
       switch(contextType) {
-        case ManagementContextConstants.TEAM_CONTEXT.type:
-          contextToRender = ManagementContextConstants.TEAM_CONTEXT;
+        case TEAM_CONTEXT.type:
+          contextToRender = TEAM_CONTEXT;
           break;
-        case ManagementContextConstants.JUDGE_CONTEXT.type:
-          contextToRender = ManagementContextConstants.JUDGE_CONTEXT;
+        case JUDGE_CONTEXT.type:
+          contextToRender = JUDGE_CONTEXT;
           break;
-        case ManagementContextConstants.ROOM_CONTEXT.type:
-          contextToRender = ManagementContextConstants.ROOM_CONTEXT;
+        case ROOM_CONTEXT.type:
+          contextToRender = ROOM_CONTEXT;
           break;
-        case ManagementContextConstants.TEAM_ROUND_CONTEXT.type:
-          contextToRender = ManagementContextConstants.TEAM_ROUND_CONTEXT;
+        case TEAM_ROUND_CONTEXT.type:
+          contextToRender = TEAM_ROUND_CONTEXT;
           break;
-        case ManagementContextConstants.JUDGE_ROUND_CONTEXT.type:
-          contextToRender = ManagementContextConstants.JUDGE_ROUND_CONTEXT;
+        case JUDGE_ROUND_CONTEXT.type:
+          contextToRender = JUDGE_ROUND_CONTEXT;
           break;
-        case ManagementContextConstants.ROOM_ROUND_CONTEXT.type:
-          contextToRender = ManagementContextConstants.ROOM_ROUND_CONTEXT;
+        case ROOM_ROUND_CONTEXT.type:
+          contextToRender = ROOM_ROUND_CONTEXT;
           break;
-        case ManagementContextConstants.MANAGE_CONTEXT_TYPE:
+        case MANAGE_CONTEXT_TYPE:
           contextToRender = {type: null};
           break;
       }
 
-      if(_.contains([ManagementContextConstants.TEAM_CONTEXT.type, ManagementContextConstants.JUDGE_CONTEXT.type, ManagementContextConstants.ROOM_CONTEXT.type], contextToRender.type)) {
+      if(_.contains([
+        TEAM_CONTEXT.type,
+        JUDGE_CONTEXT.type,
+        ROOM_CONTEXT.type
+        ], contextToRender.type)
+      ) {
         return <ManagementHotContainer context={contextToRender} />;
       }
-      else if(_.contains([ManagementContextConstants.TEAM_ROUND_CONTEXT.type, ManagementContextConstants.JUDGE_ROUND_CONTEXT.type, ManagementContextConstants.ROOM_ROUND_CONTEXT.type]), contextToRender.type){
+      else if(_.contains([
+        TEAM_ROUND_CONTEXT.type,
+        JUDGE_ROUND_CONTEXT.type,
+        ROOM_ROUND_CONTEXT.type
+        ], contextToRender.type)
+      ){
         return <RoundHotContainer roundIndex={roundIndex} context={contextToRender} />;
       }
       else {
@@ -103,7 +122,13 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
                       <div className="item" onClick={this.switchContainerContextType.bind(this, ManagementContextConstants.TEAM_ROUND_CONTEXT.type, round.index)}>Teams</div>
                       <div className="item" onClick={this.switchContainerContextType.bind(this, ManagementContextConstants.JUDGE_ROUND_CONTEXT.type, round.index)}>Judges</div>
                       <div className="item" onClick={this.switchContainerContextType.bind(this, ManagementContextConstants.ROOM_ROUND_CONTEXT.type, round.index)}>Rooms</div>
-                      {round.state !== "initial" ? <div className="item" onClick={this.switchContainerContextType.bind(this, ManagementContextConstants.MANAGE_CONTEXT_TYPE, round.index)}><div><strong>Manage Assignment</strong></div></div> : null}
+                      {round.state !== "initial" ?
+                        <div className="item"
+                          onClick={this.switchContainerContextType.bind(this, ManagementContextConstants.MANAGE_CONTEXT_TYPE, round.index)}
+                        >
+                          <div><strong>Manage Assignment</strong></div>
+                        </div>
+                        : null}
                     </div>
                   </div>
                 );
@@ -145,8 +170,14 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
         <div>
           <div className="row">
             <div className="ui toggle checkbox">
-              <input ref="enablePublicRegistrationCheckBox" checked={this.state.tournament.enablePublicRegistration} readOnly onClick={this.handleSelectPublicRegistration} type="checkbox">
-              <label>Public Registration of Teams/Judges is {this.state.tournament.enablePublicRegistration ? "Open" : "Closed"}.</label>
+              <input
+                ref="enablePublicRegistrationCheckBox"
+                checked={this.state.tournament.enablePublicRegistration}
+                onClick={this.handleSelectPublicRegistration}
+                readOnly
+                type="checkbox"
+              >
+                <label>Public Registration of Teams/Judges is {this.state.tournament.enablePublicRegistration ? "Open" : "Closed"}.</label>
               </input>
             </div>
           </div>
