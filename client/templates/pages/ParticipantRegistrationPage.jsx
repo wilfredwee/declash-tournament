@@ -1,3 +1,5 @@
+"use strict";
+
 DeclashApp.client.templates.pages.ParticipantRegistrationPageContainer = (function() {
   var REGISTRATION_STATES = {
     choosing: "choosing",
@@ -33,7 +35,7 @@ DeclashApp.client.templates.pages.ParticipantRegistrationPageContainer = (functi
         case REGISTRATION_STATES.registerJudge:
           return <JudgeRegistrationForm updateParentState={this.changeState} tournamentId={this.props.tournamentId} />;
         case REGISTRATION_STATES.success:
-          return <Success />
+          return <Success />;
       }
     }
   });

@@ -1,3 +1,5 @@
+"use strict";
+
 DeclashApp.helpers.InvariantChecker = (function() {
   var InvariantChecker = function(tournament, currentRound) {
     this.tournament = tournament;
@@ -52,7 +54,7 @@ DeclashApp.helpers.InvariantChecker = (function() {
         " more rooms."
       });
     }
-  }
+  };
 
   InvariantChecker.prototype.checkEnoughJudges = function() {
     var judgesNeeded = Math.ceil(this._activeTeams.length / this.noOfTeamsPerRoom);

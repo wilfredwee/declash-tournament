@@ -1,3 +1,5 @@
+"use strict";
+
 function renderReactPage(component) {
   React.render(component, document.getElementById("ReactComponentDiv"));
   // router will keep warning that we did not call this.next() here.

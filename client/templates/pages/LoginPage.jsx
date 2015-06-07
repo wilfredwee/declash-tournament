@@ -1,3 +1,5 @@
+"use strict";
+
 DeclashApp.client.templates.pages.LoginPageContainer = (function() {
   var LoginPageContainer = ReactMeteor.createClass({
     render: function() {
@@ -16,7 +18,7 @@ DeclashApp.client.templates.pages.LoginPageContainer = (function() {
       e.preventDefault();
 
       var email = React.findDOMNode(this.refs.email).value.trim();
-      var password = React.findDOMNode(this.refs.password).value.trim()
+      var password = React.findDOMNode(this.refs.password).value.trim();
 
       Meteor.loginWithPassword(email, password, function(err) {
         // TODO

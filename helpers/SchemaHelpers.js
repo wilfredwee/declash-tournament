@@ -1,3 +1,5 @@
+"use strict";
+
 DeclashApp.helpers.SchemaHelpers = (function(){
   var SchemaHelpers = {
     getAverageRankForJudge: function(judge) {
@@ -12,7 +14,7 @@ DeclashApp.helpers.SchemaHelpers = (function(){
       // Limit to 2 decimal places
       return Math.round(averageRank * 100) / 100;
     }
-  }
+  };
 
   return SchemaHelpers;
 })();

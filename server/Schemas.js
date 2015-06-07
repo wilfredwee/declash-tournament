@@ -1,3 +1,7 @@
+"use strict";
+/* global Tournaments */
+/* global SimpleSchema */
+
 // This serves as a useful documentation of how entities in the application
 // are expected to be constructed.
 

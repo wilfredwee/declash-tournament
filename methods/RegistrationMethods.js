@@ -1,3 +1,7 @@
+"use strict";
+/* global Tournaments */
+/* global Roles */
+
 // A good-enough guid generator.
 var createGuid = function() {
   function s4() {
@@ -18,7 +22,7 @@ Meteor.methods({
     check(options.profile.name, String);
     check(options.profile.institution, String);
 
-    user = Accounts.createUser(options);
+    var user = Accounts.createUser(options);
 
     if(Meteor.isServer) {
       Roles.addUsersToRoles(user, "tab");

@@ -1,3 +1,5 @@
+"use strict";
+
 DeclashApp.client.constants.ManagementContextConstants = (function() {
   var REGISTER_TEAMS_HEADERS = ["Team Name", "Institution", "Debater 1", "Debater 2"];
   var REGISTER_TEAMS_SCHEMA = {name: null, institution: null, debater1: null, debater2: null};
@@ -27,7 +29,7 @@ DeclashApp.client.constants.ManagementContextConstants = (function() {
   var JUDGE_REMOVE_METHOD_TYPE = "removeJudge";
   var ROOM_REMOVE_METHOD_TYPE = "removeRoom";
 
-  var MANAGE_CONTEXT_TYPE = "manage"
+  var MANAGE_CONTEXT_TYPE = "manage";
 
   // IMPORTANT: All contexts' functions must be pure functions.
   var TEAM_CONTEXT = {
@@ -52,18 +54,20 @@ DeclashApp.client.constants.ManagementContextConstants = (function() {
               var isActiveForCurrentRound = value[currentRoundIndex.toString()];
 
               if(typeof isActiveForCurrentRound !== "boolean") {
-                throw new Meteor.Error("unableToFind", "Unable To Find the Round you're looking for.")
+                throw new Meteor.Error("unableToFind", "Unable To Find the Round you're looking for.");
               }
               newTeam.isActive = isActiveForCurrentRound;
 
             }
           }
+          /* jshint ignore:start */
           else if(key === "resultForRound") {
             // TODO
           }
           else if(key === "roleForRound") {
             // TODO
           }
+          /* jshint ignore:end */
           else {
             newTeam[key] = value;
           }
@@ -85,9 +89,11 @@ DeclashApp.client.constants.ManagementContextConstants = (function() {
           collectionTeam.debaters[1] = {};
           collectionTeam.debaters[1].name = value;
         }
+        /* jshint ignore:start */
         else if(key === "isActive") {
           // do nothing?
         }
+        /* jshint ignore:end */
         else {
           collectionTeam[key] = value;
         }
@@ -115,14 +121,16 @@ DeclashApp.client.constants.ManagementContextConstants = (function() {
               var isActiveForCurrentRound = value[currentRoundIndex.toString()];
 
               if(typeof isActiveForCurrentRound !== "boolean") {
-                throw new Meteor.Error("unableToFind", "Unable To Find the Round you're looking for.")
+                throw new Meteor.Error("unableToFind", "Unable To Find the Round you're looking for.");
               }
               newJudge.isActive = isActiveForCurrentRound;
             }
           }
+          /* jshint ignore:start */
           else if(key === "isChairForRound") {
             // TODO
           }
+          /* jshint ignore:end */
           else {
             newJudge[key] = value;
           }
@@ -157,7 +165,7 @@ DeclashApp.client.constants.ManagementContextConstants = (function() {
         });
 
         if(!currentRound) {
-          throw new Meteor.Error("unableToFind", "Unable To Find the Round you're looking for.")
+          throw new Meteor.Error("unableToFind", "Unable To Find the Round you're looking for.");
         }
 
         var currentRoundRoomLocations = _.map(currentRound.rooms, function(room) {

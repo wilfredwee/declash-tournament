@@ -1,3 +1,6 @@
+"use strict";
+/* global Tournaments */
+
 DeclashApp.helpers.checkInvariantsBeforeAssign = function(tournament) {
   var trackedTournament = tournament;
 
@@ -31,4 +34,4 @@ DeclashApp.helpers.checkInvariantsBeforeAssign = function(tournament) {
       }
     }
   }
-}
+};

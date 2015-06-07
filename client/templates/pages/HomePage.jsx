@@ -1,3 +1,5 @@
+"use strict";
+
 DeclashApp.client.templates.pages.HomePageContainer = (function() {
   var HomePageContainer = ReactMeteor.createClass({
     render: function() {

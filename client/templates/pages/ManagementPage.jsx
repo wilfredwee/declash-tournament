@@ -1,3 +1,6 @@
+"use strict";
+/* global Tournaments */
+
 // Initialize variables from DeclashApp namespace.
 var TournamentRegistrationForm;
 var TournamentManagementContainer;

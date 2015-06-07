@@ -1,3 +1,6 @@
+"use strict";
+/* global Tournaments */
+
 Meteor.startup(function() {
   var query = Tournaments.find();
 

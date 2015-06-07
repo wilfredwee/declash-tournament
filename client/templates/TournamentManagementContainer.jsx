@@ -1,3 +1,10 @@
+"use strict";
+/* jshint maxlen:false */
+/* global Tournaments */
+/* global Session */
+/* global Handsontable */
+
+
 var ValidatorHelper;
 var ManagementContextConstants;
 Meteor.startup(function() {
@@ -158,11 +165,11 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
           // TODO
           alert(err.reason);
         }
-        else {
-          // We probably don't need to lag-compensate here because Meteor methods should
-          // theoretically already do it for us.
-        }
-      }.bind(this))
+        // else {
+        //   // We probably don't need to lag-compensate here because Meteor methods should
+        //   // theoretically already do it for us.
+        // }
+      }.bind(this));
     },
 
     render: function() {
@@ -214,8 +221,8 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
           return !this.hot.isEmptyRow(index);
       }.bind(this));
 
-      return !_.isEqual(tableData, this.props.context.transformCollectionToTableData(nextProps.tournament))
-        && !_.isEqual(this.props.tournament, nextProps.tournament);
+      return !_.isEqual(tableData, this.props.context.transformCollectionToTableData(nextProps.tournament)) &&
+        !_.isEqual(this.props.tournament, nextProps.tournament);
     },
 
     componentDidUpdate: function (prevProps, prevState) {
@@ -274,7 +281,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
             return false;
           }
           if(typeof value === "string" && value.length <= 0) {
-            return false
+            return false;
           }
         },
         validator: function(value, callback) {
@@ -321,8 +328,9 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
           }
           else {
             _.each(dataArray, function(data) {
+              var collectionToSend;
               if(data.guid) {
-                var collectionToSend = context.transformTableDataRowToCollection(data);
+                collectionToSend = context.transformTableDataRowToCollection(data);
 
                 Meteor.call(context.updateMethod, collectionToSend, function(err, result) {
                   // TODO
@@ -332,7 +340,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
                 });
               }
               else {
-                var collectionToSend = [context.transformTableDataRowToCollection(data)];
+                collectionToSend = [context.transformTableDataRowToCollection(data)];
                 Meteor.call(context.registerMethod, collectionToSend, function(err, result) {
                   // TODO
                   if(err) {
@@ -381,16 +389,20 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
             }
 
             for(var i=index; i<(index+amount); i++) {
-              var data = this.getSourceDataAtRow(i);
+              var rowData = this.getSourceDataAtRow(i);
 
-              if(!_.contains(data, null)) {
-                var collectionToSend = context.transformTableDataRowToCollection(data);
+              if(!_.contains(rowData, null)) {
+                var collectionToSend = context.transformTableDataRowToCollection(rowData);
+
+                /* jshint ignore:start */
+                // TODO: A more performant way for this method call.
                 Meteor.call(context.removeMethod, collectionToSend, function(err, result) {
                   // TODO
                   if(err) {
                     alert(err);
                   }
                 });
+                /* jshint ignore:end */
               }
               // Should we consider an 'else' case here where an incomplete thing is around?
             }
@@ -437,7 +449,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
           var data = hot.getSourceDataAtRow(index);
 
           var hasIncompleteData = _.some(data, function(element) {
-            return !element || element.length <= 0
+            return !element || element.length <= 0;
           });
 
           return hasIncompleteData? null : data;
@@ -500,7 +512,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
         if(err) {
           alert(err.reason);
         }
-      })
+      });
     },
 
     render: function() {
@@ -584,8 +596,8 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
           return !this.hot.isEmptyRow(index);
       }.bind(this));
 
-      return !_.isEqual(tableData, this.props.context.transformCollectionToTableData(nextProps.tournament, nextProps.roundIndex))
-        && !_.isEqual(this.props.tournament, nextProps.tournament);
+      return !_.isEqual(tableData, this.props.context.transformCollectionToTableData(nextProps.tournament, nextProps.roundIndex)) &&
+        !_.isEqual(this.props.tournament, nextProps.tournament);
     },
 
     componentDidUpdate: function (prevProps, prevState) {
@@ -626,7 +638,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       var tableData = this.props.context.transformCollectionToTableData(this.props.tournament, roundIndex);
 
       var isActiveReadOnly = (function() {
-        var round = this.props.tournament.rounds[roundIndex]
+        var round = this.props.tournament.rounds[roundIndex];
 
         return round.state !== "initial";
 
@@ -672,7 +684,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
                 alert(err.reason);
               }
             });
-          }.bind(this))
+          }.bind(this));
         }
       });
     },
@@ -690,7 +702,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
 
   var RoundRoomsContainer = ReactMeteor.createClass({
     getMeteorState: function() {
-      var tournament = Tournaments.findOne({ownerId: Meteor.userId()})
+      var tournament = Tournaments.findOne({ownerId: Meteor.userId()});
       Session.setDefault("filteredRoomIds", ["", ""]);
       Session.setDefault("currentDraggedJudgeData", null);
       return {
@@ -779,7 +791,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
               room={room}
               roundIndex={this.props.roundIndex}/>
         );
-      }.bind(this))
+      }.bind(this));
 
     },
 
@@ -898,7 +910,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
             originY: event.pageY,
             elementX: pageOffset.left,
             elementY: pageOffset.top
-          })
+          });
         }
       },
 
@@ -916,8 +928,8 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
           });
 
           if(typeof this.props.onDragStart === "function") {
-            var dragData = typeof this.props.getDragData === "function"
-              ? this.props.getDragData()
+            var dragData = typeof this.props.getDragData === "function"?
+              this.props.getDragData()
               : undefined;
 
             this.props.onDragStart(dragData);
@@ -941,7 +953,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
 
           return this.setState({
             dragging: false,
-          })
+          });
         }
       },
 

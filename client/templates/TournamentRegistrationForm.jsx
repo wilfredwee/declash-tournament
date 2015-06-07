@@ -1,3 +1,5 @@
+"use strict";
+
 DeclashApp.client.templates.TournamentRegistrationForm = (function() {
   var TournamentRegistrationForm = ReactMeteor.createClass({
     handleSubmit: function(e) {
@@ -17,11 +19,11 @@ DeclashApp.client.templates.TournamentRegistrationForm = (function() {
           alert(err.reson);
           // TODO
         }
-        else {
-          // TODO - Figure out how to handle waiting for payments here. Maybe?
-          // Just wait for re-render once tournament changes to true.
-        }
-      })
+        // else {
+        //   // TODO - Figure out how to handle waiting for payments here. Maybe?
+        //   // Just wait for re-render once tournament changes to true.
+        // }
+      });
     },
 
     render: function() {

@@ -1,3 +1,5 @@
+"use strict";
+
 DeclashApp.client.templates.BaseComponent = (function() {
   var BaseComponent = ReactMeteor.createClass({
     templateName: "baseTemplate",

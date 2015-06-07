@@ -1,3 +1,5 @@
+"use strict";
+/* global Tournaments */
 
 // Initialize variables from DeclashApp namespace.
 var ValidatorHelper;
@@ -115,8 +117,8 @@ Meteor.methods({
     Tournaments.update(tournament._id, {$pull: {rooms: room}});
   },
 
-  updateRoom: function(room) {
-    throw new Meteor.Error("invalidAction", "Single update for rooms is not supported currently.")
+  updateRoom: function() {
+    throw new Meteor.Error("invalidAction", "Single update for rooms is not supported currently.");
   },
 
   togglePublicRegistration: function() {
@@ -169,7 +171,7 @@ Meteor.methods({
 
 
     var newTeams = _.map(tournament.teams, function(team) {
-      var isActiveThisRound = !(team.isActiveForRound[(newRoundIndex-1).toString()] === false)
+      var isActiveThisRound = team.isActiveForRound[(newRoundIndex-1).toString()] !== false;
 
       team.isActiveForRound[newRoundIndex.toString()] = isActiveThisRound;
 

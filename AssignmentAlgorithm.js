@@ -1,3 +1,5 @@
+"use strict";
+
 DeclashApp.AssignmentAlgorithm = (function() {
   var AssignmentAlgorithm = {
     getAssignedFirstRound: function(tournament, roundToAssign) {
@@ -66,7 +68,7 @@ DeclashApp.AssignmentAlgorithm = (function() {
         });
 
         if(roomTeams.length !== 4) {
-          throw new Meteor.Error("fatalError", "FATAL: Assigned room does not have the required amount of teams.")
+          throw new Meteor.Error("fatalError", "FATAL: Assigned room does not have the required amount of teams.");
         }
 
         if(round.index !== 0) {

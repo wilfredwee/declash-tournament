@@ -1,3 +1,6 @@
+"use strict";
+/* global Tournaments */
+
 // For now, a static class with self-contained helper functions.
 DeclashApp.helpers.ValidatorHelper = (function() {
   var ValidatorHelper = {

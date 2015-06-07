@@ -1,3 +1,6 @@
+"use strict";
+/* global Tournaments */
+
 DeclashApp.client.templates.pages.TournamentListPageContainer = (function() {
   var TournamentListPageContainer = ReactMeteor.createClass({
     getMeteorState: function() {
