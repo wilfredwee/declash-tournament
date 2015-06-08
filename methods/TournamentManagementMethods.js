@@ -230,7 +230,7 @@ Meteor.methods({
     var roundToDelete = tournament.rounds[roundIndex];
 
     if(!ValidatorHelper.canDeleteRound(tournament, roundIndex)) {
-      throw new Meteor.Error("invalidAction", "Cannot delete this round. Make sure you have the prper conditions.");
+      throw new Meteor.Error("invalidAction", "Cannot delete this round. Make sure you have the proper conditions.");
     }
 
     // TODO: Perhaps something more elegant here?
@@ -239,6 +239,24 @@ Meteor.methods({
     }
 
     Tournaments.update(tournament._id, {$pull: {"rounds": {index: roundIndex}}});
+  },
+
+  activateRound: function(roundIndex) {
+    var tournament = getOwnerTournament.call(this);
+    var roundToActivate = tournament.rounds[roundIndex];
+
+    if(!ValidatorHelper.canActivateRound(tournament, roundIndex)) {
+      throw new Meteor.Error("invalidAction", "Cannot activate this round. Make sure you have the proper conditions.");
+    }
+
+    // TODO: Perhaps something more elegant here?
+    if(roundToActivate.index !== roundIndex) {
+      throw new Meteor.Error("fatalError", "FATAL: The round assignments do not match.");
+    }
+
+    roundToActivate.state = "active";
+
+    Tournaments.update({_id: tournament._id, "rounds.index": roundToActivate.index}, {$set: {"rounds.$": roundToActivate}}, {validate: false, filter: false});
   },
 
   changeJudgeRoom: function(transferringJudge, destinationRoomString, roundIndex) {
@@ -263,7 +281,7 @@ Meteor.methods({
 
     var newRoom = getNewRoom(tournament);
 
-    if(!ValidatorHelper.canChangeJudgeRoom(originRoom, newRoom, transferringJudge)) {
+    if(!ValidatorHelper.canChangeJudgeRoom(tournament, roundIndex, originRoom, newRoom, transferringJudge)) {
       // We silently fail for this for now.
       return;
     }

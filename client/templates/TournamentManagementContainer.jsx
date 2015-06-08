@@ -16,6 +16,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
   var TournamentManagementContainer = ReactMeteor.createClass({
     getMeteorState: function() {
       return {
+        tournament: Tournaments.findOne({ownerId: Meteor.userId()}),
         containerContextType: Session.get("containerContextType"),
         currentRoundIndex: Session.get("currentRoundIndex")
       };
@@ -80,7 +81,12 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
         return <RoundHotContainer roundIndex={roundIndex} context={contextToRender} />;
       }
       else {
-        return <RoundRoomsContainer roundIndex={roundIndex} />;
+        if(this.state.tournament.rounds[roundIndex].state === "assigned") {
+          return <RoundRoomsContainer roundIndex={roundIndex} />;
+        }
+        else {
+          return <ActiveRoundRoomsContainer roundIndex={roundIndex} />;
+        }
       }
     },
 
@@ -515,6 +521,15 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       });
     },
 
+    activateCurrentRound: function() {
+      Meteor.call("activateRound", this.props.roundIndex, function(err, result) {
+        // TODO
+        if(err) {
+          alert(err.reason);
+        }
+      });
+    },
+
     render: function() {
       if(!this.state.tournament.rounds[this.props.roundIndex]) {
         // Do we want to set the session? Somehow it complains but works fine.
@@ -541,11 +556,15 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       }.bind(this))();
 
       var assignButton = ValidatorHelper.canAssignRound(this.state.tournament, this.props.roundIndex)?
-        <button className="ui primary button" onClick={this.assignCurrentRound}>Assign</button>
+        <button className="ui primary button" onClick={this.assignCurrentRound}>Assign Round</button>
         : undefined;
 
       var deleteRoundButton = ValidatorHelper.canDeleteRound(this.state.tournament, this.props.roundIndex)?
         <button className="ui negative button" onClick={this.deleteCurrentRound}>Delete Round</button>
+        : undefined;
+
+      var activateRoundButton = ValidatorHelper.canActivateRound(this.state.tournament, this.props.roundIndex)?
+        <button className="ui positive button" onClick={this.activateCurrentRound}>Finalize Round and Publish Assignment</button>
         : undefined;
 
       return (
@@ -563,6 +582,9 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
           </div>
           <div className="row">
             {deleteRoundButton}
+          </div>
+          <div className="row">
+            {activateRoundButton}
           </div>
           <div className="row">
             <RoundHot roundIndex={this.props.roundIndex} context={this.props.context} tournament={this.state.tournament} />
@@ -692,10 +714,66 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
     render: function() {
       return (
         <div className="row">
-          <div className="SOMETABLE" ref="handsontable"></div>
+          <div ref="handsontable"></div>
         </div>
       );
 
+    }
+
+  });
+
+  var ActiveRoundRoomsContainer = ReactMeteor.createClass({
+    getMeteorState: function() {
+      var tournament = Tournaments.findOne({ownerId: Meteor.userId()});
+      return {
+        tournament: tournament,
+        schemaInjectedRounds: this.getSchemaInjectedRounds(tournament),
+      };
+    },
+
+    getSchemaInjectedRounds: function(tournament) {
+      return _.map(_.map(tournament.rounds, _.clone), function(round) {
+        round.rooms = _.map(round.rooms, function(room) {
+          room.teams = _.map(room.teams, function(teamGuid) {
+            return _.find(tournament.teams, function(tournamentTeam) {
+              return tournamentTeam.guid === teamGuid;
+            });
+          });
+
+          room.judges = _.map(room.judges, function(judgeGuid) {
+            return _.find(tournament.judges, function(tournamentJudge) {
+              return tournamentJudge.guid === judgeGuid;
+            });
+          });
+
+          return room;
+        });
+
+        return round;
+      });
+    },
+
+    renderRooms: function(room) {
+      return _.map(this.state.schemaInjectedRounds[this.props.roundIndex].rooms, function(room, roomIndex) {
+        return (
+            <ActiveRoomComponent
+              key={roomIndex}
+              room={room}
+              roundIndex={this.props.roundIndex}/>
+        );
+      }.bind(this));
+    },
+
+    render: function() {
+      return (
+        <div>
+          <div className="row">
+            <div className="ui stackable two column grid">
+              {this.renderRooms()}
+            </div>
+          </div>
+        </div>
+      );
     }
 
   });
@@ -852,10 +930,9 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
 
   // Contract for Draggable Connector:
   // 1. A Component must be passed it.
-  // 2. This connector provides three props:
+  // 2. This connector provides two props:
   //      i:   onMouseDown
-  //      ii:  onMouseMove
-  //      iii: style
+  //      ii: style
   var connectDraggable = function(Component) {
     var DraggableComponent = ReactMeteor.createClass({
       getInitialState: function () {
@@ -1030,6 +1107,122 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
 
     return DroppableComponent;
   };
+
+  var ActiveRoomComponent = ReactMeteor.createClass({
+    changeTeamResult: function(team, debaterIndex) {
+      console.log(arguments);
+    },
+
+    changeJudgeRank: function(judge) {
+
+    },
+
+    renderTeamsForRoom: function(room, roundIndex) {
+      function getTeamForRole(role) {
+        return _.find(room.teams, function(team) {
+          return team.roleForRound[roundIndex] === role;
+        });
+      }
+
+      var OGTeam = getTeamForRole("OG");
+      var OOTeam = getTeamForRole("OO");
+      var CGTeam = getTeamForRole("CG");
+      var COTeam = getTeamForRole("CO");
+
+      var teams = [OGTeam, OOTeam, CGTeam, COTeam];
+      var teamPositions = ["OG", "OO", "CG", "CO"];
+
+      return (
+        <div className="ui stackable two column celled grid">
+          {_.map(_.range(2), function(firstRangeIndex) {
+            return (
+              <div key={firstRangeIndex} className="two column row">
+                {_.map(_.range(2), function(secondRangeIndex) {
+                  var teamPosition = teamPositions.shift();
+                  var team = teams.shift();
+
+                  return (
+                    <div key={secondRangeIndex} className="column">
+                      <div className="row">
+                        <span><strong>{teamPosition + ": "} </strong>{team.name}</span>
+                      </div>
+                      <div className="ui two column row">
+                        <div className="ui two column grid">
+                          <div className="two column row">
+                            <div className="ten wide column">
+                              <span>{team.debaters[0].name}:</span>
+                            </div>
+                            <div className="six wide column">
+                              <div className="ui mini fluid input">
+                                <input type="number" onChange={this.changeTeamResult.bind(null, team, 0)} />
+                              </div>
+                            </div>
+                          </div>
+                          <div className="two column row">
+                            <div className="ten wide column">
+                              <span>{team.debaters[1].name}:</span>
+                            </div>
+                            <div className="six wide column">
+                              <div className="ui mini fluid input">
+                                <input type="number" onChange={this.changeTeamResult.bind(null, team, 1)} />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }.bind(this))}
+              </div>
+            );
+          }.bind(this))
+          }
+        </div>
+      );
+    },
+
+    renderJudgesForRoom: function(room, roundIndex) {
+      return _.map(room.judges, function(judge, judgeIndex) {
+        var judgeName = judge.name;
+
+        if(judge.isChairForRound[roundIndex]) {
+          judgeName = "(Chair) ".concat(judgeName);
+        }
+
+        return (
+          <div key={judgeIndex} className="column">
+            <div className="ui two column grid">
+              <div className="two column row">
+                <div className="ten wide column">
+                  <div>{judgeName}</div>
+                </div>
+                <div className="six wide column">
+                  <div className="ui mini fluid input">
+                    <input type="number" onChange={this.changeJudgeRank.bind(null, judge)} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }.bind(this));
+    },
+
+    render: function() {
+      return (
+        <div className="column">
+          <div className="ui segment">
+            <h3 className="ui horizontal header divider">{this.props.room.locationId}</h3>
+            {this.renderTeamsForRoom(this.props.room, this.props.roundIndex)}
+            <h5 className="ui horizontal header divider">Judges</h5>
+            <div className="ui stackable two column grid">
+              {this.renderJudgesForRoom(this.props.room, this.props.roundIndex)}
+            </div>
+          </div>
+        </div>
+      );
+    }
+  });
 
   var RoomComponent = connectDroppable(
     ReactMeteor.createClass({

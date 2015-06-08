@@ -32,7 +32,12 @@ DeclashApp.helpers.ValidatorHelper = (function() {
       return _.contains(acceptableStates, tournament.rounds[currentRoundIndex].state);
     },
 
-    canChangeJudgeRoom: function(originRoom, newRoom, transferringJudge) {
+    canChangeJudgeRoom: function(tournament, roundIndex, originRoom, newRoom, transferringJudge) {
+      // tournament must be in an assigned state
+      if(tournament.rounds[roundIndex].state !== "assigned") {
+        return false;
+      }
+
       // rooms must be different.
       if(originRoom.locationId === newRoom.locationId) {
         return false;
@@ -44,6 +49,15 @@ DeclashApp.helpers.ValidatorHelper = (function() {
       }
 
       return true;
+    },
+
+    canActivateRound: function(tournament, currentRoundIndex) {
+      var round = tournament.rounds[currentRoundIndex];
+      if(!round) {
+        return false;
+      }
+
+      return round.state === "assigned";
     }
   };
 
