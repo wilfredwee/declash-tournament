@@ -1231,7 +1231,6 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
     },
 
     render: function() {
-      console.log("I have re rendered" + this.props.room.locationId);
       return (
         <div className="column">
           <div className="ui segment">
@@ -1249,6 +1248,30 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
 
   var RoomComponent = connectDroppable(
     ReactMeteor.createClass({
+      shouldComponentUpdate: function(nextProps, nextState) {
+        // Should update room if judge is being dragged FROM the room.
+        var draggedData = this.props.getDragData();
+
+        if(draggedData && draggedData.judge) {
+          var draggedJudge = draggedData.judge;
+
+          var hasRoomJudge = _.some(this.props.room.judges, function(judge) {
+            return judge.guid === draggedJudge.guid;
+          });
+
+          if(hasRoomJudge) {
+            return true;
+          }
+        }
+
+        // Should update if room information has changed.
+        // Should update if judge is being dragged TO the room.
+        // For now, we check this by checking the style prop from connectDroppable.
+        // This is not ideal. Ideally, we want to only transmit data, not information
+        // about appearance.
+        return !_.isEqual(this.props.room, nextProps.room) || !_.isEqual(this.props.style, nextProps.style);
+      },
+
       onDrop: function() {
         this.props.onDrop(this.props.room, this.props.roundIndex);
       },
@@ -1268,12 +1291,12 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
         return (
           <div className="ui stackable two column celled grid">
             <div className="two column row">
-              <div className="column"><span><strong>Opening Gov: </strong><u>{OGTeam.name}</u></span></div>
-              <div className="column"><span><strong>Opening Opp: </strong><u>{OOTeam.name}</u></span></div>
+              <div className="column"><span><strong>OG: </strong><u>{OGTeam.name}</u></span></div>
+              <div className="column"><span><strong>OO: </strong><u>{OOTeam.name}</u></span></div>
             </div>
             <div className="two column row">
-              <div className="column"><span><strong>Closing Gov: </strong><u>{CGTeam.name}</u></span></div>
-              <div className="column"><span><strong>Closing Opp: </strong><u>{COTeam.name}</u></span></div>
+              <div className="column"><span><strong>CG: </strong><u>{CGTeam.name}</u></span></div>
+              <div className="column"><span><strong>CO: </strong><u>{COTeam.name}</u></span></div>
             </div>
           </div>
         );

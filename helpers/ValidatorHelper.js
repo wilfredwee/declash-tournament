@@ -24,7 +24,7 @@ DeclashApp.helpers.ValidatorHelper = (function() {
     },
 
     canDeleteRound: function(tournament, currentRoundIndex) {
-      var acceptableStates = ["initial", "assigned"];
+      var acceptableStates = ["initial", "assigned", "active"];
       var round = tournament.rounds[currentRoundIndex];
       if(!round) {
         return false;
