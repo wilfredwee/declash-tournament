@@ -337,5 +337,37 @@ Meteor.methods({
     Tournaments.update(
       {_id: tournament._id, "rounds.index": roundIndex},
       {$set: {"rounds.$.rooms": tournament.rounds[roundIndex].rooms}});
+  },
+
+  changeDebaterScore: function(team, debaterIndex, roundIndex, scoreValue) {
+    var tournament = getOwnerTournament.call(this);
+
+    var teamToUpdate = _.find(tournament.teams, function(tournamentTeam) {
+      return tournamentTeam.guid === team.guid;
+    });
+
+    if(!ValidatorHelper.canChangeDebaterScore(tournament, roundIndex, teamToUpdate, debaterIndex, scoreValue)) {
+      throw new Meteor.Error("invalidAction", "Encountered problems changing the debater score.");
+    }
+
+    teamToUpdate.debaters[debaterIndex].scoreForRound[roundIndex] = scoreValue;
+
+    teamToUpdate.resultForRound[roundIndex] = (function() {
+      var score = 0;
+
+      _.each(teamToUpdate.debaters, function(debater) {
+        if(debater.scoreForRound[roundIndex]) {
+          score += debater.scoreForRound[roundIndex];
+        }
+      });
+
+      return score;
+    })();
+
+    Tournaments.update(
+      {_id: tournament._id, "teams.guid": teamToUpdate.guid},
+      {$set: {"teams.$": teamToUpdate}},
+      {validate: false, filter: false}
+    );
   }
 });

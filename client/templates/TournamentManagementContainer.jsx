@@ -1110,8 +1110,23 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
   };
 
   var ActiveRoomComponent = ReactMeteor.createClass({
-    changeTeamResult: function(team, debaterIndex) {
-      console.log(arguments);
+    shouldComponentUpdate: function(nextProps, nextState) {
+      return !_.isEqual(this.props, nextProps);
+    },
+
+    changeDebaterScore: function(team, debaterIndex, event) {
+      var value = event.target.valueAsNumber;
+
+      if(value < 75 || value > 100) {
+        return;
+      }
+
+      Meteor.call("changeDebaterScore", team, debaterIndex, this.props.roundIndex, value, function(err, result) {
+        // TODO
+        if(err) {
+          alert(err.reason);
+        }
+      });
     },
 
     changeJudgeRank: function(judge) {
@@ -1158,7 +1173,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
                             </div>
                             <div className="six wide column">
                               <div className="ui mini fluid input">
-                                <input type="number" onChange={this.changeTeamResult.bind(null, team, 0)} />
+                                <input type="number" onChange={this.changeDebaterScore.bind(null, team, 0)} />
                               </div>
                             </div>
                           </div>
@@ -1168,7 +1183,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
                             </div>
                             <div className="six wide column">
                               <div className="ui mini fluid input">
-                                <input type="number" onChange={this.changeTeamResult.bind(null, team, 1)} />
+                                <input type="number" onChange={this.changeDebaterScore.bind(null, team, 1)} />
                               </div>
                             </div>
                           </div>
@@ -1216,6 +1231,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
     },
 
     render: function() {
+      console.log("I have re rendered" + this.props.room.locationId);
       return (
         <div className="column">
           <div className="ui segment">

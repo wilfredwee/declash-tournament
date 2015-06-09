@@ -58,6 +58,17 @@ DeclashApp.helpers.ValidatorHelper = (function() {
       }
 
       return round.state === "assigned";
+    },
+
+    canChangeDebaterScore: function(tournament, roundIndex, teamToUpdate, debaterIndex, scoreValue) {
+      var round = tournament.rounds[roundIndex];
+      if(!round || round.state !== "active") {
+        return false
+      }
+
+      return true;
+
+      // TODO: More conditions
     }
   };
 
