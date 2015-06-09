@@ -313,7 +313,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
 
           // Rooms are special, we just re-register all of them for now
           // as they are just string arrays.
-          if(context.type === ManagementContextConstants.ROOM_CONTEXT_TYPE) {
+          if(context.type === ManagementContextConstants.ROOM_CONTEXT.type) {
 
             var data = this.getData();
 
@@ -373,7 +373,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
           var context = componentThis.props.context;
 
           if(allowRemoveRow === true) {
-            if(context.type === ManagementContextConstants.ROOM_CONTEXT_TYPE) {
+            if(context.type === ManagementContextConstants.ROOM_CONTEXT.type) {
               var data = this.getData();
 
               var dataWithoutEmptyRows = _.filter(data, function(rowData, rowIndex) {
@@ -618,8 +618,9 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
           return !this.hot.isEmptyRow(index);
       }.bind(this));
 
-      return !_.isEqual(tableData, this.props.context.transformCollectionToTableData(nextProps.tournament, nextProps.roundIndex)) &&
-        !_.isEqual(this.props.tournament, nextProps.tournament);
+      return !_.isEqual(this.props.tournament, nextProps.tournament) &&
+        !_.isEqual(tableData, this.props.context.transformCollectionToTableData(nextProps.tournament, nextProps.roundIndex));
+
     },
 
     componentDidUpdate: function (prevProps, prevState) {
@@ -1117,7 +1118,10 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
 
     },
 
-    renderTeamsForRoom: function(room, roundIndex) {
+    renderTeamsForRoom: function() {
+      var room = this.props.room;
+      var roundIndex = this.props.roundIndex;
+
       function getTeamForRole(role) {
         return _.find(room.teams, function(team) {
           return team.roleForRound[roundIndex] === role;
@@ -1144,7 +1148,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
                   return (
                     <div key={secondRangeIndex} className="column">
                       <div className="row">
-                        <span><strong>{teamPosition + ": "} </strong>{team.name}</span>
+                        <span><strong>{teamPosition + ": "} </strong><u>{team.name}</u></span>
                       </div>
                       <div className="ui two column row">
                         <div className="ui two column grid">
@@ -1181,7 +1185,10 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       );
     },
 
-    renderJudgesForRoom: function(room, roundIndex) {
+    renderJudgesForRoom: function() {
+      var room = this.props.room;
+      var roundIndex = this.props.roundIndex;
+
       return _.map(room.judges, function(judge, judgeIndex) {
         var judgeName = judge.name;
 
@@ -1213,10 +1220,10 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
         <div className="column">
           <div className="ui segment">
             <h3 className="ui horizontal header divider">{this.props.room.locationId}</h3>
-            {this.renderTeamsForRoom(this.props.room, this.props.roundIndex)}
+            {this.renderTeamsForRoom()}
             <h5 className="ui horizontal header divider">Judges</h5>
             <div className="ui stackable two column grid">
-              {this.renderJudgesForRoom(this.props.room, this.props.roundIndex)}
+              {this.renderJudgesForRoom()}
             </div>
           </div>
         </div>
@@ -1245,12 +1252,12 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
         return (
           <div className="ui stackable two column celled grid">
             <div className="two column row">
-              <div className="column"><span><strong>Opening Gov: </strong>{OGTeam.name}</span></div>
-              <div className="column"><span><strong>Opening Opp: </strong>{OOTeam.name}</span></div>
+              <div className="column"><span><strong>Opening Gov: </strong><u>{OGTeam.name}</u></span></div>
+              <div className="column"><span><strong>Opening Opp: </strong><u>{OOTeam.name}</u></span></div>
             </div>
             <div className="two column row">
-              <div className="column"><span><strong>Closing Gov: </strong>{CGTeam.name}</span></div>
-              <div className="column"><span><strong>Closing Opp: </strong>{COTeam.name}</span></div>
+              <div className="column"><span><strong>Closing Gov: </strong><u>{CGTeam.name}</u></span></div>
+              <div className="column"><span><strong>Closing Opp: </strong><u>{COTeam.name}</u></span></div>
             </div>
           </div>
         );

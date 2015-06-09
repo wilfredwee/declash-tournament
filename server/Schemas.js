@@ -168,7 +168,6 @@ var RoundSchema = new SimpleSchema({
   isResultPublishable: {
     type: Boolean,
     label: "Where a round's result can be viewed by public",
-    defaultValue: false
   }
 });
 
