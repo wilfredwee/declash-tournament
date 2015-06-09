@@ -340,6 +340,10 @@ Meteor.methods({
   },
 
   changeDebaterScore: function(team, debaterIndex, roundIndex, scoreValue) {
+    if(Meteor.isClient) {
+      return;
+    }
+
     var tournament = getOwnerTournament.call(this);
 
     var teamToUpdate = _.find(tournament.teams, function(tournamentTeam) {

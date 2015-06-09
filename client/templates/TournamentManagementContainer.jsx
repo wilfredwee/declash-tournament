@@ -1110,16 +1110,43 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
   };
 
   var ActiveRoomComponent = ReactMeteor.createClass({
+    componentDidMount: function() {
+      function getRoleValuePair(team, roundIndex, debaterIndex) {
+        var role = team.roleForRound[roundIndex];
+        var roleKey = role + debaterIndex.toString();
+
+        var ret = {};
+        ret[roleKey] = team.debaters[debaterIndex].scoreForRound[roundIndex];
+
+        return ret;
+      }
+
+      _.each(this.props.room.teams, function(team) {
+        this.setState(getRoleValuePair(team, this.props.roundIndex, 0));
+        this.setState(getRoleValuePair(team, this.props.roundIndex, 1));
+      }.bind(this))
+
+      var current = new Date();
+      this.setState({lastUpdate: current});
+    },
+
     shouldComponentUpdate: function(nextProps, nextState) {
-      return !_.isEqual(this.props, nextProps);
+      var lastUpdate = this.state.lastUpdate || new Date();
+      var current = new Date();
+
+      if((lastUpdate.getTime() - current.getTime() > 10000) && !_.isEqual(this.props, nextProps)) {
+        this.setState({
+          lastUpdate: current
+        });
+
+        return true;
+      }
+
+      return false;
     },
 
     changeDebaterScore: function(team, debaterIndex, event) {
       var value = event.target.valueAsNumber;
-
-      if(value < 75 || value > 100) {
-        return;
-      }
 
       Meteor.call("changeDebaterScore", team, debaterIndex, this.props.roundIndex, value, function(err, result) {
         // TODO
@@ -1173,7 +1200,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
                             </div>
                             <div className="six wide column">
                               <div className="ui mini fluid input">
-                                <input type="number" onChange={this.changeDebaterScore.bind(null, team, 0)} />
+                                <input type="number" defaultValue={team.debaters[0].scoreForRound[this.props.roundIndex]} onChange={this.changeDebaterScore.bind(null, team, 0)} />
                               </div>
                             </div>
                           </div>
@@ -1183,7 +1210,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
                             </div>
                             <div className="six wide column">
                               <div className="ui mini fluid input">
-                                <input type="number" onChange={this.changeDebaterScore.bind(null, team, 1)} />
+                                <input type="number" defaultValue={team.debaters[1].scoreForRound[this.props.roundIndex]} onChange={this.changeDebaterScore.bind(null, team, 1)} />
                               </div>
                             </div>
                           </div>
