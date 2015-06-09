@@ -116,18 +116,19 @@ Meteor.methods({
       judge.guid = createGuid();
       judge.isChairForRound = {};
       judge.isActiveForRound = (function() {
-          var objBuilder = {};
-          _.each(tournament.rounds, function(round) {
-            if(round.state === "initial") {
-              objBuilder[round.index.toString()] = true;
-            }
-            else {
-              objBuilder[round.index.toString()] = false;
-            }
-          });
+        var objBuilder = {};
+        _.each(tournament.rounds, function(round) {
+          if(round.state === "initial") {
+            objBuilder[round.index.toString()] = true;
+          }
+          else {
+            objBuilder[round.index.toString()] = false;
+          }
+        });
 
-          return objBuilder;
-        })();
+        return objBuilder;
+      })();
+      judge.rankForRound = {};
     });
 
     Tournaments.update(tournament._id, {$push: {judges: {$each: judges}}});

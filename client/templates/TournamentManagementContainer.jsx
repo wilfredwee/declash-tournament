@@ -1110,22 +1110,13 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
   };
 
   var ActiveRoomComponent = ReactMeteor.createClass({
+    getMeteorState: function() {
+      return {
+        lastUpdate: new Date()
+      };
+    },
+
     componentDidMount: function() {
-      function getRoleValuePair(team, roundIndex, debaterIndex) {
-        var role = team.roleForRound[roundIndex];
-        var roleKey = role + debaterIndex.toString();
-
-        var ret = {};
-        ret[roleKey] = team.debaters[debaterIndex].scoreForRound[roundIndex];
-
-        return ret;
-      }
-
-      _.each(this.props.room.teams, function(team) {
-        this.setState(getRoleValuePair(team, this.props.roundIndex, 0));
-        this.setState(getRoleValuePair(team, this.props.roundIndex, 1));
-      }.bind(this))
-
       var current = new Date();
       this.setState({lastUpdate: current});
     },
@@ -1156,8 +1147,15 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       });
     },
 
-    changeJudgeRank: function(judge) {
+    changeJudgeRank: function(judge, event) {
+      var value = event.target.valueAsNumber;
 
+      Meteor.call("changeJudgeRank", judge, this.props.roundIndex, value, function(err, result) {
+        // TODO:
+        if(err) {
+          alert(err.reason);
+        }
+      });
     },
 
     renderTeamsForRoom: function() {
@@ -1247,7 +1245,10 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
                 </div>
                 <div className="six wide column">
                   <div className="ui mini fluid input">
-                    <input type="number" onChange={this.changeJudgeRank.bind(null, judge)} />
+                    {judge.rankForRound ?
+                      <input type="number" defaultValue={judge.rankForRound[this.props.roundIndex]} onChange={this.changeJudgeRank.bind(null, judge)} />
+                      : undefined
+                    }
                   </div>
                 </div>
               </div>

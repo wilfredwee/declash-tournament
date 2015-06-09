@@ -63,12 +63,23 @@ DeclashApp.helpers.ValidatorHelper = (function() {
     canChangeDebaterScore: function(tournament, roundIndex, teamToUpdate, debaterIndex, scoreValue) {
       var round = tournament.rounds[roundIndex];
       if(!round || round.state !== "active") {
-        return false
+        return false;
       }
 
       return true;
 
       // TODO: More conditions
+    },
+
+    canChangeJudgeRank: function(tournament, roundIndex, judgeToUpdate, rankValue) {
+      var round = tournament.rounds[roundIndex];
+      if(!round || round.state !== "active") {
+        return false;
+      }
+
+      return true;
+
+      // TODO: More conditions.
     }
   };
 

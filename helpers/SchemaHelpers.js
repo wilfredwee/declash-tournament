@@ -9,7 +9,9 @@ DeclashApp.helpers.SchemaHelpers = (function(){
         totalRank += rank;
       });
 
-      var averageRank = judge.rankForRound? totalRank/(_.keys(judge.rankForRound).length) : 0;
+      var averageRank = _.keys(judge.rankForRound).length > 0 ?
+        totalRank/(_.keys(judge.rankForRound).length)
+        : 0;
 
       // Limit to 2 decimal places
       return Math.round(averageRank * 100) / 100;

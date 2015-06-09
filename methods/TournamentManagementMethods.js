@@ -373,5 +373,29 @@ Meteor.methods({
       {$set: {"teams.$": teamToUpdate}},
       {validate: false, filter: false}
     );
+  },
+
+  changeJudgeRank: function(judge, roundIndex, rankValue) {
+    if(Meteor.isClient) {
+      return;
+    }
+
+    var tournament = getOwnerTournament.call(this);
+
+    var judgeToUpdate = _.find(tournament.judges, function(tournamentJudge) {
+      return tournamentJudge.guid === judge.guid;
+    });
+
+    if(!ValidatorHelper.canChangeJudgeRank(tournament, roundIndex, judgeToUpdate, rankValue)) {
+      throw new Meteor.Error("invalidAction", "Encountered problems changing the judge rank.");
+    }
+
+    judgeToUpdate.rankForRound[roundIndex] = rankValue;
+
+    Tournaments.update(
+      {_id: tournament._id, "judges.guid": judgeToUpdate.guid},
+      {$set: {"judges.$": judgeToUpdate}},
+      {validate: false, filter: false}
+    );
   }
 });
