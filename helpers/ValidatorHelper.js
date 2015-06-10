@@ -12,29 +12,42 @@ DeclashApp.helpers.ValidatorHelper = (function() {
       return lastRound.state === "finished";
     },
 
-    canAssignRound: function(tournament, currentRoundIndex) {
+    canAssignRound: function(tournament, roundIndex) {
       // TODO: In the future, if necessary, check for specific violations.
-      var round = tournament.rounds[currentRoundIndex];
+      var round = _.find(tournament.rounds, function(round) {
+        return round.index === roundIndex;
+      });
 
       if(!round) {
         return false;
       }
       return tournament.currentInvariantViolations.length === 0 &&
-        tournament.rounds[currentRoundIndex].state === "initial";
+        tournament.rounds[roundIndex].state === "initial";
     },
 
-    canDeleteRound: function(tournament, currentRoundIndex) {
+    canDeleteRound: function(tournament, roundIndex) {
       var acceptableStates = ["initial", "assigned", "active"];
-      var round = tournament.rounds[currentRoundIndex];
+      var round = _.find(tournament.rounds, function(round) {
+        return round.index === roundIndex;
+      });
+
       if(!round) {
         return false;
       }
-      return _.contains(acceptableStates, tournament.rounds[currentRoundIndex].state);
+      return _.contains(acceptableStates, tournament.rounds[roundIndex].state);
     },
 
     canChangeJudgeRoom: function(tournament, roundIndex, originRoom, newRoom, transferringJudge) {
+      var round = _.find(tournament.rounds, function(round) {
+        return round.index === roundIndex;
+      });
+
+      if(!round) {
+        return false;
+      }
+
       // tournament must be in an assigned state
-      if(tournament.rounds[roundIndex].state !== "assigned") {
+      if(round.state !== "assigned") {
         return false;
       }
 
@@ -51,9 +64,9 @@ DeclashApp.helpers.ValidatorHelper = (function() {
       return true;
     },
 
-    canActivateRound: function(tournament, currentRoundIndex) {
+    canActivateRound: function(tournament, roundIndex) {
       var round = _.find(tournament.rounds, function(round) {
-        return round.index === currentRoundIndex;
+        return round.index === roundIndex;
       });
 
       if(!round) {
@@ -63,9 +76,9 @@ DeclashApp.helpers.ValidatorHelper = (function() {
       return round.state === "assigned";
     },
 
-    canFinalizeRound: function(tournament, currentRoundIndex) {
+    canFinalizeRound: function(tournament, roundIndex) {
       var round = _.find(tournament.rounds, function(round) {
-        return round.index === currentRoundIndex;
+        return round.index === roundIndex;
       });
 
       if(!round) {
@@ -73,36 +86,46 @@ DeclashApp.helpers.ValidatorHelper = (function() {
       }
 
       var everyActiveTeamHasResult = _.every(tournament.teams, function(team) {
-        if(!team.isActiveForRound[currentRoundIndex]) {
+        if(!team.isActiveForRound[roundIndex]) {
           return true;
         }
 
         var everyDebaterHasScore = _.every(team.debaters, function(debater) {
-          var score = debater.scoreForRound[currentRoundIndex];
+          var score = debater.scoreForRound[roundIndex];
           return typeof score === "number";
         });
 
-        var result = team.resultForRound[currentRoundIndex];
+        var result = team.resultForRound[roundIndex];
 
-        return result !== undefined && everyDebaterHasScore;
+        return typeof result === "number" && everyDebaterHasScore;
       });
 
       return everyActiveTeamHasResult && round.state === "active";
     },
 
+    isDebaterScoreWithinRange: function(scoreValue) {
+      return scoreValue >= 65 && scoreValue <= 100;
+    },
+
     canChangeDebaterScore: function(tournament, roundIndex, teamToUpdate, debaterIndex, scoreValue) {
-      var round = tournament.rounds[roundIndex];
-      if(!round || round.state !== "active") {
+      var round = _.find(tournament.rounds, function(round) {
+        return round.index === roundIndex;
+      });
+
+      if(!round) {
         return false;
       }
 
-      return true;
+      return this.isDebaterScoreWithinRange(scoreValue);
 
       // TODO: More conditions
     },
 
     canChangeJudgeRank: function(tournament, roundIndex, judgeToUpdate, rankValue) {
-      var round = tournament.rounds[roundIndex];
+      var round = _.find(tournament.rounds, function(round) {
+        return round.index === roundIndex;
+      });
+
       if(!round || round.state !== "active") {
         return false;
       }
@@ -110,6 +133,47 @@ DeclashApp.helpers.ValidatorHelper = (function() {
       return true;
 
       // TODO: More conditions.
+    },
+
+    canChangeTeamResult: function(tournament, roundIndex, teamToUpdate, resultValue) {
+      var round = _.find(tournament.rounds, function(round) {
+        return round.index === roundIndex;
+      });
+
+      if(!round) {
+        return false;
+      }
+
+      // This is BP Specific. Update when necessary.
+      var resultWithinRange =  this.isTeamResultWithinRange(resultValue);
+
+      var isResultDuplicate = (function() {
+        var room = _.find(round.rooms, function(room) {
+          return _.some(room.teams, function(teamGuid) {
+            return teamGuid === teamToUpdate.guid;
+          });
+        });
+
+        var roomTeams = _.map(room.teams, function(teamGuid) {
+          return _.find(tournament.teams, function(team) {
+            return team.guid === teamGuid;
+          });
+        });
+
+        return this.isTeamResultDuplicate(roomTeams, teamToUpdate, roundIndex, resultValue);
+      }.bind(this))();
+
+      return resultWithinRange && !isResultDuplicate;
+    },
+
+    isTeamResultWithinRange: function(resultValue) {
+      return resultValue >= 0 && resultValue <= 3;
+    },
+
+    isTeamResultDuplicate: function(roomTeams, teamToUpdate, roundIndex, resultValue) {
+      return _.some(roomTeams, function(team) {
+        return team.resultForRound[roundIndex] === resultValue && team.guid !== teamToUpdate.guid;
+      });
     }
   };
 

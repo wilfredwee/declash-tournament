@@ -382,17 +382,25 @@ Meteor.methods({
 
     teamToUpdate.debaters[debaterIndex].scoreForRound[roundIndex] = scoreValue;
 
-    teamToUpdate.resultForRound[roundIndex] = (function() {
-      var score = 0;
+    Tournaments.update(
+      {_id: tournament._id, "teams.guid": teamToUpdate.guid},
+      {$set: {"teams.$": teamToUpdate}},
+      {validate: false, filter: false}
+    );
+  },
 
-      _.each(teamToUpdate.debaters, function(debater) {
-        if(debater.scoreForRound[roundIndex]) {
-          score += debater.scoreForRound[roundIndex];
-        }
-      });
+  changeTeamResult: function(team, roundIndex, resultValue) {
+    var tournament = getOwnerTournament.call(this);
 
-      return score;
-    })();
+    var teamToUpdate = _.find(tournament.teams, function(tournamentTeam) {
+      return tournamentTeam.guid === team.guid;
+    });
+
+    if(!ValidatorHelper.canChangeTeamResult(tournament, roundIndex, teamToUpdate, resultValue)) {
+      throw new Meteor.Error("invalidAction", "Encountered problems changing the team result.");
+    }
+
+    teamToUpdate.resultForRound[roundIndex] = resultValue;
 
     Tournaments.update(
       {_id: tournament._id, "teams.guid": teamToUpdate.guid},

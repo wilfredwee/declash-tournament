@@ -1155,15 +1155,46 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       return false;
     },
 
-    changeDebaterScore: function(team, debaterIndex, event) {
+    changeTeamResult: function(team, event) {
+      var inputClassName = "ui mini fluid input";
       var value = event.target.valueAsNumber;
 
-      Meteor.call("changeDebaterScore", team, debaterIndex, this.props.roundIndex, value, function(err, result) {
-        // TODO
-        if(err) {
-          alert(err.reason);
-        }
-      });
+
+      if(!ValidatorHelper.isTeamResultWithinRange(value)) {
+        event.target.parentElement.className =  inputClassName + " error";
+      }
+      else if(ValidatorHelper.isTeamResultDuplicate(this.props.room.teams, team, this.props.roundIndex, value)) {
+        event.target.parentElement.className =  inputClassName + " error";
+      }
+      else {
+        event.target.parentElement.className =  inputClassName;
+
+        Meteor.call("changeTeamResult", team, this.props.roundIndex, value, function(err, result) {
+          // TODO:
+          if(err) {
+            alert(err.reason);
+          }
+        });
+      }
+    },
+
+    changeDebaterScore: function(team, debaterIndex, event) {
+      var inputClassName = "ui mini fluid input";
+      var value = event.target.valueAsNumber;
+
+      if(!ValidatorHelper.isDebaterScoreWithinRange(value)) {
+        event.target.parentElement.className = inputClassName + " error";
+      }
+      else {
+        event.target.parentElement.className = inputClassName;
+
+        Meteor.call("changeDebaterScore", team, debaterIndex, this.props.roundIndex, value, function(err, result) {
+          // TODO
+          if(err) {
+            alert(err.reason);
+          }
+        });
+      }
     },
 
     changeJudgeRank: function(judge, event) {
@@ -1206,11 +1237,18 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
 
                   return (
                     <div key={secondRangeIndex} className="column">
-                      <div className="row">
-                        <span><strong>{teamPosition + ": "} </strong><u>{team.name}</u></span>
-                      </div>
                       <div className="ui two column row">
                         <div className="ui two column grid">
+                          <div className="two column row">
+                            <div className="ten wide column">
+                              <span><strong>{teamPosition + ": "} </strong><u>{team.name}</u></span>
+                            </div>
+                            <div className="six wide column">
+                              <div className="ui mini fluid input">
+                                <input type="number" defaultValue={team.resultForRound[this.props.roundIndex]} onChange={this.changeTeamResult.bind(null, team)} />
+                              </div>
+                            </div>
+                          </div>
                           <div className="two column row">
                             <div className="ten wide column">
                               <span>{team.debaters[0].name}:</span>
