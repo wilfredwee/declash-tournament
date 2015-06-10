@@ -49,6 +49,15 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       });
     },
 
+    finalizeCurrentRound: function() {
+      Meteor.call("finalizeRound", this.state.currentRoundIndex, function(err, result) {
+        // TODO:
+        if(err) {
+          alert(err.reson);
+        }
+      });
+    },
+
     switchContainerContextType: function(contextType, roundIndex) {
       Session.set("containerContextType", contextType);
       if(typeof roundIndex === "number") {
@@ -129,7 +138,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
     render: function() {
       var contentContainer = this.renderAccordingToContextType(this.state.containerContextType, this.state.currentRoundIndex);
 
-      var assignButton = ValidatorHelper.canAssignRound(this.state.tournament, this.state.currentRoundIndex)?
+      var assignRoundButton = ValidatorHelper.canAssignRound(this.state.tournament, this.state.currentRoundIndex)?
         <button className="ui primary button" onClick={this.assignCurrentRound}>Assign Round</button>
         : undefined;
 
@@ -138,7 +147,11 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
         : undefined;
 
       var activateRoundButton = ValidatorHelper.canActivateRound(this.state.tournament, this.state.currentRoundIndex)?
-        <button className="ui positive button" onClick={this.activateCurrentRound}>Finalize Round and Publish Assignment</button>
+        <button className="ui positive button" onClick={this.activateCurrentRound}>Activate Round and Publish Assignment</button>
+        : undefined;
+
+      var finalizeRoundButton = ValidatorHelper.canFinalizeRound(this.state.tournament, this.state.currentRoundIndex)?
+        <button className="ui positive button" onClick={this.finalizeCurrentRound}>Finalize Round {this.state.currentRoundIndex + 1}</button>
         : undefined;
 
       var createRoundClassName = (function() {
@@ -194,13 +207,16 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
           </div>
           <br />
           <div className="row">
-            {assignButton}
+            {assignRoundButton}
           </div>
           <div className="row">
             {deleteRoundButton}
           </div>
           <div className="row">
             {activateRoundButton}
+          </div>
+          <div className="row">
+            {finalizeRoundButton}
           </div>
           <br />
           <div className="row">

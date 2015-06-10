@@ -52,12 +52,42 @@ DeclashApp.helpers.ValidatorHelper = (function() {
     },
 
     canActivateRound: function(tournament, currentRoundIndex) {
-      var round = tournament.rounds[currentRoundIndex];
+      var round = _.find(tournament.rounds, function(round) {
+        return round.index === currentRoundIndex;
+      });
+
       if(!round) {
         return false;
       }
 
       return round.state === "assigned";
+    },
+
+    canFinalizeRound: function(tournament, currentRoundIndex) {
+      var round = _.find(tournament.rounds, function(round) {
+        return round.index === currentRoundIndex;
+      });
+
+      if(!round) {
+        return false;
+      }
+
+      var everyActiveTeamHasResult = _.every(tournament.teams, function(team) {
+        if(!team.isActiveForRound[currentRoundIndex]) {
+          return true;
+        }
+
+        var everyDebaterHasScore = _.every(team.debaters, function(debater) {
+          var score = debater.scoreForRound[currentRoundIndex];
+          return typeof score === "number";
+        });
+
+        var result = team.resultForRound[currentRoundIndex];
+
+        return result !== undefined && everyDebaterHasScore;
+      });
+
+      return everyActiveTeamHasResult && round.state === "active";
     },
 
     canChangeDebaterScore: function(tournament, roundIndex, teamToUpdate, debaterIndex, scoreValue) {

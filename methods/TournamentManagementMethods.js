@@ -228,15 +228,16 @@ Meteor.methods({
 
   deleteRound: function(roundIndex) {
     var tournament = getOwnerTournament.call(this);
-    var roundToDelete = tournament.rounds[roundIndex];
+    var roundToDelete = _.find(tournament.rounds, function(round) {
+      return round.index === roundIndex;
+    });
+
+    if(!roundToDelete) {
+      throw new Meteor.Error("unableToFind", "Unable to find the round you're looking for.");
+    }
 
     if(!ValidatorHelper.canDeleteRound(tournament, roundIndex)) {
       throw new Meteor.Error("invalidAction", "Cannot delete this round. Make sure you have the proper conditions.");
-    }
-
-    // TODO: Perhaps something more elegant here?
-    if(roundToDelete.index !== roundIndex) {
-      throw new Meteor.Error("fatalError", "FATAL: The round assignments do not match.");
     }
 
     Tournaments.update(tournament._id, {$pull: {"rounds": {index: roundIndex}}});
@@ -244,20 +245,45 @@ Meteor.methods({
 
   activateRound: function(roundIndex) {
     var tournament = getOwnerTournament.call(this);
-    var roundToActivate = tournament.rounds[roundIndex];
+    var roundToActivate = _.find(tournament.rounds, function(round) {
+      return round.index === roundIndex;
+    });
+
+    if(!roundToActivate) {
+      throw new Meteor.Error("unableToFind", "Unable to find the round you're looking for.");
+    }
 
     if(!ValidatorHelper.canActivateRound(tournament, roundIndex)) {
       throw new Meteor.Error("invalidAction", "Cannot activate this round. Make sure you have the proper conditions.");
     }
 
-    // TODO: Perhaps something more elegant here?
-    if(roundToActivate.index !== roundIndex) {
-      throw new Meteor.Error("fatalError", "FATAL: The round assignments do not match.");
-    }
-
     roundToActivate.state = "active";
 
     Tournaments.update({_id: tournament._id, "rounds.index": roundToActivate.index}, {$set: {"rounds.$": roundToActivate}}, {validate: false, filter: false});
+  },
+
+  finalizeRound: function(roundIndex) {
+    var tournament = getOwnerTournament.call(this);
+    var roundToFinalize = _.find(tournament.rounds, function(round) {
+      return round.index === roundIndex;
+    });
+
+    if(!roundToFinalize) {
+      throw new Meteor.Error("unableToFind", "Unable to find the round you're looking for.");
+    }
+
+    if(!ValidatorHelper.canFinalizeRound(tournament, roundIndex)) {
+      throw new Meteor.Error("invalidAction", "Cannot finalize this round. Make sure you have the proper conditions.");
+    }
+
+    roundToFinalize.state = "finished";
+
+    Tournaments.update(
+      {_id: tournament._id, "rounds.index": roundToFinalize.index},
+      {$set: {"rounds.$": roundToFinalize}},
+      {validate: false, filter: false}
+    );
+
   },
 
   changeJudgeRoom: function(transferringJudge, destinationRoomString, roundIndex) {
