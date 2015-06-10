@@ -22,6 +22,33 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       };
     },
 
+    assignCurrentRound: function() {
+      Meteor.call("assignRound", this.state.currentRoundIndex, function(err, result) {
+        // TODO
+        if(err) {
+          alert(err.reason);
+        }
+      });
+    },
+
+    deleteCurrentRound: function() {
+      Meteor.call("deleteRound", this.state.currentRoundIndex, function(err, result) {
+        // TODO
+        if(err) {
+          alert(err.reason);
+        }
+      });
+    },
+
+    activateCurrentRound: function() {
+      Meteor.call("activateRound", this.state.currentRoundIndex, function(err, result) {
+        // TODO
+        if(err) {
+          alert(err.reason);
+        }
+      });
+    },
+
     switchContainerContextType: function(contextType, roundIndex) {
       Session.set("containerContextType", contextType);
       if(typeof roundIndex === "number") {
@@ -102,6 +129,18 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
     render: function() {
       var contentContainer = this.renderAccordingToContextType(this.state.containerContextType, this.state.currentRoundIndex);
 
+      var assignButton = ValidatorHelper.canAssignRound(this.state.tournament, this.state.currentRoundIndex)?
+        <button className="ui primary button" onClick={this.assignCurrentRound}>Assign Round</button>
+        : undefined;
+
+      var deleteRoundButton = ValidatorHelper.canDeleteRound(this.state.tournament, this.state.currentRoundIndex)?
+        <button className="ui negative button" onClick={this.deleteCurrentRound}>Delete Round</button>
+        : undefined;
+
+      var activateRoundButton = ValidatorHelper.canActivateRound(this.state.tournament, this.state.currentRoundIndex)?
+        <button className="ui positive button" onClick={this.activateCurrentRound}>Finalize Round and Publish Assignment</button>
+        : undefined;
+
       var createRoundClassName = (function() {
         if(this.props.tournament.rounds.length === 0) {
           return "ui link item";
@@ -148,6 +187,20 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
               }.bind(this))}
               <div onClick={createRoundClassName.indexOf("disabled") >= 0? undefined : this.createRound} className={createRoundClassName}>Create a Round</div>
             </div>
+          </div>
+          <br />
+          <div className="row">
+            <h3>Managing Round {(this.state.currentRoundIndex + 1).toString()}.</h3>
+          </div>
+          <br />
+          <div className="row">
+            {assignButton}
+          </div>
+          <div className="row">
+            {deleteRoundButton}
+          </div>
+          <div className="row">
+            {activateRoundButton}
           </div>
           <br />
           <div className="row">
@@ -503,33 +556,6 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       };
     },
 
-    assignCurrentRound: function() {
-      Meteor.call("assignRound", this.props.roundIndex, function(err, result) {
-        // TODO
-        if(err) {
-          alert(err.reason);
-        }
-      });
-    },
-
-    deleteCurrentRound: function() {
-      Meteor.call("deleteRound", this.props.roundIndex, function(err, result) {
-        // TODO
-        if(err) {
-          alert(err.reason);
-        }
-      });
-    },
-
-    activateCurrentRound: function() {
-      Meteor.call("activateRound", this.props.roundIndex, function(err, result) {
-        // TODO
-        if(err) {
-          alert(err.reason);
-        }
-      });
-    },
-
     render: function() {
       if(!this.state.tournament.rounds[this.props.roundIndex]) {
         // Do we want to set the session? Somehow it complains but works fine.
@@ -555,37 +581,14 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
         return undefined;
       }.bind(this))();
 
-      var assignButton = ValidatorHelper.canAssignRound(this.state.tournament, this.props.roundIndex)?
-        <button className="ui primary button" onClick={this.assignCurrentRound}>Assign Round</button>
-        : undefined;
 
-      var deleteRoundButton = ValidatorHelper.canDeleteRound(this.state.tournament, this.props.roundIndex)?
-        <button className="ui negative button" onClick={this.deleteCurrentRound}>Delete Round</button>
-        : undefined;
-
-      var activateRoundButton = ValidatorHelper.canActivateRound(this.state.tournament, this.props.roundIndex)?
-        <button className="ui positive button" onClick={this.activateCurrentRound}>Finalize Round and Publish Assignment</button>
-        : undefined;
 
       return (
         <div>
           <div className="row">
-            <h3>Managing Round {(this.props.roundIndex + 1).toString()}.</h3>
-          </div>
-          <br />
-          <div className="row">
             {warningMessage}
           </div>
           <br />
-          <div className="row">
-            {assignButton}
-          </div>
-          <div className="row">
-            {deleteRoundButton}
-          </div>
-          <div className="row">
-            {activateRoundButton}
-          </div>
           <div className="row">
             <RoundHot roundIndex={this.props.roundIndex} context={this.props.context} tournament={this.state.tournament} />
           </div>
