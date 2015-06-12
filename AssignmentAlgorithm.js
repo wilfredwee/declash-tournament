@@ -24,8 +24,9 @@ DeclashApp.AssignmentAlgorithm = (function() {
       }));
 
 
-      // Since this is the first round, we're not concerned with the nested
-      // data structure of teams and judges as we'll replace them anyway.
+      // According to the RoomSchema, this should properly clone the rooms,
+      // because all fields of a Room are primitive types, except teams and judges,
+      // which is not applicable because it is now empty anyway and we're populating it here.
       var currentRoundRooms = _.map(_.first(currentRound.rooms, (shuffledActiveTeams.length/4)), _.clone);
 
       var roomIndex = 0;
@@ -122,6 +123,95 @@ DeclashApp.AssignmentAlgorithm = (function() {
       });
 
       return assignedJudges;
+    },
+
+    // Return round that contains information about teams and rooms.
+
+    getAssignedRound: function(tournament, roundToAssign) {
+      function getTotalResult(team) {
+        return _.reduce(team.resultForRound, function(prev, curr) {
+          prev = typeof prev === "number"? prev : 0;
+          curr = typeof curr === "number"? curr : 0;
+
+          return prev + curr;
+        }, 0);
+      }
+
+      // TODO: Check that all rooms do not have teams and judges assigned.
+
+      if(roundToAssign.index === 0) {
+        return this.getAssignedFirstRound(tournament, roundToAssign);
+      }
+
+      // Clone the round to avoid mutating data.
+      // We separately clone the rooms to deal with nested data structure.
+      var currentRound = _.clone(_.find(tournament.rounds, function(round) {
+        return round.index === roundToAssign.index;
+      }));
+
+
+      var activeTeams = _.filter(tournament.teams, function(team) {
+        return team.isActiveForRound[currentRound.index];
+      });
+
+      var currentRoundRooms = _.map(_.first(currentRound.rooms, (activeTeams.length/4)), _.clone);
+
+      var groupedTeams = _.groupBy(activeTeams, function(team) {
+        return getTotalResult(team);
+      });
+
+      var sortedKeys = _.sortBy(_.keys(groupedTeams), function(num) {
+        return parseInt(num, 10);
+      }).reverse();
+
+      var pool = [];
+      var pools = [];
+      for(var i=0; i<sortedKeys.length; i++) {
+        var teamsWithSameResult = _.shuffle(groupedTeams[sortedKeys[i]]);
+
+        /* jshint ignore:start */
+        _.each(teamsWithSameResult, function(team) {
+            pool.push(team);
+
+            if(pool.length === 4) {
+              pools.push(_.clone(pool));
+              pool = [];
+            }
+        });
+        /* jshint ignore:end */
+      }
+
+
+      var roomIndex = 0;
+      _.each(pools, function(teams) {
+        if(currentRoundRooms[roomIndex].teams.length === 4) {
+          roomIndex++;
+        }
+
+        currentRoundRooms[roomIndex].teams = _.map(teams, function(team) {
+          return team.guid;
+        });
+      });
+
+      // TODO: Assign judges based on proper strategy.
+      var shuffledActiveJudges = _.shuffle(_.filter(tournament.judges, function(judge) {
+        return judge.isActiveForRound[currentRound.index] === true;
+      }));
+
+      // roomIndex now also serves as the last room index, we can determine
+      // the number of rooms used by computing roomIndex + 1
+
+      // TODO: Assign judges based on proper strategy.
+      _.each(shuffledActiveJudges, function(judge, index) {
+        currentRoundRooms[index % (roomIndex + 1)].judges.push(judge.guid);
+      });
+
+      currentRound.rooms = currentRoundRooms;
+
+      console.log("currentRoundRooms");
+      console.log(currentRound.rooms);
+
+      return currentRound;
     }
   };
 

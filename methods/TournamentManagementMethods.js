@@ -209,22 +209,20 @@ Meteor.methods({
       throw new Meteor.Error("fatalError", "FATAL: The round assignments do not match.");
     }
 
-    if(roundToAssign.index === 0) {
-      // assignedRound assigns teams and judges to rooms.
-      var assignedRound = DeclashApp.AssignmentAlgorithm.getAssignedFirstRound(tournament, roundToAssign);
+    // assignedRound assigns teams and judges to rooms.
+    var assignedRound = DeclashApp.AssignmentAlgorithm.getAssignedRound(tournament, roundToAssign);
 
-      // assignedTeams has their roles for a round assigned
-      var assignedTeams = DeclashApp.AssignmentAlgorithm.getAssignedTeams(tournament.teams, assignedRound);
+    // assignedTeams has their roles for a round assigned
+    var assignedTeams = DeclashApp.AssignmentAlgorithm.getAssignedTeams(tournament.teams, assignedRound);
 
-      // assignedJudges has their roles for a round assigned (is chair or not)
-      var assignedJudges = DeclashApp.AssignmentAlgorithm.getAssignedJudges(tournament.judges, assignedRound);
+    // assignedJudges has their roles for a round assigned (is chair or not)
+    var assignedJudges = DeclashApp.AssignmentAlgorithm.getAssignedJudges(tournament.judges, assignedRound);
 
-      assignedRound.state = "assigned";
+    assignedRound.state = "assigned";
 
-      Tournaments.update({_id: tournament._id, "rounds.index": assignedRound.index}, {$set: {"rounds.$": assignedRound}}, {validate: false, filter: false});
-      Tournaments.update(tournament._id, {$set: {teams: assignedTeams, judges: assignedJudges}});
-    }
-  },
+    Tournaments.update({_id: tournament._id, "rounds.index": assignedRound.index}, {$set: {"rounds.$": assignedRound}}, {validate: false, filter: false});
+    Tournaments.update(tournament._id, {$set: {teams: assignedTeams, judges: assignedJudges}});
+},
 
   deleteRound: function(roundIndex) {
     var tournament = getOwnerTournament.call(this);

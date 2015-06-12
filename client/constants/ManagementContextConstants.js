@@ -190,7 +190,7 @@ DeclashApp.client.constants.ManagementContextConstants = (function() {
       return _.map(schema, function(value, key) {
         var columnObj = {};
         if(key !== "name" || key !== "institution") {
-          columnObj.type = "numeric"
+          columnObj.type = "numeric";
         }
         columnObj.data = key;
 
