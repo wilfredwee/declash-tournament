@@ -74,6 +74,8 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       var TEAM_ROUND_CONTEXT = ManagementContextConstants.TEAM_ROUND_CONTEXT;
       var JUDGE_ROUND_CONTEXT = ManagementContextConstants.JUDGE_ROUND_CONTEXT;
       var ROOM_ROUND_CONTEXT = ManagementContextConstants.ROOM_ROUND_CONTEXT;
+      var TEAM_TAB_CONTEXT = ManagementContextConstants.TEAM_TAB_CONTEXT;
+      var SPEAKER_TAB_CONTEXT = ManagementContextConstants.SPEAKER_TAB_CONTEXT;
 
       var contextToRender = TEAM_CONTEXT;
       switch(contextType) {
@@ -98,6 +100,12 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
         case MANAGE_CONTEXT_TYPE:
           contextToRender = {type: null};
           break;
+        case TEAM_TAB_CONTEXT.type:
+          contextToRender = TEAM_TAB_CONTEXT;
+          break;
+        case SPEAKER_TAB_CONTEXT.type:
+          contextToRender = SPEAKER_TAB_CONTEXT;
+          break;
       }
 
       if(_.contains([
@@ -115,6 +123,13 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
         ], contextToRender.type)
       ){
         return <RoundHotContainer roundIndex={roundIndex} context={contextToRender} />;
+      }
+      else if(_.contains([
+        TEAM_TAB_CONTEXT.type,
+        SPEAKER_TAB_CONTEXT.type
+        ], contextToRender.type)
+      ) {
+        return <TabHotContainer context={contextToRender} />;
       }
       else {
         if(this.state.tournament.rounds[roundIndex].state === "assigned") {
@@ -199,6 +214,14 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
                 );
               }.bind(this))}
               <div onClick={createRoundClassName.indexOf("disabled") >= 0? undefined : this.createRound} className={createRoundClassName}>Create a Round</div>
+              <div tabIndex="-1" className="ui simple pointing dropdown link item">
+                <i tabIndex="0" className="dropdown icon"></i>
+                <span className="text">Tab Results</span>
+                <div tabIndex="-1" className="menu">
+                  <div className="item" onClick={this.switchContainerContextType.bind(this, ManagementContextConstants.TEAM_TAB_CONTEXT.type)}>Teams</div>
+                  <div className="item" onClick={this.switchContainerContextType.bind(this, ManagementContextConstants.SPEAKER_TAB_CONTEXT.type)}>Speakers</div>
+                </div>
+              </div>
             </div>
           </div>
           <br />
@@ -740,6 +763,116 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
 
     }
 
+  });
+
+  var TabHotContainer = ReactMeteor.createClass({
+    getMeteorState: function() {
+      Session.setDefault("canEdit", false);
+      return {
+        tournament: Tournaments.findOne({ownerId: Meteor.userId()}),
+        canEdit: Session.get("canEdit")
+      };
+    },
+
+    render: function() {
+      // TODO: change canEdit based on button.
+      return (
+        <div className="row">
+          <TabHot canEdit={this.state.canEdit} context={this.props.context} tournament={this.state.tournament} />
+        </div>
+      );
+    }
+  });
+
+  var TabHot = ReactMeteor.createClass({
+    componentDidMount: function () {
+      if(!this.hot) {
+        this.initializeHot();
+      }
+    },
+    shouldComponentUpdate: function(nextProps, nextState) {
+      if(!this.hot ||
+        !_.isEqual(this.props.context, nextProps.context) ||
+        !_.isEqual(this.props.canEdit, nextProps.canEdit)) {
+        return true;
+      }
+
+      // TODO: Better checks.
+
+      return !_.isEqual(this.props.tournament, nextProps.tournament);
+    },
+
+    componentDidUpdate: function (prevProps, prevState) {
+      if(!this.hot) {
+        this.initializeHot();
+      }
+      else {
+        if(_.isEqual(this.props.context, prevProps.context)) {
+          // TODO: update data depending on whether editing is allowed.
+          this.hot.updateSettings({
+            readOnly: this.props.canEdit
+          });
+
+          //this.hot.loadData(this.props.context.transformCollectionToTableData(this.props.tournament));
+        }
+        else {
+          this.hot.destroy();
+          this.hot = undefined;
+          this.initializeHot();
+        }
+      }
+    },
+
+    componentWillUnmount: function () {
+      if(this.hot) {
+        this.hot.destroy();
+        this.hot = undefined;
+      }
+    },
+
+    initializeHot: function() {
+      var componentThis = this;
+      var context = this.props.context;
+      var colHeaders = context.getColHeaders(this.props.tournament);
+      var dataSchema = context.getDataSchema(this.props.tournament);
+      var columns = context.getColumns(this.props.tournament);
+      var tableData = context.transformCollectionToTableData(this.props.tournament);
+
+      var readOnly = !this.props.canEdit;
+
+      this.hot = new Handsontable(this.refs.handsontable.getDOMNode(), {
+        data: tableData,
+        minCols: colHeaders.length,
+        startCols: colHeaders.length,
+        minSpareRows: 0,
+        maxRows: tableData.length,
+        rowHeaders: true,
+        colHeaders: colHeaders,
+        autoWrapRow: true,
+        stretchH: "all",
+        height: 500,
+        allowRemoveColumn: false,
+        allowInsertColumn: false,
+        allowInsertRow: false,
+        allowRemoveRow: false,
+        readOnly: readOnly,
+        dataSchema: dataSchema,
+        columns: columns,
+        columnSorting: true,
+        afterChange: function(changes, source) {
+          // TODO?
+        }
+      });
+    },
+
+    render: function() {
+      return (
+        <div className="row">
+          <div ref="handsontable"></div>
+        </div>
+      );
+
+    }
   });
 
   var ActiveRoundRoomsContainer = ReactMeteor.createClass({

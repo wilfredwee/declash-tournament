@@ -30,6 +30,220 @@ DeclashApp.client.constants.ManagementContextConstants = (function() {
   var ROOM_REMOVE_METHOD_TYPE = "removeRoom";
 
   var MANAGE_CONTEXT_TYPE = "manage";
+  var TEAM_TAB_CONTEXT_TYPE = "team_tab";
+  var SPEAKER_TAB_CONTEXT_TYPE = "speaker_tab";
+
+  var TEAM_TAB_CONTEXT = {
+    getColHeaders: function(tournament) {
+      // Build up our headers.
+      var defaultHeaders = ["Position", "Team Name", "Institution", "Total Rank", "Total Speaker"];
+
+      var rankHeaders = [];
+      var speakerHeaders = [];
+
+      _.each(tournament.rounds, function(round) {
+        var roundNumber = (round.index + 1).toString();
+        var rankHeader = "Rank R" + roundNumber;
+        var speakerHeader = "Speaker R" + roundNumber;
+
+        rankHeaders.push(rankHeader);
+        speakerHeaders.push(speakerHeader);
+      });
+
+      return defaultHeaders.concat(rankHeaders, speakerHeaders);
+    },
+
+    getDataSchema: function(tournament) {
+      var schema = {position: null, name: null, institution: null, totalResult: null, totalScore: null};
+
+      _.each(tournament.rounds, function(round) {
+        var roundNumber = round.index.toString();
+
+        var rankObj = {};
+        rankObj["result" + roundNumber] =  null;
+        _.extend(schema, rankObj);
+      });
+
+      _.each(tournament.rounds, function(round) {
+        var roundNumber = round.index.toString();
+
+        var scoreObj = {};
+        scoreObj["score" + roundNumber] = null;
+        _.extend(schema, scoreObj);
+      });
+
+      return schema;
+    },
+
+    getColumns: function(tournament) {
+      var schema = this.getDataSchema(tournament);
+
+      return _.map(schema, function(value, key) {
+        var columnObj = {};
+        columnObj.data = key;
+
+        return columnObj;
+      });
+    },
+
+    type: TEAM_TAB_CONTEXT_TYPE,
+
+    transformCollectionToTableData: function(tournament) {
+      var getCleanNumber = function(input) {
+        return typeof input === "number"? input : 0;
+      };
+
+      var getTotalFromAllRounds = function(round) {
+        return _.reduce(round, function(prev, curr) {
+          prev = getCleanNumber(prev);
+          curr = getCleanNumber(curr);
+
+          return prev + curr;
+        }, 0);
+      };
+
+      var tableTeamWithoutPosition =  _.map(tournament.teams, function(team) {
+        var newTeam = {};
+
+        newTeam.name = team.name;
+        newTeam.institution = team.institution;
+
+        // TODO: This is BP Specific.
+        newTeam.totalResult = _.reduce(team.resultForRound, function(prevResult, currResult) {
+          return prevResult + currResult;
+        }, 0);
+
+        newTeam.totalScore = getTotalFromAllRounds(team.debaters[0].scoreForRound) +
+          getTotalFromAllRounds(team.debaters[1].scoreForRound);
+
+        _.each(team.resultForRound, function(value, key) {
+          newTeam["result" + key.toString()] = value;
+        });
+
+        _.each(tournament.rounds, function(round) {
+          var roundNumber = round.index.toString();
+
+          newTeam["result" + roundNumber] = getCleanNumber(team.resultForRound[roundNumber]);
+
+          var debater1Score = getCleanNumber(team.debaters[0].scoreForRound[roundNumber]);
+          var debater2Score = getCleanNumber(team.debaters[1].scoreForRound[roundNumber]);
+
+          newTeam["score" + roundNumber] = debater1Score + debater2Score;
+        });
+
+        return newTeam;
+      });
+
+      tableTeamWithoutPosition = _.sortBy(tableTeamWithoutPosition, "totalResult");
+
+      tableTeamWithoutPosition.reverse();
+
+      return _.map(tableTeamWithoutPosition, function(team, index) {
+        team.position = (index + 1).toString();
+
+        return team;
+      });
+    },
+
+    transformTableDataRowToCollection: function(tableData) {
+      throw new Meteor.Error("unimplemented", "This is not implemented");
+    }
+  };
+
+  var SPEAKER_TAB_CONTEXT = {
+    getColHeaders: function(tournament) {
+      // Build up our headers.
+      var defaultHeaders = ["Position", "Name", "Institution", "Total Score"];
+
+      var roundHeaders = [];
+
+      _.each(tournament.rounds, function(round) {
+        var roundNumber = (round.index + 1).toString();
+        var scoreHeader = "Score R" + roundNumber;
+
+        roundHeaders.push(scoreHeader);
+      });
+
+      return defaultHeaders.concat(roundHeaders);
+    },
+
+    getDataSchema: function(tournament) {
+      var schema = {position: null, name: null, institution: null, totalScore: null};
+
+      _.each(tournament.rounds, function(round) {
+        var roundNumber = round.index.toString();
+
+        var scoreObj = {};
+        scoreObj["score" + roundNumber] =  null;
+        _.extend(schema, scoreObj);
+      });
+
+      return schema;
+    },
+
+    getColumns: function(tournament) {
+      var schema = this.getDataSchema(tournament);
+
+      return _.map(schema, function(value, key) {
+        var columnObj = {};
+        columnObj.data = key;
+
+        return columnObj;
+      });
+    },
+
+    type: SPEAKER_TAB_CONTEXT_TYPE,
+
+    transformCollectionToTableData: function(tournament) {
+      var getCleanNumber = function(input) {
+        return typeof input === "number"? input : 0;
+      };
+
+      var getTotalFromAllRounds = function(round) {
+        return _.reduce(round, function(prev, curr) {
+          prev = getCleanNumber(prev);
+          curr = getCleanNumber(curr);
+
+          return prev + curr;
+        }, 0);
+      };
+
+      var tableDebatersWithoutPosition = [];
+
+      _.each(tournament.teams, function(team) {
+        _.each(team.debaters, function(debater) {
+          var newDebater = {};
+
+          newDebater.name = debater.name;
+          newDebater.institution = team.institution;
+
+          newDebater.totalScore = getTotalFromAllRounds(debater.scoreForRound);
+
+          _.each(tournament.rounds, function(round) {
+            var roundNumber = round.index.toString();
+
+            newDebater["score" + roundNumber] = getCleanNumber(debater.scoreForRound[roundNumber]);
+          });
+
+          tableDebatersWithoutPosition.push(newDebater);
+        });
+      });
+
+
+      tableDebatersWithoutPosition = _.sortBy(tableDebatersWithoutPosition, "totalScore");
+      tableDebatersWithoutPosition.reverse();
+
+      return _.map(tableDebatersWithoutPosition, function(debater, index) {
+        debater.position = (index + 1).toString();
+
+        return debater;
+      });
+    },
+
+    transformTableDataRowToCollection: function(tableData) {
+      throw new Meteor.Error("unimplemented", "This is not implemented");
+    }
+  };
 
   // IMPORTANT: All contexts' functions must be pure functions.
   var TEAM_CONTEXT = {
@@ -262,6 +476,8 @@ DeclashApp.client.constants.ManagementContextConstants = (function() {
     TEAM_ROUND_CONTEXT: TEAM_ROUND_CONTEXT,
     JUDGE_ROUND_CONTEXT: JUDGE_ROUND_CONTEXT,
     ROOM_ROUND_CONTEXT: ROOM_ROUND_CONTEXT,
+    TEAM_TAB_CONTEXT: TEAM_TAB_CONTEXT,
+    SPEAKER_TAB_CONTEXT: SPEAKER_TAB_CONTEXT
   };
 
   return ManagementContextConstants;
