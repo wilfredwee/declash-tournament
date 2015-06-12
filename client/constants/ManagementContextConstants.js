@@ -80,6 +80,9 @@ DeclashApp.client.constants.ManagementContextConstants = (function() {
 
       return _.map(schema, function(value, key) {
         var columnObj = {};
+        if(key !== "name" || key !== "institution") {
+          columnObj.type = "numeric";
+        }
         columnObj.data = key;
 
         return columnObj;
@@ -139,7 +142,7 @@ DeclashApp.client.constants.ManagementContextConstants = (function() {
       tableTeamWithoutPosition.reverse();
 
       return _.map(tableTeamWithoutPosition, function(team, index) {
-        team.position = (index + 1).toString();
+        team.position = index;
 
         return team;
       });
@@ -186,6 +189,9 @@ DeclashApp.client.constants.ManagementContextConstants = (function() {
 
       return _.map(schema, function(value, key) {
         var columnObj = {};
+        if(key !== "name" || key !== "institution") {
+          columnObj.type = "numeric"
+        }
         columnObj.data = key;
 
         return columnObj;
@@ -234,7 +240,7 @@ DeclashApp.client.constants.ManagementContextConstants = (function() {
       tableDebatersWithoutPosition.reverse();
 
       return _.map(tableDebatersWithoutPosition, function(debater, index) {
-        debater.position = (index + 1).toString();
+        debater.position = index + 1;
 
         return debater;
       });
