@@ -1,5 +1,10 @@
 "use strict";
 
+var SchemaHelpers;
+Meteor.startup(function() {
+  SchemaHelpers = DeclashApp.helpers.SchemaHelpers;
+});
+
 DeclashApp.AssignmentAlgorithm = (function() {
   function AssignmentAlgorithm(tournament, roundToAssign) {
     this.tournament = JSON.parse(JSON.stringify(tournament));
@@ -12,11 +17,13 @@ DeclashApp.AssignmentAlgorithm = (function() {
 
   AssignmentAlgorithm.prototype.assign = function() {
     if(this.roundToAssign.index === 0) {
-      assignFirstRound.call(this);
+      assignFirstRoundRoomsForTeams.call(this);
+      assignRoomsForJudges.call(this);
       assignTeams.call(this);
     }
     else {
       assignRound.call(this);
+      assignRoomsForJudges.call(this);
     }
 
     assignJudges.call(this);
@@ -34,7 +41,60 @@ DeclashApp.AssignmentAlgorithm = (function() {
     return this.assignedJudges;
   };
 
-  function assignFirstRound() {
+  function assignRoomsForJudges() {
+    var shuffledActiveJudges = _.shuffle(_.filter(this.tournament.judges, function(judge) {
+      return judge.isActiveForRound[this.assignedRound.index] === true;
+    }.bind(this)));
+
+    _.each(shuffledActiveJudges, function(judge) {
+      var sortedRooms = _.chain(this.assignedRound.rooms)
+        .map(function(room, roomIndex) {
+          var institutions = _.map(room.teams, function(teamGuid) {
+            var team = _.find(this.tournament.teams, function(assignedTeam) {
+              return assignedTeam.guid === teamGuid;
+            });
+
+            return team.institution;
+          }.bind(this));
+
+          var clonedRoom = JSON.parse(JSON.stringify(room));
+
+          clonedRoom.institutions = institutions;
+          clonedRoom.index = roomIndex;
+
+          return clonedRoom;
+        }.bind(this))
+        .sortBy(function(room) {
+          return _.reduce(room.judges, function(acc, currJudgeGuid) {
+            var judge = _.find(shuffledActiveJudges, function(judgeObj) {
+              return judgeObj.guid === currJudgeGuid;
+            });
+
+            return acc += SchemaHelpers.getAverageRankForJudge(judge);
+          }, 0);
+        })
+        .sortBy(function(room) {
+          return room.judges.length;
+        })
+        .sortBy(function(room) {
+          return room.judges.length % 2 !== 0? Infinity : -Infinity;
+        })
+        .sortBy(function(room) {
+          return _.contains(room.institutions, judge.institution)? Infinity : -Infinity;
+        })
+        .sortBy(function(room) {
+          return room.judges.length === 0? -Infinity : Infinity;
+        })
+        .value();
+
+
+      var roomToAssign = _.first(sortedRooms);
+
+      this.assignedRound.rooms[roomToAssign.index].judges.push(judge.guid);
+    }.bind(this));
+  }
+
+  function assignFirstRoundRoomsForTeams() {
     // Strategy:
     // 1. Assign teams randomly.
     // 2. Assign judges to chair based on rank.
@@ -48,11 +108,6 @@ DeclashApp.AssignmentAlgorithm = (function() {
 
     var shuffledActiveTeams = _.shuffle(_.filter(this.tournament.teams, function(team) {
       return team.isActiveForRound[currentRound.index] === true;
-    }));
-
-    // TODO: Assign judges based on proper strategy.
-    var shuffledActiveJudges = _.shuffle(_.filter(this.tournament.judges, function(judge) {
-      return judge.isActiveForRound[currentRound.index] === true;
     }));
 
 
@@ -70,14 +125,6 @@ DeclashApp.AssignmentAlgorithm = (function() {
       var currentRoom = currentRoundRooms[roomIndex];
 
       currentRoom.teams.push(team.guid);
-    });
-
-    // roomIndex now also serves as the last room index, we can determine
-    // the number of rooms used by computing roomIndex + 1
-
-    // TODO: Assign judges based on proper strategy.
-    _.each(shuffledActiveJudges, function(judge, index) {
-      currentRoundRooms[index % (roomIndex + 1)].judges.push(judge.guid);
     });
 
     currentRound.rooms = currentRoundRooms;
@@ -107,7 +154,7 @@ DeclashApp.AssignmentAlgorithm = (function() {
       roomTeams[3].roleForRound[this.assignedRound.index] = "CO";
 
       return roomTeams;
-    }), true);
+    }.bind(this)), true);
 
     var assignedTeamsGuid = _.pluck(assignedTeams, "guid");
 
@@ -125,11 +172,18 @@ DeclashApp.AssignmentAlgorithm = (function() {
     var clonedJudges = _.map(this.tournament.judges, _.clone);
 
     var assignedJudges = _.flatten(_.map(this.assignedRound.rooms, function(room) {
-      var roomJudges = _.map(room.judges, function(judgeGuid) {
-        return _.find(clonedJudges, function(judge) {
-          return judge.guid === judgeGuid;
-        });
-      });
+      var roomJudges = _.chain(room.judges)
+        .map(function(judgeGuid) {
+          return _.find(clonedJudges, function(judge) {
+            return judge.guid === judgeGuid;
+          });
+        })
+        .shuffle()
+        .sortBy(function(judge) {
+          return SchemaHelpers.getAverageRankForJudge(judge);
+        })
+        .reverse()
+        .value();
 
       _.first(roomJudges).isChairForRound[this.assignedRound.index] = true;
 
@@ -217,6 +271,9 @@ DeclashApp.AssignmentAlgorithm = (function() {
       return parseInt(num, 10);
     }).reverse();
 
+
+    // Start assigning teams their roles, and place them into
+    // pools to assign them their rooms.
     var pool = [];
     var pools = [];
     for(var i=0; i<sortedKeys.length; i++) {
@@ -267,7 +324,7 @@ DeclashApp.AssignmentAlgorithm = (function() {
       /* jshint ignore:end */
     }
 
-
+    // Place teams in their rooms from the pools.
     var roomIndex = 0;
     _.each(pools, function(teams) {
       if(currentRoundRooms[roomIndex].teams.length === 4) {
@@ -279,6 +336,7 @@ DeclashApp.AssignmentAlgorithm = (function() {
       });
     });
 
+    // Assign roles to remaining teams that have not been assigned.
     _.each(pools, function(teams) {
       var roomTeamGuids = _.pluck(teams, "guid");
       var availablePositions = ["OG", "OO", "CG", "CO"];
@@ -318,25 +376,15 @@ DeclashApp.AssignmentAlgorithm = (function() {
       });
     });
 
-    // TODO: Assign judges based on proper strategy.
-    var shuffledActiveJudges = _.shuffle(_.filter(this.tournament.judges, function(judge) {
-      return judge.isActiveForRound[roundToUpdate.index] === true;
-    }));
+    // Done assigning teams.
+    this.assignedTeams = activeTeamsToUpdate.concat(_.filter(teamsToUpdate, function(team) {
+      return !team.isActiveForRound[roundToUpdate.index];
+    }.bind(this)));
 
-    // roomIndex now also serves as the last room index, we can determine
-    // the number of rooms used by computing roomIndex + 1
-
-    // TODO: Assign judges based on proper strategy.
-    _.each(shuffledActiveJudges, function(judge, index) {
-      currentRoundRooms[index % (roomIndex + 1)].judges.push(judge.guid);
-    });
 
     roundToUpdate.rooms = currentRoundRooms;
-
     this.assignedRound = roundToUpdate;
-    this.assignedTeams = activeTeamsToUpdate.concat(_.filter(teamsToUpdate, function(team) {
-      return !team.isActiveForRound[this.assignedRound.index];
-    }.bind(this)));
+
   }
 
   return AssignmentAlgorithm;

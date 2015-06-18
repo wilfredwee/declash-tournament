@@ -6,6 +6,7 @@ DeclashApp.helpers.SchemaHelpers = (function(){
       var totalRank = 0;
 
       _.each(judge.rankForRound, function(rank) {
+        rank = typeof rank  === "number"? rank : 0;
         totalRank += rank;
       });
 

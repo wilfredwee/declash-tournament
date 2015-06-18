@@ -7,9 +7,11 @@
 
 var ValidatorHelper;
 var ManagementContextConstants;
+var SchemaHelpers;
 Meteor.startup(function() {
   ValidatorHelper = DeclashApp.helpers.ValidatorHelper;
   ManagementContextConstants = DeclashApp.client.constants.ManagementContextConstants;
+  SchemaHelpers = DeclashApp.helpers.SchemaHelpers;
 });
 
 DeclashApp.client.templates.TournamentManagementContainer = (function() {
@@ -1571,8 +1573,14 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       render: function() {
         var judgeName = this.props.judge.name;
 
+        judgeName += " (" + this.props.judge.institution + ")";
+        judgeName += " (" + SchemaHelpers.getAverageRankForJudge(this.props.judge) + ")";
+
         if(this.props.judge.isChairForRound[this.props.roundIndex]) {
-          judgeName = "(Chair) ".concat(judgeName);
+          judgeName = <div><i className="legal icon"></i>{judgeName}</div>;
+        }
+        else {
+          judgeName = <div>{judgeName}</div>;
         }
 
         return (
@@ -1581,7 +1589,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
             style={this.props.style}
           >
             <div className="column">
-              <div>{judgeName}</div>
+              {judgeName}
             </div>
           </div>
         );
