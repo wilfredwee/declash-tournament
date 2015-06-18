@@ -1501,6 +1501,15 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
           });
         }
 
+        function getTotalResultForTeam(team) {
+          return _.reduce(team.resultForRound, function(prev, curr) {
+            prev = typeof prev === "number"? prev : 0;
+            curr = typeof curr === "number"? curr : 0;
+
+            return prev + curr;
+          }, 0);
+        }
+
         var OGTeam = getTeamForRole("OG");
         var OOTeam = getTeamForRole("OO");
         var CGTeam = getTeamForRole("CG");
@@ -1509,12 +1518,12 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
         return (
           <div className="ui stackable two column celled grid">
             <div className="two column row">
-              <div className="column"><span><strong>OG: </strong><u>{OGTeam.name}</u></span></div>
-              <div className="column"><span><strong>OO: </strong><u>{OOTeam.name}</u></span></div>
+              <div className="column"><span><strong>OG: </strong>{OGTeam.name} ({getTotalResultForTeam(OGTeam)})</span></div>
+              <div className="column"><span><strong>OO: </strong>{OOTeam.name} ({getTotalResultForTeam(OOTeam)})</span></div>
             </div>
             <div className="two column row">
-              <div className="column"><span><strong>CG: </strong><u>{CGTeam.name}</u></span></div>
-              <div className="column"><span><strong>CO: </strong><u>{COTeam.name}</u></span></div>
+              <div className="column"><span><strong>CG: </strong>{CGTeam.name} ({getTotalResultForTeam(CGTeam)})</span></div>
+              <div className="column"><span><strong>CO: </strong>{COTeam.name} ({getTotalResultForTeam(COTeam)})</span></div>
             </div>
           </div>
         );

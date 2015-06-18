@@ -4,9 +4,11 @@
 // Initialize variables from DeclashApp namespace.
 var ValidatorHelper;
 var SchemaHelpers;
+var AssignmentAlgorithm;
 Meteor.startup(function() {
   ValidatorHelper = DeclashApp.helpers.ValidatorHelper;
   SchemaHelpers = DeclashApp.helpers.SchemaHelpers;
+  AssignmentAlgorithm = DeclashApp.AssignmentAlgorithm;
 });
 
 var getOwnerTournament = function() {
@@ -209,14 +211,19 @@ Meteor.methods({
       throw new Meteor.Error("fatalError", "FATAL: The round assignments do not match.");
     }
 
+    var algorithm = new AssignmentAlgorithm(tournament, roundToAssign);
+
+    // Synchronous assignment call that does all the algorithmic heavy lifting.
+    algorithm.assign();
+
     // assignedRound assigns teams and judges to rooms.
-    var assignedRound = DeclashApp.AssignmentAlgorithm.getAssignedRound(tournament, roundToAssign);
+    var assignedRound = algorithm.getAssignedRound();
 
     // assignedTeams has their roles for a round assigned
-    var assignedTeams = DeclashApp.AssignmentAlgorithm.getAssignedTeams(tournament.teams, assignedRound);
+    var assignedTeams = algorithm.getAssignedTeams();
 
     // assignedJudges has their roles for a round assigned (is chair or not)
-    var assignedJudges = DeclashApp.AssignmentAlgorithm.getAssignedJudges(tournament.judges, assignedRound);
+    var assignedJudges = algorithm.getAssignedJudges();
 
     assignedRound.state = "assigned";
 
