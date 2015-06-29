@@ -436,5 +436,41 @@ Meteor.methods({
       {$set: {"judges.$": judgeToUpdate}},
       {validate: false, filter: false}
     );
+  },
+
+  switchChair: function(judgeGuid, roundIndex) {
+    var tournament = getOwnerTournament.call(this);
+
+    var round = _.find(tournament.rounds, function(round) {
+      return round.index === roundIndex;
+    });
+
+    var room = _.find(round.rooms, function(roomObj) {
+      return _.contains(roomObj.judges, judgeGuid);
+    });
+
+    var prevChair = _.find(tournament.judges, function(judge) {
+      return _.contains(room.judges, judge.guid) && judge.isChairForRound[roundIndex] === true;
+    });
+
+    var newChair = _.find(tournament.judges, function(judge) {
+      return _.contains(room.judges, judge.guid) && judge.guid === judgeGuid;
+    });
+
+    prevChair.isChairForRound[roundIndex] = false;
+    newChair.isChairForRound[roundIndex] = true;
+
+    Tournaments.update(
+      {_id: tournament._id, "judges.guid": prevChair.guid},
+      {$set: {"judges.$": prevChair}},
+      {validate: false, filter: false}
+    );
+
+    Tournaments.update(
+      {_id: tournament._id, "judges.guid": newChair.guid},
+      {$set: {"judges.$": newChair}},
+      {validate: false, filter: false}
+    );
+
   }
 });

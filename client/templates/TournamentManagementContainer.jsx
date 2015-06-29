@@ -1570,6 +1570,18 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
 
   var JudgeComponent = connectDraggable(
     ReactMeteor.createClass({
+      switchChair: function() {
+        var judgeGuid = this.props.judge.guid;
+        var roundIndex = this.props.roundIndex;
+
+        Meteor.call("switchChair", judgeGuid, roundIndex, function(err, result) {
+          // TODO:
+          if(err) {
+            alert(err.reason);
+          }
+        });
+      },
+
       render: function() {
         var judgeName = this.props.judge.name;
 
@@ -1587,6 +1599,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
           <div className="row"
             onMouseDown={this.props.onMouseDown}
             style={this.props.style}
+            onDoubleClick={this.switchChair}
           >
             <div className="column">
               {judgeName}
