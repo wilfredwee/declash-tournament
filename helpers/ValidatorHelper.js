@@ -73,7 +73,7 @@ DeclashApp.helpers.ValidatorHelper = (function() {
         return false;
       }
 
-      return round.state === "assigned";
+      return round.state === "assigned" && round.motion && round.motion.length > 0;
     },
 
     canFinalizeRound: function(tournament, roundIndex) {
@@ -101,6 +101,20 @@ DeclashApp.helpers.ValidatorHelper = (function() {
       });
 
       return everyActiveTeamHasResult && round.state === "active";
+    },
+
+    canEditMotion: function(tournament, roundIndex) {
+      var round = _.find(tournament.rounds, function(round) {
+        return round.index === roundIndex;
+      });
+
+      if(!round) {
+        return false;
+      }
+
+      var acceptableStates = ["initial", "assigned"];
+
+      return _.contains(acceptableStates, round.state);
     },
 
     isDebaterScoreWithinRange: function(scoreValue) {

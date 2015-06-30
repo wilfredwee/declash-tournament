@@ -478,6 +478,24 @@ Meteor.methods({
       {$set: {"judges.$": newChair}},
       {validate: false, filter: false}
     );
+  },
 
+  changeMotion: function(motionText, roundIndex) {
+    var tournament = getOwnerTournament.call(this);
+
+    if(!ValidatorHelper.canEditMotion(tournament, roundIndex)) {
+      throw new Meteor.Error("invalidAction", "Cannot edit the motion for this round.");
+    }
+
+    var round = _.find(tournament.rounds, function(round) {
+      return round.index === roundIndex;
+    });
+
+    round.motion = motionText;
+
+    Tournaments.update(
+      {_id: tournament._id, "rounds.index": round.index},
+      {$set: {"rounds.$": round}}
+    );
   }
 });

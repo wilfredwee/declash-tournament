@@ -24,47 +24,9 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       };
     },
 
-    assignCurrentRound: function() {
-      Meteor.call("assignRound", this.state.currentRoundIndex, function(err, result) {
-        // TODO
-        if(err) {
-          alert(err.reason);
-        }
-      });
-    },
-
-    deleteCurrentRound: function() {
-      Meteor.call("deleteRound", this.state.currentRoundIndex, function(err, result) {
-        // TODO
-        if(err) {
-          alert(err.reason);
-        }
-      });
-    },
-
-    activateCurrentRound: function() {
-      Meteor.call("activateRound", this.state.currentRoundIndex, function(err, result) {
-        // TODO
-        if(err) {
-          alert(err.reason);
-        }
-      });
-    },
-
-    finalizeCurrentRound: function() {
-      Meteor.call("finalizeRound", this.state.currentRoundIndex, function(err, result) {
-        // TODO:
-        if(err) {
-          alert(err.reson);
-        }
-      });
-    },
-
     switchContainerContextType: function(contextType, roundIndex) {
       Session.set("containerContextType", contextType);
-      if(typeof roundIndex === "number") {
-        Session.set("currentRoundIndex", roundIndex);
-      }
+      Session.set("currentRoundIndex", roundIndex);
     },
 
     renderAccordingToContextType: function(contextType, roundIndex) {
@@ -155,21 +117,6 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
     render: function() {
       var contentContainer = this.renderAccordingToContextType(this.state.containerContextType, this.state.currentRoundIndex);
 
-      var assignRoundButton = ValidatorHelper.canAssignRound(this.state.tournament, this.state.currentRoundIndex)?
-        <button className="ui primary button" onClick={this.assignCurrentRound}>Assign Round</button>
-        : undefined;
-
-      var deleteRoundButton = ValidatorHelper.canDeleteRound(this.state.tournament, this.state.currentRoundIndex)?
-        <button className="ui negative button" onClick={this.deleteCurrentRound}>Delete Round</button>
-        : undefined;
-
-      var activateRoundButton = ValidatorHelper.canActivateRound(this.state.tournament, this.state.currentRoundIndex)?
-        <button className="ui positive button" onClick={this.activateCurrentRound}>Activate Round and Publish Assignment</button>
-        : undefined;
-
-      var finalizeRoundButton = ValidatorHelper.canFinalizeRound(this.state.tournament, this.state.currentRoundIndex)?
-        <button className="ui positive button" onClick={this.finalizeCurrentRound}>Finalize Round {this.state.currentRoundIndex + 1}</button>
-        : undefined;
 
       var createRoundClassName = (function() {
         if(this.props.tournament.rounds.length === 0) {
@@ -227,26 +174,146 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
             </div>
           </div>
           <br />
-          <div className="row">
-            <h3>Managing Round {(this.state.currentRoundIndex + 1).toString()}.</h3>
-          </div>
-          <br />
-          <div className="row">
-            {assignRoundButton}
-          </div>
-          <div className="row">
-            {deleteRoundButton}
-          </div>
-          <div className="row">
-            {activateRoundButton}
-          </div>
-          <div className="row">
-            {finalizeRoundButton}
-          </div>
-          <br />
+          {typeof this.state.currentRoundIndex === "number"?
+            <RoundManagementComponent currentRoundIndex={this.state.currentRoundIndex} tournament={this.state.tournament} />
+            : undefined
+          }
           <div className="row">
             {contentContainer}
           </div>
+        </div>
+      );
+    }
+  });
+
+  var RoundManagementComponent = ReactMeteor.createClass({
+    getMeteorState: function() {
+      Session.setDefault("isEditMode", false);
+
+      return {
+        isEditMode: Session.get("isEditMode")
+      };
+    },
+
+    assignCurrentRound: function() {
+      Meteor.call("assignRound", this.props.currentRoundIndex, function(err, result) {
+        // TODO
+        if(err) {
+          alert(err.reason);
+        }
+      });
+    },
+
+    deleteCurrentRound: function() {
+      Meteor.call("deleteRound", this.props.currentRoundIndex, function(err, result) {
+        // TODO
+        if(err) {
+          alert(err.reason);
+        }
+      });
+    },
+
+    activateCurrentRound: function() {
+      Meteor.call("activateRound", this.props.currentRoundIndex, function(err, result) {
+        // TODO
+        if(err) {
+          alert(err.reason);
+        }
+      });
+    },
+
+    finalizeCurrentRound: function() {
+      Meteor.call("finalizeRound", this.props.currentRoundIndex, function(err, result) {
+        // TODO:
+        if(err) {
+          alert(err.reson);
+        }
+      });
+    },
+
+    setToEditMode: function(e) {
+      e.preventDefault();
+
+      Session.set("isEditMode", true);
+    },
+
+    handleMotionSubmit: function(e) {
+      e.preventDefault();
+
+      var motionText = React.findDOMNode(this.refs.motionText).value;
+
+      Meteor.call("changeMotion", motionText, this.props.currentRoundIndex, function(err, result) {
+        // TODO:
+        if(err) {
+          alert(err);
+        }
+        else {
+          Session.set("isEditMode", false);
+        }
+      });
+    },
+
+    render: function() {
+      function addRowToItem(uiItem) {
+        return uiItem? <div className="row">{uiItem}<br /></div> : undefined;
+      }
+
+      var currentRoundIndex = this.props.currentRoundIndex;
+      var tournament = this.props.tournament;
+      var currentRound = tournament.rounds[currentRoundIndex];
+
+      var manageRoundLabel = <h3>Managing Round {(currentRoundIndex + 1).toString()}.</h3>;
+
+      var motionInputForm = (
+        <form className="ui form" onSubmit={this.handleMotionSubmit}>
+          <input type="text" ref="motionText" placeholder="Enter the Motion" />
+          <input type="submit" className="ui submit button" value="Save" />
+        </form>
+      );
+
+      var motionLabel = <div>{currentRound.motion}</div>;
+
+      var motionSegment = (
+        <div className="ui blue segment">
+          <div className="ui grid">
+            <div className="column">
+              <h4 className="ui header">Motion:</h4>
+            </div>
+            {ValidatorHelper.canEditMotion(tournament, currentRoundIndex)?
+              <div className="right floated right aligned column">
+                <i onClick={this.setToEditMode} className="large edit link icon"></i>
+              </div>
+              : undefined
+            }
+          </div>
+          {this.state.isEditMode? motionInputForm : motionLabel}
+        </div>
+      );
+
+      var assignRoundButton = ValidatorHelper.canAssignRound(tournament, currentRoundIndex)?
+        <button className="ui primary button" onClick={this.assignCurrentRound}>Assign Round</button>
+        : undefined;
+
+      var deleteRoundButton = ValidatorHelper.canDeleteRound(tournament, currentRoundIndex)?
+        <button className="ui negative button" onClick={this.deleteCurrentRound}>Delete Round</button>
+        : undefined;
+
+      var activateRoundButton = ValidatorHelper.canActivateRound(tournament, currentRoundIndex)?
+        <button className="ui positive button" onClick={this.activateCurrentRound}>Activate Round and Publish Assignment</button>
+        : undefined;
+
+      var finalizeRoundButton = ValidatorHelper.canFinalizeRound(tournament, currentRoundIndex)?
+        <button className="ui positive button" onClick={this.finalizeCurrentRound}>Finalize Round {currentRoundIndex + 1}</button>
+        : undefined;
+
+      return (
+        <div>
+          {addRowToItem(manageRoundLabel)}
+          {addRowToItem(motionSegment)}
+          {addRowToItem(assignRoundButton)}
+          {addRowToItem(deleteRoundButton)}
+          {addRowToItem(activateRoundButton)}
+          {addRowToItem(finalizeRoundButton)}
         </div>
       );
     }
