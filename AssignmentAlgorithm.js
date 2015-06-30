@@ -42,6 +42,7 @@ DeclashApp.AssignmentAlgorithm = (function() {
   };
 
   function assignRoomsForJudges() {
+  /*jshint validthis:true */
     var shuffledActiveJudges = _.shuffle(_.filter(this.tournament.judges, function(judge) {
       return judge.isActiveForRound[this.assignedRound.index] === true;
     }.bind(this)));
@@ -95,6 +96,7 @@ DeclashApp.AssignmentAlgorithm = (function() {
   }
 
   function assignFirstRoundRoomsForTeams() {
+  /*jshint validthis:true */
     // Strategy:
     // 1. Assign teams randomly.
     // 2. Assign judges to chair based on rank.
@@ -133,6 +135,7 @@ DeclashApp.AssignmentAlgorithm = (function() {
   }
 
   function assignTeams() {
+  /*jshint validthis:true */
     // Clone to avoid mutating input.
     var clonedTeams = _.map(this.tournament.teams, _.clone);
 
@@ -168,6 +171,7 @@ DeclashApp.AssignmentAlgorithm = (function() {
   }
 
   function assignJudges() {
+  /*jshint validthis:true */
     // Properly assign judges.
     var clonedJudges = _.map(this.tournament.judges, _.clone);
 
@@ -205,6 +209,7 @@ DeclashApp.AssignmentAlgorithm = (function() {
   }
 
   function assignRound() {
+  /*jshint validthis:true */
     function getTotalResult(team) {
       return _.reduce(team.resultForRound, function(prev, curr) {
         prev = typeof prev === "number"? prev : 0;
@@ -294,6 +299,7 @@ DeclashApp.AssignmentAlgorithm = (function() {
 
         var changedTeams = lowestOGs.concat(lowestOOs, lowestCGs, lowestCOs);
 
+        /*jshint loopfunc: true */
         _.each(changedTeams, function(changedTeam) {
           var teamToChange = _.find(activeTeamsToUpdate, function(teamToUpdate) {
             return teamToUpdate.guid === changedTeam.guid;

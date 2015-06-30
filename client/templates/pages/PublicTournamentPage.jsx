@@ -1,3 +1,4 @@
+
 "use strict";
 /* global Tournaments */
 
@@ -24,7 +25,12 @@ DeclashApp.client.templates.pages.PublicTournamentPageContainer = (function() {
       if(this.state.tournament.enablePublicRegistration === true) {
         participantRegistration = (
           <div className="row">
-            <a className="ui primary button" href={window.location.origin + "/registerParticipants/" + this.state.tournament._id}>Register As A Participant</a>
+            <a
+              className="ui primary button"
+              href={window.location.origin + "/registerParticipants/" + this.state.tournament._id}
+            >
+              Register As A Participant
+            </a>
           </div>
         );
       }
