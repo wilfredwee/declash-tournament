@@ -37,12 +37,24 @@ Meteor.methods({
     tournament.paymentVerified = false;
     tournament.finished = false;
     tournament.enablePublicRegistration = false;
+    tournament.enablePublicView = false;
     tournament.teams = [];
     tournament.judges = [];
     tournament.rooms = [];
     tournament.rounds = [];
     tournament.currentInvariantViolations = [];
 
+    var urlId = tournament.name.toLowerCase().replace(" ", "-");
+
+    var tournamentsWithSameUrl = Tournaments.find({urlId: urlId}).fetch();
+
+    if(tournamentsWithSameUrl.length > 0) {
+      var count = tournamentsWithSameUrl.length + 1;
+
+      urlId = urlId + "-" + count.toString();
+    }
+
+    tournament.urlId = urlId;
 
     Tournaments.insert(tournament);
 

@@ -176,6 +176,11 @@ var TournamentSchema = new SimpleSchema({
     type: Date
   },
 
+  urlId : {
+    type: String,
+    label: "URL identifier for the tournament"
+  },
+
   name: {
     type: String,
     label: "Name of the tournament.",
@@ -212,6 +217,11 @@ var TournamentSchema = new SimpleSchema({
   enablePublicRegistration: {
     type: Boolean,
     label: "Field for whether tournament enables the public to register"
+  },
+
+  enablePublicView: {
+    type: Boolean,
+    label: "Field for whether tournament enables the public to view the tournament"
   },
 
   teams: {

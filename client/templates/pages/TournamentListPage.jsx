@@ -5,20 +5,31 @@ DeclashApp.client.templates.pages.TournamentListPageContainer = (function() {
   var TournamentListPageContainer = ReactMeteor.createClass({
     getMeteorState: function() {
       return {
-        tournaments: Tournaments.find({enablePublicRegistration: true})
+        // We further specify the constraint here to prevent confusion from the admins.
+        tournaments: Tournaments.find({enablePublicView: true}).fetch()
       };
     },
 
     render: function() {
       return (
-        <div className="ui selection list">
-          {this.state.tournaments.map(function(tournament, index) {
-            return (
-              <a className="item" key={index} href={"registerParticipants/" + tournament._id}>
-                {tournament.name}
-              </a>
-            );
-          })}
+        <div className="ui stackable column grid">
+          <div className="column">
+            <div className="row">
+              <h1 className="ui header">Active Tournaments</h1>
+            </div>
+            <div className="row">
+              <div className="ui selection list">
+                {_.map(this.state.tournaments, function(tournament, index) {
+                  return (
+                    <a className="item" key={index} href={"tournaments/" + tournament.urlId}>
+                      {tournament.name}
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
         </div>
       );
     }

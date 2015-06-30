@@ -272,6 +272,15 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       }.bind(this));
     },
 
+    handleSelectPublicView: function() {
+      Meteor.call("togglePublicView", function(err, result) {
+        // TODO:
+        if(err) {
+          alert(err.reason);
+        }
+      });
+    },
+
     render: function() {
       return (
         <div>
@@ -285,6 +294,20 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
                 type="checkbox"
               >
                 <label>Public Registration of Teams/Judges is {this.state.tournament.enablePublicRegistration ? "Open" : "Closed"}.</label>
+              </input>
+            </div>
+          </div>
+          <br />
+          <div className="row">
+            <div className="ui toggle checkbox">
+              <input
+                ref="enablePublicViewCheckBox"
+                checked={this.state.tournament.enablePublicView}
+                onClick={this.handleSelectPublicView}
+                readOnly
+                type="checkbox"
+              >
+                <label>The public {this.state.tournament.enablePublicView ? "can" : "cannot"} see your tournament.</label>
               </input>
             </div>
           </div>

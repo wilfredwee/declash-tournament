@@ -3,7 +3,12 @@
 
 Meteor.publish("unfinishedTournaments", function() {
   if(this.userId) {
+    // TODO: Disallow admins from viewing other tournaments that disabled
+    // enablePublicView
     return Tournaments.find({finished: false});
   }
-  return Tournaments.find({finished: false, enablePublicRegistration: true});
+  else {
+    return Tournaments.find({finished: false, enablePublicView: true});
+  }
+
 });

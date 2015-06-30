@@ -50,3 +50,7 @@ Router.route("/tournaments", function() {
 Router.route("/registerParticipants/:tournamentId", function() {
   renderReactPage(<DeclashApp.client.templates.pages.ParticipantRegistrationPageContainer tournamentId={this.params.tournamentId} />);
 });
+
+Router.route("/tournaments/:tournamentUrlId", function() {
+  renderReactPage(<DeclashApp.client.templates.pages.PublicTournamentPageContainer tournamentUrlId={this.params.tournamentUrlId} />);
+});

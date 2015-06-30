@@ -132,6 +132,13 @@ Meteor.methods({
     return newChecked;
   },
 
+  togglePublicView: function() {
+    var tournament = getOwnerTournament.call(this);
+
+    var newChecked = !tournament.enablePublicView;
+    Tournaments.update(tournament._id, {$set: {enablePublicView: newChecked}});
+  },
+
   createRound: function() {
     var tournament = getOwnerTournament.call(this);
 
