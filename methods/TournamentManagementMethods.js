@@ -173,8 +173,7 @@ Meteor.methods({
       index: newRoundIndex,
       motion: "",
       rooms: roundRooms,
-      state: "initial",
-      isResultPublishable: false
+      state: "initial"
     };
 
     Tournaments.update(tournament._id, {$push: {rounds: newRound}});

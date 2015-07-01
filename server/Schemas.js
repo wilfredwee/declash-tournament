@@ -163,11 +163,6 @@ var RoundSchema = new SimpleSchema({
     type: String,
     label: "Whether a round is active.",
     allowedValues: ["initial", "assigned", "active", "finished"]
-  },
-
-  isResultPublishable: {
-    type: Boolean,
-    label: "Where a round's result can be viewed by public",
   }
 });
 
