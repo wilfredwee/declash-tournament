@@ -7,11 +7,13 @@
 
 var ValidatorHelper;
 var ManagementContextConstants;
-var SchemaHelpers;
+var RoomComponent;
+var ConnectDroppable;
 Meteor.startup(function() {
   ValidatorHelper = DeclashApp.helpers.ValidatorHelper;
   ManagementContextConstants = DeclashApp.client.constants.ManagementContextConstants;
-  SchemaHelpers = DeclashApp.helpers.SchemaHelpers;
+  RoomComponent = DeclashApp.client.templates.RoomComponent;
+  ConnectDroppable = DeclashApp.client.templates.ConnectDroppable;
 });
 
 DeclashApp.client.templates.TournamentManagementContainer = (function() {
@@ -389,7 +391,6 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       );
     }
   });
-
 
   var ManagementHot = ReactMeteor.createClass({
     componentDidMount: function() {
@@ -1103,9 +1104,11 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
     },
 
     renderRooms: function(room) {
+      var DroppableRoomComponent = ConnectDroppable(RoomComponent);
+
       return _.map(this.state.schemaInjectedRounds[this.props.roundIndex].rooms, function(room, roomIndex) {
         return (
-            <RoomComponent
+            <DroppableRoomComponent
               key={roomIndex}
               onDragStart={this.setCurrentDraggedJudge}
               onDragStop={this.clearCurrentDraggedJudge}
@@ -1115,7 +1118,6 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
               roundIndex={this.props.roundIndex}/>
         );
       }.bind(this));
-
     },
 
     handleFilter: function(e, index) {
@@ -1171,187 +1173,6 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       );
     }
   });
-
-
-  // Contract for Draggable Connector:
-  // 1. A Component must be passed it.
-  // 2. This connector provides two props:
-  //      i:   onMouseDown
-  //      ii: style
-  var connectDraggable = function(Component) {
-    var DraggableComponent = ReactMeteor.createClass({
-      getInitialState: function () {
-        return {
-            mouseDown: false,
-            dragging: false
-        };
-      },
-      render: function() {
-        var combinedProps = {
-            onMouseDown: this.onMouseDown,
-            style: this.getStyle()
-        };
-        _.extend(combinedProps, this.props);
-        return <Component {...combinedProps} />;
-      },
-
-      getStyle: function() {
-        // To set a style, we build an object accordingly.
-
-        var styleObj = {
-          cursor: "move"
-        };
-
-        // We're currently dragging something.
-        if(this.props.getDragData()) {
-
-          // We're dealing with an object that's being dragged.
-          if(this.state.dragging) {
-            _.extend(styleObj, {
-              position: "absolute",
-              left: this.state.left,
-              top: this.state.top,
-              zIndex: 10,
-              pointerEvents: "none"
-            });
-          }
-        }
-        return styleObj;
-      },
-
-      onMouseDown: function(event) {
-        // 0 is left-button
-        if(event.button === 0) {
-          event.stopPropagation();
-          event.preventDefault();
-          this.addDragEvents();
-          var pageOffset = this.getDOMNode().getBoundingClientRect();
-          return this.setState({
-            mouseDown: true,
-            originX: event.pageX,
-            originY: event.pageY,
-            elementX: pageOffset.left,
-            elementY: pageOffset.top
-          });
-        }
-      },
-
-      onMouseMove: function(event) {
-
-        var deltaX = event.pageX - this.state.originX;
-        var deltaY = event.pageY - this.state.originY;
-        var distance = Math.abs(deltaX) + Math.abs(deltaY);
-
-        var DRAG_TRESHOLD = 3;
-
-        if(!this.state.dragging && distance > DRAG_TRESHOLD) {
-          this.setState({
-            dragging: true
-          });
-
-          if(typeof this.props.onDragStart === "function") {
-            var dragData = typeof this.props.getDragData === "function"?
-              this.props.getDragData()
-              : undefined;
-
-            this.props.onDragStart(dragData);
-          }
-        }
-
-        if(this.state.dragging) {
-          return this.setState({
-            left: this.state.elementX + deltaX + document.body.scrollLeft,
-            top: this.state.elementY + deltaY + document.body.scrollTop
-          });
-        }
-
-      },
-
-      onMouseUp: function(event) {
-        this.removeDragEvents();
-
-        if(this.state.dragging) {
-          this.props.onDragStop();
-
-          return this.setState({
-            dragging: false,
-          });
-        }
-      },
-
-      addDragEvents: function() {
-        document.addEventListener("mousemove", this.onMouseMove);
-        return document.addEventListener("mouseup", this.onMouseUp);
-      },
-
-      removeDragEvents: function() {
-        document.removeEventListener("mousemove", this.onMouseMove);
-        return document.removeEventListener("mouseup", this.onMouseUp);
-      }
-    });
-
-    return DraggableComponent;
-  };
-
-  // Contract for Droppable Connector:
-  // 1. A Component must be passed it.
-  // 2. This connector provides four props:
-  //      i:   onMouseEnter
-  //      ii:  onMouseLeave
-  //      iii: onMouseUp
-  //      iv:  style
-  var connectDroppable = function(Component) {
-    var DroppableComponent = ReactMeteor.createClass({
-      getInitialState: function() {
-        return {
-            hover: false
-        };
-      },
-
-      getStyle: function() {
-        var styleObj = {};
-
-        if(this.state.hover && this.props.getDragData()) {
-          _.extend(styleObj, {background: "green"});
-        }
-
-        return styleObj;
-      },
-
-      onMouseEnter: function(event) {
-        return this.setState({
-          hover: true
-        });
-      },
-
-      onMouseLeave: function(event) {
-        return this.setState({
-          hover: false
-        });
-      },
-
-      onMouseUp: function(event) {
-        if(this.props.getDragData()) {
-          this.props.onDrop();
-        }
-      },
-
-      render: function() {
-        var props = {
-          onMouseEnter: this.onMouseEnter,
-          onMouseLeave: this.onMouseLeave,
-          onMouseUp: this.onMouseUp,
-          style: this.getStyle()
-        };
-
-        _.extend(props, this.props);
-
-        return <Component {...props} />;
-      }
-    });
-
-    return DroppableComponent;
-  };
 
   var ActiveRoomComponent = ReactMeteor.createClass({
     getMeteorState: function() {
@@ -1555,150 +1376,6 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       );
     }
   });
-
-  var RoomComponent = connectDroppable(
-    ReactMeteor.createClass({
-      shouldComponentUpdate: function(nextProps, nextState) {
-        // Should update room if judge is being dragged FROM the room.
-        var draggedData = this.props.getDragData();
-
-        if(draggedData && draggedData.judge) {
-          var draggedJudge = draggedData.judge;
-
-          var hasRoomJudge = _.some(this.props.room.judges, function(judge) {
-            return judge.guid === draggedJudge.guid;
-          });
-
-          if(hasRoomJudge) {
-            return true;
-          }
-        }
-
-        // Should update if room information has changed.
-        // Should update if judge is being dragged TO the room.
-        // For now, we check this by checking the style prop from connectDroppable.
-        // This is not ideal. Ideally, we want to only transmit data, not information
-        // about appearance.
-        return !_.isEqual(this.props.room, nextProps.room) || !_.isEqual(this.props.style, nextProps.style);
-      },
-
-      onDrop: function() {
-        this.props.onDrop(this.props.room, this.props.roundIndex);
-      },
-
-      renderTeamsForRoom: function(room, roundIndex) {
-        function getTeamForRole(role) {
-          return _.find(room.teams, function(team) {
-            return team.roleForRound[roundIndex] === role;
-          });
-        }
-
-        function getTotalResultForTeam(team) {
-          return _.reduce(team.resultForRound, function(prev, curr) {
-            prev = typeof prev === "number"? prev : 0;
-            curr = typeof curr === "number"? curr : 0;
-
-            return prev + curr;
-          }, 0);
-        }
-
-        var OGTeam = getTeamForRole("OG");
-        var OOTeam = getTeamForRole("OO");
-        var CGTeam = getTeamForRole("CG");
-        var COTeam = getTeamForRole("CO");
-
-        return (
-          <div className="ui stackable two column celled grid">
-            <div className="two column row">
-              <div className="column"><span><strong>OG: </strong>{OGTeam.name} ({getTotalResultForTeam(OGTeam)})</span></div>
-              <div className="column"><span><strong>OO: </strong>{OOTeam.name} ({getTotalResultForTeam(OOTeam)})</span></div>
-            </div>
-            <div className="two column row">
-              <div className="column"><span><strong>CG: </strong>{CGTeam.name} ({getTotalResultForTeam(CGTeam)})</span></div>
-              <div className="column"><span><strong>CO: </strong>{COTeam.name} ({getTotalResultForTeam(COTeam)})</span></div>
-            </div>
-          </div>
-        );
-      },
-
-      renderJudgesForRoom: function(room, roundIndex) {
-        return _.map(room.judges, function(judge, judgeIndex) {
-          return (
-            <JudgeComponent
-              key={judgeIndex}
-              onDragStart={this.props.onDragStart.bind(null, judge, roundIndex)}
-              onDragStop={this.props.onDragStop}
-              getDragData={this.props.getDragData}
-              judge={judge}
-              roundIndex={roundIndex}
-            />
-          );
-        }.bind(this));
-      },
-
-      render: function() {
-        return (
-          <div className="column">
-            <div className="ui segment"
-              onMouseEnter={this.props.onMouseEnter}
-              onMouseLeave={this.props.onMouseLeave}
-              onMouseUp={this.props.onMouseUp}
-              style={this.props.style}
-            >
-              <h3 className="ui horizontal header divider">{this.props.room.locationId}</h3>
-              {this.renderTeamsForRoom(this.props.room, this.props.roundIndex)}
-              <h5 className="ui horizontal header divider">Judges</h5>
-              <div className="ui celled vertically divided grid">
-                {this.renderJudgesForRoom(this.props.room, this.props.roundIndex)}
-              </div>
-            </div>
-          </div>
-        );
-      }
-    })
-  );
-
-  var JudgeComponent = connectDraggable(
-    ReactMeteor.createClass({
-      switchChair: function() {
-        var judgeGuid = this.props.judge.guid;
-        var roundIndex = this.props.roundIndex;
-
-        Meteor.call("switchChair", judgeGuid, roundIndex, function(err, result) {
-          // TODO:
-          if(err) {
-            alert(err.reason);
-          }
-        });
-      },
-
-      render: function() {
-        var judgeName = this.props.judge.name;
-
-        judgeName += " (" + this.props.judge.institution + ")";
-        judgeName += " (" + SchemaHelpers.getAverageRankForJudge(this.props.judge) + ")";
-
-        if(this.props.judge.isChairForRound[this.props.roundIndex]) {
-          judgeName = <div><i className="legal icon"></i>{judgeName}</div>;
-        }
-        else {
-          judgeName = <div>{judgeName}</div>;
-        }
-
-        return (
-          <div className="row"
-            onMouseDown={this.props.onMouseDown}
-            style={this.props.style}
-            onDoubleClick={this.switchChair}
-          >
-            <div className="column">
-              {judgeName}
-            </div>
-          </div>
-        );
-      }
-    })
-  );
 
   return TournamentManagementContainer;
 })();
