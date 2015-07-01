@@ -474,6 +474,12 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
             return false;
           }
           if(typeof value === "string" && value.length <= 0) {
+            var selection = this.getSelected();
+
+            if(selection[1] === 0 && selection[3] === context.colHeaders.length - 1) {
+              return true;
+            }
+
             return false;
           }
         },
@@ -485,6 +491,39 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
             callback(true);
           }
         },
+
+        beforeChange: function(changes) {
+          var affectedRows = _.map(changes, function(change) {
+            var row = change[0];
+
+            return row;
+          });
+
+          var uniqueAffectedRows = _.uniq(affectedRows);
+
+          var everyCellInRowChanged = _.every(uniqueAffectedRows, function(uniqueRowIndex) {
+            var changesInSameRow = _.filter(changes, function(change) {
+              return change[0] === uniqueRowIndex;
+            });
+
+            return changesInSameRow.length === context.colHeaders.length;
+          });
+
+          var everyChangeIsEmptyString = _.every(changes, function(change) {
+            var newValue = change[3];
+
+            return newValue === "";
+          });
+
+          if(everyCellInRowChanged && everyChangeIsEmptyString) {
+            uniqueAffectedRows.sort();
+
+            this.alter("remove_row", uniqueAffectedRows[0], uniqueAffectedRows.length);
+          }
+
+          return false;
+        },
+
         afterChange: function(changes, source) {
           //  We might want to perform caching if source === "paste"
           if(source === "loadData") {
@@ -552,8 +591,16 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
             return !this.isEmptyRow(rowIndex) || this.getSourceDataAtRow(rowIndex).guid;
           }.bind(this));
 
+          var hasNonInitialRound = _.some(componentThis.props.tournament.rounds, function(round) {
+            return round.state !== "initial";
+          });
+
           if(notEmptyRows.length <= 0) {
             return true;
+          }
+
+          if(hasNonInitialRound) {
+            return false;
           }
 
           var thisTable = this;
