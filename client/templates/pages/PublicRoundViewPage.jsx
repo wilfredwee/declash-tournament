@@ -35,10 +35,34 @@ DeclashApp.client.templates.pages.PublicRoundViewPageContainer = (function() {
       if(!this.state.tournament) {
         return <h1>No Tournament Found </h1>;
       }
-      return (
-        <div className="ui stackable three column grid">
-          {this.renderRooms()}
+
+      var motionSegment = (
+        <div className="ui blue segment">
+          <div className="ui grid">
+            <div className="column">
+              <h4 className="ui header">Motion:</h4>
+            </div>
+          </div>
+          <p>{this.state.tournament.rounds[this.state.roundIndex].motion}</p>
         </div>
+      );
+
+      return (
+          <div>
+          <div className="row">
+            <h1 className="ui header">{this.state.tournament.name + ": Round " + (this.state.roundIndex + 1).toString()}</h1>
+          </div>
+          <div className="row">
+            {motionSegment}
+            <br />
+            <br />
+          </div>
+          <div className="row">
+            <div className="ui stackable three column grid">
+              {this.renderRooms()}
+            </div>
+          </div>
+          </div>
       );
     }
   });

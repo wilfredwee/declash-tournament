@@ -48,9 +48,9 @@ DeclashApp.client.templates.pages.PublicTournamentPageContainer = (function() {
             <br />
             {_.map(this.state.tournament.rounds, function(round, index) {
               return (
-                <div className="row">
+                <div key={index} className="row">
                   <a className="ui primary button" href={window.location.origin + "/tournaments/" + this.props.urlId + "/" + round.index.toString()}>
-                    View Round {round.index}
+                    View Round {round.index + 1}
                   </a>
                 </div>
               );
