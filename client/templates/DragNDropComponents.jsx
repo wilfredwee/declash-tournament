@@ -1,3 +1,5 @@
+"use strict";
+
 DeclashApp.client.templates.ConnectDroppable = (function() {
   // Contract for Droppable Connector:
   // 1. A Component must be passed in.
@@ -94,25 +96,10 @@ DeclashApp.client.templates.ConnectDraggable = (function() {
 
       getStyle: function() {
         // To set a style, we build an object accordingly.
-
         var styleObj = {
           cursor: "move"
         };
 
-        // We're currently dragging something.
-        if(this.props.getDragData()) {
-
-          // We're dealing with an object that's being dragged.
-          if(this.state.dragging) {
-            _.extend(styleObj, {
-              position: "absolute",
-              left: this.state.left,
-              top: this.state.top,
-              zIndex: 10,
-              pointerEvents: "none"
-            });
-          }
-        }
         return styleObj;
       },
 
@@ -125,23 +112,12 @@ DeclashApp.client.templates.ConnectDraggable = (function() {
           var pageOffset = this.getDOMNode().getBoundingClientRect();
           return this.setState({
             mouseDown: true,
-            originX: event.pageX,
-            originY: event.pageY,
-            elementX: pageOffset.left,
-            elementY: pageOffset.top
           });
         }
       },
 
       onMouseMove: function(event) {
-
-        var deltaX = event.pageX - this.state.originX;
-        var deltaY = event.pageY - this.state.originY;
-        var distance = Math.abs(deltaX) + Math.abs(deltaY);
-
-        var DRAG_TRESHOLD = 3;
-
-        if(!this.state.dragging && distance > DRAG_TRESHOLD) {
+        if(!this.state.dragging) {
           this.setState({
             dragging: true
           });
@@ -154,14 +130,6 @@ DeclashApp.client.templates.ConnectDraggable = (function() {
             this.props.onDragStart(dragData);
           }
         }
-
-        if(this.state.dragging) {
-          return this.setState({
-            left: this.state.elementX + deltaX + document.body.scrollLeft,
-            top: this.state.elementY + deltaY + document.body.scrollTop
-          });
-        }
-
       },
 
       onMouseUp: function(event) {

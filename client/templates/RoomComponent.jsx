@@ -1,3 +1,6 @@
+"use strict";
+/* jshint maxlen:false */
+
 var ConnectDraggable;
 var SchemaHelpers;
 Meteor.startup(function() {
@@ -76,18 +79,27 @@ DeclashApp.client.templates.RoomComponent = (function() {
       return _.map(room.judges, function(judge, judgeIndex) {
         if(this.props.getDragData) {
           return (
-            <DraggableJudgeComponent
-              key={judgeIndex}
-              onDragStart={this.props.onDragStart.bind(null, judge, roundIndex)}
-              onDragStop={this.props.onDragStop}
-              getDragData={this.props.getDragData}
-              judge={judge}
-              roundIndex={roundIndex}
-            />
+            <div className="row" key={judgeIndex}>
+              <div className="column">
+                <DraggableJudgeComponent
+                  onDragStart={this.props.onDragStart.bind(null, judge, roundIndex)}
+                  onDragStop={this.props.onDragStop}
+                  getDragData={this.props.getDragData}
+                  judge={judge}
+                  roundIndex={roundIndex}
+                />
+              </div>
+            </div>
           );
         }
 
-        return <JudgeComponent key={judgeIndex} judge={judge} roundIndex={roundIndex} />;
+        return (
+          <div className="row" key={judgeIndex}>
+            <div className="column">
+              <JudgeComponent key={judgeIndex} judge={judge} roundIndex={roundIndex} />
+            </div>
+          </div>
+        );
       }.bind(this));
     },
 
@@ -129,7 +141,10 @@ DeclashApp.client.templates.RoomComponent = (function() {
       var judgeName = this.props.judge.name;
 
       judgeName += " (" + this.props.judge.institution + ")";
-      judgeName += " (" + SchemaHelpers.getAverageRankForJudge(this.props.judge) + ")";
+
+      if(this.props.getDragData) {
+        judgeName += " (" + SchemaHelpers.getAverageRankForJudge(this.props.judge) + ")";
+      }
 
       if(this.props.judge.isChairForRound[this.props.roundIndex]) {
         judgeName = <div><i className="legal icon"></i>{judgeName}</div>;
@@ -140,25 +155,17 @@ DeclashApp.client.templates.RoomComponent = (function() {
 
       if(this.props.getDragData) {
         return (
-          <div className="row"
+          <div
             onMouseDown={this.props.onMouseDown}
             style={this.props.style}
             onDoubleClick={this.switchChair}
           >
-            <div className="column">
               {judgeName}
-            </div>
           </div>
         );
       }
 
-      return (
-        <div className="row">
-          <div className="column">
-            {judgeName}
-          </div>
-        </div>
-      );
+      return judgeName;
     }
   });
 

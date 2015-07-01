@@ -1,4 +1,3 @@
-
 "use strict";
 /* global Tournaments */
 
@@ -17,6 +16,8 @@ DeclashApp.client.templates.pages.PublicTournamentPageContainer = (function() {
     },
 
     render: function() {
+      /* jshint maxlen:false */
+
       if(!this.state.tournament) {
         return false;
       }
@@ -44,6 +45,16 @@ DeclashApp.client.templates.pages.PublicTournamentPageContainer = (function() {
             <br />
             <br />
             {participantRegistration}
+            <br />
+            {_.map(this.state.tournament.rounds, function(round, index) {
+              return (
+                <div className="row">
+                  <a className="ui primary button" href={window.location.origin + "/tournaments/" + this.props.urlId + "/" + round.index.toString()}>
+                    View Round {round.index}
+                  </a>
+                </div>
+              );
+            }.bind(this))}
           </div>
         </div>
       );

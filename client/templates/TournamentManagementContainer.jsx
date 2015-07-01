@@ -6,11 +6,13 @@
 
 
 var ValidatorHelper;
+var SchemaHelpers;
 var ManagementContextConstants;
 var RoomComponent;
 var ConnectDroppable;
 Meteor.startup(function() {
   ValidatorHelper = DeclashApp.helpers.ValidatorHelper;
+  SchemaHelpers = DeclashApp.helpers.SchemaHelpers;
   ManagementContextConstants = DeclashApp.client.constants.ManagementContextConstants;
   RoomComponent = DeclashApp.client.templates.RoomComponent;
   ConnectDroppable = DeclashApp.client.templates.ConnectDroppable;
@@ -973,34 +975,12 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       var tournament = Tournaments.findOne({ownerId: Meteor.userId()});
       return {
         tournament: tournament,
-        schemaInjectedRounds: this.getSchemaInjectedRounds(tournament),
+        schemaInjectedRound: SchemaHelpers.getSchemaInjectedRound(tournament),
       };
     },
 
-    getSchemaInjectedRounds: function(tournament) {
-      return _.map(_.map(tournament.rounds, _.clone), function(round) {
-        round.rooms = _.map(round.rooms, function(room) {
-          room.teams = _.map(room.teams, function(teamGuid) {
-            return _.find(tournament.teams, function(tournamentTeam) {
-              return tournamentTeam.guid === teamGuid;
-            });
-          });
-
-          room.judges = _.map(room.judges, function(judgeGuid) {
-            return _.find(tournament.judges, function(tournamentJudge) {
-              return tournamentJudge.guid === judgeGuid;
-            });
-          });
-
-          return room;
-        });
-
-        return round;
-      });
-    },
-
     renderRooms: function(room) {
-      return _.map(this.state.schemaInjectedRounds[this.props.roundIndex].rooms, function(room, roomIndex) {
+      return _.map(this.state.schemaInjectedRound.rooms, function(room, roomIndex) {
         return (
             <ActiveRoomComponent
               key={roomIndex}
@@ -1031,35 +1011,17 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       Session.setDefault("currentDraggedJudgeData", null);
       return {
         tournament: tournament,
-        schemaInjectedRounds: this.getSchemaInjectedRounds(tournament, Session.get("filteredRoomIds")),
+        schemaInjectedRound: this.filterRooms(SchemaHelpers.getSchemaInjectedRound(tournament, this.props.roundIndex), Session.get("filteredRoomIds")),
         currentDraggedJudgeData: Session.get("currentDraggedJudgeData")
       };
     },
 
-    getSchemaInjectedRounds: function(tournament, filteredRoomIds) {
-      return _.map(_.map(tournament.rounds, _.clone), function(round) {
-        round.rooms = _.filter(round.rooms, function(room) {
-          return _.contains(filteredRoomIds, room.locationId) || _.contains(filteredRoomIds, "");
-        });
-
-        round.rooms = _.map(round.rooms, function(room) {
-          room.teams = _.map(room.teams, function(teamGuid) {
-            return _.find(tournament.teams, function(tournamentTeam) {
-              return tournamentTeam.guid === teamGuid;
-            });
-          });
-
-          room.judges = _.map(room.judges, function(judgeGuid) {
-            return _.find(tournament.judges, function(tournamentJudge) {
-              return tournamentJudge.guid === judgeGuid;
-            });
-          });
-
-          return room;
-        });
-
-        return round;
+    filterRooms: function(schemaInjectedRound, filteredRoomIds) {
+      schemaInjectedRound.rooms = _.filter(schemaInjectedRound.rooms, function(room) {
+        return _.contains(filteredRoomIds, room.locationId) || _.contains(filteredRoomIds, "");
       });
+
+      return schemaInjectedRound;
     },
 
     componentDidMount: function () {
@@ -1106,7 +1068,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
     renderRooms: function(room) {
       var DroppableRoomComponent = ConnectDroppable(RoomComponent);
 
-      return _.map(this.state.schemaInjectedRounds[this.props.roundIndex].rooms, function(room, roomIndex) {
+      return _.map(this.state.schemaInjectedRound.rooms, function(room, roomIndex) {
         return (
             <DroppableRoomComponent
               key={roomIndex}

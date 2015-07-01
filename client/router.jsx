@@ -54,3 +54,10 @@ Router.route("/registerParticipants/:tournamentId", function() {
 Router.route("/tournaments/:tournamentUrlId", function() {
   renderReactPage(<DeclashApp.client.templates.pages.PublicTournamentPageContainer tournamentUrlId={this.params.tournamentUrlId} />);
 });
+
+Router.route("/tournaments/:tournamentUrlId/:roundIndex", function() {
+  renderReactPage(<DeclashApp.client.templates.pages.PublicRoundViewPageContainer
+    tournamentUrlId={this.params.tournamentUrlId}
+    roundIndex={this.params.roundIndex} />
+  );
+});
