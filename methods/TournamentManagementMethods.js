@@ -494,7 +494,7 @@ Meteor.methods({
 
     Tournaments.update(
       {_id: tournament._id, "rounds.index": round.index},
-      {$set: {"rounds.$": round}}
+      {$set: {"rounds.$.motion": round.motion}}
     );
   }
 });

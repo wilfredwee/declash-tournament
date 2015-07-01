@@ -142,7 +142,7 @@ DeclashApp.client.constants.ManagementContextConstants = (function() {
       tableTeamWithoutPosition.reverse();
 
       return _.map(tableTeamWithoutPosition, function(team, index) {
-        team.position = index;
+        team.position = index + 1;
 
         return team;
       });

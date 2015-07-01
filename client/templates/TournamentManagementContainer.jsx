@@ -975,7 +975,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       var tournament = Tournaments.findOne({ownerId: Meteor.userId()});
       return {
         tournament: tournament,
-        schemaInjectedRound: SchemaHelpers.getSchemaInjectedRound(tournament),
+        schemaInjectedRound: SchemaHelpers.getSchemaInjectedRound(tournament, this.props.roundIndex),
       };
     },
 
