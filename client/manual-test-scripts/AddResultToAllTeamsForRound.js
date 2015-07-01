@@ -1,3 +1,5 @@
+"use strict";
+
 DeclashApp.client.manualTestScripts.AddResultToAllTeamsForRound = (function() {
   var getRandomScore = function() {
       return Math.floor(Math.random() * (92 - 68 + 1) + 68);
@@ -42,7 +44,7 @@ DeclashApp.client.manualTestScripts.AddResultToAllTeamsForRound = (function() {
           var score = getRandomScore();
 
           if(totalScore - score < 0) {
-            score = totalScore
+            score = totalScore;
           }
           else {
             totalScore -= score;
@@ -72,7 +74,7 @@ DeclashApp.client.manualTestScripts.AddResultToAllTeamsForRound = (function() {
         alert(err.reason);
       }
     });
-  }
+  };
 
   return addResultToAllTeamsForRound;
 })();
