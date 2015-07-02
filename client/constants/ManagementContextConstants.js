@@ -137,7 +137,10 @@ DeclashApp.client.constants.ManagementContextConstants = (function() {
         return newTeam;
       });
 
-      tableTeamWithoutPosition = _.sortBy(tableTeamWithoutPosition, "totalResult");
+      tableTeamWithoutPosition = _.chain(tableTeamWithoutPosition)
+        .sortBy("totalScore")
+        .sortBy("totalResult")
+        .value();
 
       tableTeamWithoutPosition.reverse();
 

@@ -233,7 +233,12 @@ Meteor.methods({
 
     assignedRound.state = "assigned";
 
-    Tournaments.update({_id: tournament._id, "rounds.index": assignedRound.index}, {$set: {"rounds.$": assignedRound}}, {validate: false, filter: false});
+    Tournaments.update(
+      {_id: tournament._id, "rounds.index": assignedRound.index},
+      {$set: {"rounds.$": assignedRound}},
+      {validate: false, filter: false}
+    );
+
     Tournaments.update(tournament._id, {$set: {teams: assignedTeams, judges: assignedJudges}});
 },
 
@@ -270,7 +275,10 @@ Meteor.methods({
 
     roundToActivate.state = "active";
 
-    Tournaments.update({_id: tournament._id, "rounds.index": roundToActivate.index}, {$set: {"rounds.$": roundToActivate}}, {validate: false, filter: false});
+    Tournaments.update(
+      {_id: tournament._id, "rounds.index": roundToActivate.index},
+      {$set: {"rounds.$.state": roundToActivate.state}}
+    );
   },
 
   finalizeRound: function(roundIndex) {
@@ -291,8 +299,7 @@ Meteor.methods({
 
     Tournaments.update(
       {_id: tournament._id, "rounds.index": roundToFinalize.index},
-      {$set: {"rounds.$": roundToFinalize}},
-      {validate: false, filter: false}
+      {$set: {"rounds.$.state": roundToFinalize.state}}
     );
 
   },
