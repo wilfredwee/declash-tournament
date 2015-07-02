@@ -1,12 +1,14 @@
-// Meteor.publish("tabUsers", function() {
-//   return Meteor.users.find({
-//     role: "super"
-//   });
-// });
+"use strict";
+/* global Tournaments */
 
 Meteor.publish("unfinishedTournaments", function() {
   if(this.userId) {
+    // TODO: Disallow admins from viewing other tournaments that disabled
+    // enablePublicView
     return Tournaments.find({finished: false});
   }
-  return Tournaments.find({finished: false, enablePublicRegister: true});
+  else {
+    return Tournaments.find({finished: false, enablePublicView: true});
+  }
+
 });

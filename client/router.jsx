@@ -1,3 +1,5 @@
+"use strict";
+
 function renderReactPage(component) {
   React.render(component, document.getElementById("ReactComponentDiv"));
   // router will keep warning that we did not call this.next() here.
@@ -13,7 +15,7 @@ Router.onBeforeAction(function() {
     this.next();
   }
   else if(!Meteor.userId()) {
-    renderReactPage(<LoginPageContainer />);
+    renderReactPage(<DeclashApp.client.templates.pages.LoginPageContainer />);
   }
   else {
     this.next();
@@ -21,12 +23,12 @@ Router.onBeforeAction(function() {
 });
 
 Router.route("/register", function() {
-  renderReactPage(<TabRegistrationPageContainer />);
+  renderReactPage(<DeclashApp.client.templates.pages.TabRegistrationPageContainer />);
 });
 
 Router.route("/login", function() {
   if(!Meteor.user()) {
-    renderReactPage(<LoginPageContainer />);
+    renderReactPage(<DeclashApp.client.templates.pages.LoginPageContainer />);
   }
   else {
     this.redirect("/");
@@ -34,17 +36,28 @@ Router.route("/login", function() {
 });
 
 Router.route("/management", function() {
-  renderReactPage(<ManagementPageContainer />);
+  renderReactPage(<DeclashApp.client.templates.pages.ManagementPageContainer />);
 });
 
 Router.route("/", function() {
-  renderReactPage(<HomePageContainer />);
+  renderReactPage(<DeclashApp.client.templates.pages.HomePageContainer />);
 });
 
 Router.route("/tournaments", function() {
-  renderReactPage(<TournamentListPageContainer />);
+  renderReactPage(<DeclashApp.client.templates.pages.TournamentListPageContainer />);
 });
 
 Router.route("/registerParticipants/:tournamentId", function() {
-  renderReactPage(<ParticipantRegistrationPageContainer tournamentId={this.params.tournamentId} />);
+  renderReactPage(<DeclashApp.client.templates.pages.ParticipantRegistrationPageContainer tournamentId={this.params.tournamentId} />);
+});
+
+Router.route("/tournaments/:tournamentUrlId", function() {
+  renderReactPage(<DeclashApp.client.templates.pages.PublicTournamentPageContainer tournamentUrlId={this.params.tournamentUrlId} />);
+});
+
+Router.route("/tournaments/:tournamentUrlId/:roundIndex", function() {
+  renderReactPage(<DeclashApp.client.templates.pages.PublicRoundViewPageContainer
+    tournamentUrlId={this.params.tournamentUrlId}
+    roundIndex={this.params.roundIndex} />
+  );
 });

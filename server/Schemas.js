@@ -1,3 +1,7 @@
+"use strict";
+/* global Tournaments */
+/* global SimpleSchema */
+
 // This serves as a useful documentation of how entities in the application
 // are expected to be constructed.
 
@@ -22,6 +26,7 @@ var DebaterSchema = new SimpleSchema({
   scoreForRound: {
     type: Object,
     label: "All scores for a debater. They are a key-value pair. Key:Round index. Value: score",
+    blackbox: true
   }
 });
 
@@ -43,15 +48,24 @@ var JudgeSchema = new SimpleSchema({
     max: 100
   },
 
-  scoreForRound: {
+  rankForRound: {
     type: Object,
-    label:"All scores for a judge. They are a key-value pair. Key: Round index, Value: score",
-    optional: true
+    label: "All scores for a judge. They are a key-value pair. Key: Round index, Value: score",
+    optional: true,
+    blackbox: true
+  },
+
+  isActiveForRound: {
+    type: Object,
+    label: "All active status for a judge. They are a key-value pair. Key:Round index. Value: isActive(Boolean)",
+    blackbox: true
   },
 
   isChairForRound: {
+
     type: Object,
-    label: "All isChar for a judge. They are a key-value pair. Key:Round index, Value: score"
+    label: "All isChar for a judge. They are a key-value pair. Key:Round index, Value: score",
+    blackbox: true
   }
 });
 
@@ -75,7 +89,7 @@ var RoomSchema = new SimpleSchema({
   },
 
   motion: {
-    type:String,
+    type: String,
     label: "Room-specific motions for a round.",
     max: 1000,
     optional: true
@@ -109,16 +123,19 @@ var TeamSchema = new SimpleSchema({
   resultForRound: {
     type: Object,
     label: "All results for a team. They are a key-value pair. Key:Round index. Value: result",
+    blackbox: true
   },
 
   roleForRound: {
     type: Object,
-    label: "All roles for a team. They are a key-value pair. Key:Round index. Value: role(String)"
+    label: "All roles for a team. They are a key-value pair. Key:Round index. Value: role(String)",
+    blackbox: true
   },
 
   isActiveForRound: {
     type: Object,
-    label: "All active status for a team. They are a key-value pair. Key:Round index. Value: isActive(Boolean)"
+    label: "All active status for a team. They are a key-value pair. Key:Round index. Value: isActive(Boolean)",
+    blackbox: true
   }
 });
 
@@ -132,20 +149,31 @@ var RoundSchema = new SimpleSchema({
   motion: {
     type: String,
     label: "Motion for a round.",
-    max: 1000
+    max: 1000,
+    optional: true
   },
 
   rooms: {
-    type:[RoomSchema],
+    type: [RoomSchema],
     label: "All rooms for a round.",
     minCount: 0
+  },
+
+  state: {
+    type: String,
+    label: "Whether a round is active.",
+    allowedValues: ["initial", "assigned", "active", "finished"]
   }
 });
-
 
 var TournamentSchema = new SimpleSchema({
   createdAt: {
     type: Date
+  },
+
+  urlId : {
+    type: String,
+    label: "URL identifier for the tournament"
   },
 
   name: {
@@ -186,6 +214,11 @@ var TournamentSchema = new SimpleSchema({
     label: "Field for whether tournament enables the public to register"
   },
 
+  enablePublicView: {
+    type: Boolean,
+    label: "Field for whether tournament enables the public to view the tournament"
+  },
+
   teams: {
     type: [TeamSchema],
     label: "All teams in a tournament.",
@@ -206,10 +239,36 @@ var TournamentSchema = new SimpleSchema({
   },
 
   rounds: {
-    type:[RoundSchema],
+    type: [RoundSchema],
     label: "All rounds created in a tournament.",
-    minCount: 0
+    minCount: 0,
+  },
+
+  currentInvariantViolations: {
+    type: [Object],
+    label: "List of invariant violation types",
+    minCount: 0,
+    blackbox: true
   }
+});
+
+// Initial implementation of the validator, which disallows user from
+// creating a round if the last round is not finished.
+// More needs to be added here, and the validator component should be exportable
+// so that we can do the same validation in the client.
+SimpleSchema.addValidator(function() {
+  if(this.isUpdate) {
+    if(this.genericKey === "rounds.$" && this.value.index !== 0) {
+      var tournament = Tournaments.findOne({ownerId: this.userId, finished:false});
+
+      if(!DeclashApp.helpers.ValidatorHelper.canCreateNextRound(tournament)) {
+        return "notAllowed";
+      }
+    }
+  }
+
+  return true;
+
 });
 
 Tournaments.attachSchema(TournamentSchema);
