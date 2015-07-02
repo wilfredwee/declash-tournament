@@ -141,8 +141,16 @@ DeclashApp.client.constants.ManagementContextConstants = (function() {
 
       tableTeamWithoutPosition.reverse();
 
-      return _.map(tableTeamWithoutPosition, function(team, index) {
-        team.position = index + 1;
+      return _.map(tableTeamWithoutPosition, function(team, index, teamList) {
+        // prevTeam is undefined if index === 0 (exploiting JavaScript)
+        var prevTeam = teamList[index-1];
+
+        if(prevTeam && prevTeam.totalResult === team.totalResult && prevTeam.totalScore === team.totalScore) {
+          team.position = prevTeam.position;
+        }
+        else {
+          team.position = index + 1;
+        }
 
         return team;
       });
@@ -239,8 +247,16 @@ DeclashApp.client.constants.ManagementContextConstants = (function() {
       tableDebatersWithoutPosition = _.sortBy(tableDebatersWithoutPosition, "totalScore");
       tableDebatersWithoutPosition.reverse();
 
-      return _.map(tableDebatersWithoutPosition, function(debater, index) {
-        debater.position = index + 1;
+      return _.map(tableDebatersWithoutPosition, function(debater, index, debaterList) {
+        // prevDebater is undefined if index === 0 (exploiting JavaScript)
+        var prevDebater = debaterList[index-1];
+
+        if(prevDebater && prevDebater.totalScore === debater.totalScore) {
+          debater.position = prevDebater.position;
+        }
+        else {
+          debater.position = index + 1;
+        }
 
         return debater;
       });

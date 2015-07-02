@@ -519,9 +519,9 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
             uniqueAffectedRows.sort();
 
             this.alter("remove_row", uniqueAffectedRows[0], uniqueAffectedRows.length);
-          }
 
-          return false;
+            return false;
+          }
         },
 
         afterChange: function(changes, source) {
