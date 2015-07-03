@@ -8,7 +8,7 @@
 // Notes:
 // 1. Rooms use their location string as their unique ID's.
 // 2. Rounds use their index field as their unique ID's.
-// 3. Teams must have a unique guid assigned on creation.
+// 3. Teams and Judges must have a unique guid assigned on creation.
 
 // This is important because other fields use this assumption to reference these fields.
 // Any changes or updates must be done in ALL areas.

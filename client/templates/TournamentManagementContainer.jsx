@@ -100,7 +100,8 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
         return <TabHotContainer context={contextToRender} />;
       }
       else {
-        if(this.state.tournament.rounds[roundIndex].state === "assigned") {
+        if(this.state.tournament.rounds[roundIndex].state === "assigned" ||
+          this.state.tournament.rounds[roundIndex].state === "finished") {
           return <RoundRoomsContainer roundIndex={roundIndex} />;
         }
         else {
@@ -1114,8 +1115,13 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
 
     renderRooms: function(room) {
       var DroppableRoomComponent = ConnectDroppable(RoomComponent);
+      var roundState = this.state.schemaInjectedRound.state;
 
       return _.map(this.state.schemaInjectedRound.rooms, function(room, roomIndex) {
+        if(roundState === "finished") {
+          return <RoomComponent key={roomIndex} room={room} roundIndex={this.props.roundIndex} />;
+        }
+
         return (
             <DroppableRoomComponent
               key={roomIndex}
