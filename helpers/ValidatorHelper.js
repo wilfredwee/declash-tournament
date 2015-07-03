@@ -127,11 +127,17 @@ DeclashApp.helpers.ValidatorHelper = (function() {
     },
 
     doesRoomScoresAddUp: function(teamsInRoom, roundIndex) {
-      var hasEmptyResult = _.some(teamsInRoom, function(team) {
-        return typeof team.resultForRound[roundIndex] !== "number";
+      var hasEmpties = _.some(teamsInRoom, function(team) {
+        var hasEmptyResult = typeof team.resultForRound[roundIndex] !== "number";
+
+        var hasEmptyScore = _.some(team.debaters, function(debater) {
+          return typeof debater.scoreForRound[roundIndex] !== "number";
+        });
+
+        return hasEmptyResult || hasEmptyScore;
       });
 
-      if(hasEmptyResult) {
+      if(hasEmpties) {
         return false;
       }
 

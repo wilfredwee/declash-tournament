@@ -183,6 +183,10 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
             <RoundManagementComponent currentRoundIndex={this.state.currentRoundIndex} tournament={this.state.tournament} />
             : undefined
           }
+          {typeof this.state.currentRoundIndex === "number"?
+            <br />
+            : undefined
+          }
           <div className="row">
             {contentContainer}
           </div>
