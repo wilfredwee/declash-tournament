@@ -154,21 +154,25 @@ Meteor.methods({
       throw new Meteor.Error("invalidAction", "You may not have duplicate rooms.");
     }
 
-    var newRounds = _.map(tournament.rounds, function(round) {
-      if(round.state === "initial") {
-        round.rooms = (_.map(rooms, function(roomString) {
-          return {
-            locationId: roomString,
-            teams: [],
-            judges: []
-          };
-        }));
-      }
+    Tournaments.update(tournament._id, {$set: {rooms: rooms}});
 
-      return round;
+    var initialRound = _.find(tournament.rounds, function(round) {
+      return round.state === "initial";
     });
 
+    if(initialRound) {
+      initialRound.rooms = _.map(rooms, function(roomString) {
+        return {
+          locationId: roomString,
+          teams: [],
+          judges: []
+        }
+      });
 
-    Tournaments.update(tournament._id, {$set: {rooms: rooms, rounds: newRounds}});
+      Tournaments.update(
+        {_id: tournament._id, "rounds.index": initialRound.index},
+        {$set: {"rounds.$.rooms": initialRound.rooms}}
+      );
+    }
   }
 });
