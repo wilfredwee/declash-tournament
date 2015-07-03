@@ -35,10 +35,10 @@ DeclashApp.helpers.SchemaHelpers = (function(){
       return _.reduce(team.debaters, function(accValue, currDebater) {
 
         if(typeof roundIndex === "number") {
-          return currDebater.scoreForRound[roundIndex];
+          return accValue + currDebater.scoreForRound[roundIndex];
         }
 
-        return _.reduce(currDebater.scoreForRound, function(prev, curr) {
+        return accValue + _.reduce(currDebater.scoreForRound, function(prev, curr) {
           prev = getFiniteNumber(prev);
           curr = getFiniteNumber(curr);
 
