@@ -42,6 +42,7 @@ Meteor.methods({
     tournament.judges = [];
     tournament.rooms = [];
     tournament.rounds = [];
+    tournament.publicRounds = [];
     tournament.currentInvariantViolations = [];
 
     var urlId = tournament.name.toLowerCase().replace(" ", "-");

@@ -2,6 +2,10 @@
 
 DeclashApp.helpers.SchemaHelpers = (function(){
   var SchemaHelpers = {
+    getFiniteNumber: function(num) {
+      return typeof num === "number" && isFinite(num)? num : 0;
+    },
+
     getAverageRankForJudge: function(judge) {
       var totalRank = 0;
 
@@ -16,6 +20,31 @@ DeclashApp.helpers.SchemaHelpers = (function(){
 
       // Limit to 2 decimal places
       return Math.round(averageRank * 100) / 100;
+    },
+
+    getTotalResultForTeam: function(team) {
+      return _.reduce(team.resultForRound, function(prev, curr) {
+        prev = getFiniteNumber(prev);
+        curr = getFiniteNumber(curr);
+
+        return prev + curr;
+      }, 0);
+    },
+
+    getTotalScoreForTeam: function(team, roundIndex) {
+      return _.reduce(team.debaters, function(accValue, currDebater) {
+
+        if(typeof roundIndex === "number") {
+          return currDebater.scoreForRound[roundIndex];
+        }
+
+        return _.reduce(currDebater.scoreForRound, function(prev, curr) {
+          prev = getFiniteNumber(prev);
+          curr = getFiniteNumber(curr);
+
+          return prev + curr;
+        }, 0)
+      }, 0)
     },
 
     getSchemaInjectedRound: function(tournament, roundIndex) {

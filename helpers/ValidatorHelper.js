@@ -1,6 +1,11 @@
 "use strict";
 /* global Tournaments */
 
+var SchemaHelpers;
+Meteor.startup(function() {
+ SchemaHelpers = DeclashApp.helpers.SchemaHelpers;
+});
+
 // For now, a static class with self-contained helper functions.
 DeclashApp.helpers.ValidatorHelper = (function() {
   var ValidatorHelper = {
@@ -121,6 +126,29 @@ DeclashApp.helpers.ValidatorHelper = (function() {
       return scoreValue >= 65 && scoreValue <= 100;
     },
 
+    doesRoomScoresAddUp: function(teamsInRoom, roundIndex) {
+      var hasEmptyResult = _.some(teamsInRoom, function(team) {
+        return typeof team.resultForRound[roundIndex] !== "number";
+      });
+
+      if(hasEmptyResult) {
+        return false;
+      }
+
+      var sortedByResult = _.sortBy(teamsInRoom, function(team) {
+        return team.resultForRound[roundIndex];
+      });
+
+      var sortedByScores = _.sortBy(teamsInRoom, function(team) {
+        return SchemaHelpers.getTotalScoreForTeam(team, roundIndex);
+      });
+
+      // We know that their lengths are the same.
+      return _.every(sortedByResult, function(team, index) {
+        return team.guid === sortedByScores[index].guid;
+      });
+    },
+
     canChangeDebaterScore: function(tournament, roundIndex, teamToUpdate, debaterIndex, scoreValue) {
       var round = _.find(tournament.rounds, function(round) {
         return round.index === roundIndex;
@@ -131,8 +159,6 @@ DeclashApp.helpers.ValidatorHelper = (function() {
       }
 
       return this.isDebaterScoreWithinRange(scoreValue);
-
-      // TODO: More conditions
     },
 
     canChangeJudgeRank: function(tournament, roundIndex, judgeToUpdate, rankValue) {

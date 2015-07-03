@@ -1192,7 +1192,8 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
   var ActiveRoomComponent = ReactMeteor.createClass({
     getMeteorState: function() {
       return {
-        lastUpdate: new Date()
+        lastUpdate: new Date(),
+        doesRoomScoresAddUp: ValidatorHelper.doesRoomScoresAddUp(this.props.room.teams, this.props.roundIndex)
       };
     },
 
@@ -1210,6 +1211,9 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
           lastUpdate: current
         });
 
+        return true;
+      }
+      else if(this.state.doesRoomScoresAddUp !== nextState.doesRoomScoresAddUp) {
         return true;
       }
 
@@ -1240,8 +1244,24 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
     },
 
     changeDebaterScore: function(team, debaterIndex, event) {
+      var roundIndex = this.props.roundIndex;
+
       var inputClassName = "ui mini fluid input";
       var value = event.target.valueAsNumber;
+
+      function doesRoomScoresAddUp(roomTeams) {
+        var teamToUpdate = _.find(roomTeams, function(teamInList) {
+          return teamInList.guid === team.guid;
+        });
+
+        teamToUpdate.debaters[debaterIndex].scoreForRound[roundIndex] = value;
+
+        return ValidatorHelper.doesRoomScoresAddUp(roomTeams, roundIndex);
+      }
+
+      this.setState({
+        doesRoomScoresAddUp: doesRoomScoresAddUp(this.props.room.teams)
+      });
 
       if(!ValidatorHelper.isDebaterScoreWithinRange(value)) {
         event.target.parentElement.className = inputClassName + " error";
@@ -1251,9 +1271,9 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
 
         Meteor.call("changeDebaterScore", team, debaterIndex, this.props.roundIndex, value, function(err, result) {
           // TODO
-          if(err) {
-            alert(err.reason);
-          }
+          // if(err) {
+          //   alert(err.reason);
+          // }
         });
       }
     },
@@ -1377,9 +1397,11 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
     },
 
     render: function() {
+      var styleObj = this.state.doesRoomScoresAddUp? {} : {background: "rgba(226, 82, 76, 0.1)"};
+
       return (
         <div className="column">
-          <div className="ui segment">
+          <div style={styleObj} className="ui segment">
             <h3 className="ui horizontal header divider">{this.props.room.locationId}</h3>
             {this.renderTeamsForRoom()}
             <h5 className="ui horizontal header divider">Judges</h5>
