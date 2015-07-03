@@ -241,7 +241,13 @@ var TournamentSchema = new SimpleSchema({
   rounds: {
     type: [RoundSchema],
     label: "All rounds created in a tournament.",
-    minCount: 0,
+    minCount: 0
+  },
+
+  publicRounds: {
+    type: [RoundSchema],
+    label: "All rounds created in a tournament - viewable by the public.",
+    minCount: 0
   },
 
   currentInvariantViolations: {

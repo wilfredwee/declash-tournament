@@ -40,6 +40,16 @@ DeclashApp.helpers.SchemaHelpers = (function(){
       });
 
       return round;
+    },
+
+    populateRoundsForPublic: function(tournament) {
+      if(!tournament) {
+        return undefined;
+      }
+
+      tournament.rounds = tournament.publicRounds;
+
+      return tournament;
     }
   };
 

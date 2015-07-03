@@ -1,5 +1,10 @@
 "use strict";
 /* global Tournaments */
+var SchemaHelpers;
+Meteor.startup(function() {
+  SchemaHelpers = DeclashApp.helpers.SchemaHelpers;
+});
+
 
 DeclashApp.client.templates.pages.PublicTournamentPageContainer = (function() {
   var PublicTournamentPageContainer = ReactMeteor.createClass({
@@ -11,7 +16,7 @@ DeclashApp.client.templates.pages.PublicTournamentPageContainer = (function() {
   var TournamentPageBody = ReactMeteor.createClass({
     getMeteorState: function() {
       return {
-        tournament: Tournaments.findOne({urlId: this.props.urlId})
+        tournament: SchemaHelpers.populateRoundsForPublic(Tournaments.findOne({urlId: this.props.urlId}))
       };
     },
 

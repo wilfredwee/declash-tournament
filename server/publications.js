@@ -8,7 +8,10 @@ Meteor.publish("unfinishedTournaments", function() {
     return Tournaments.find({finished: false});
   }
   else {
-    return Tournaments.find({finished: false, enablePublicView: true});
+    return Tournaments.find(
+      {finished: false, enablePublicView: true},
+      {fields: {"rounds": 0}}
+    );
   }
 
 });

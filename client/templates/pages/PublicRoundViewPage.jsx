@@ -18,7 +18,7 @@ DeclashApp.client.templates.pages.PublicRoundViewPageContainer = (function() {
   var RoundViewBody = ReactMeteor.createClass({
     getMeteorState: function() {
       return {
-        tournament: Tournaments.findOne({urlId: this.props.urlId}),
+        tournament: SchemaHelpers.populateRoundsForPublic(Tournaments.findOne({urlId: this.props.urlId})),
         roundIndex: parseInt(this.props.roundIndex)
       };
     },
