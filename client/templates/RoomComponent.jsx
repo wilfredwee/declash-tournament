@@ -39,11 +39,22 @@ DeclashApp.client.templates.RoomComponent = (function() {
     },
 
     openSwapDialog: function(team) {
+      if(!this.getDragData) {
+        return;
+      }
+
       var self = this;
 
       var modalDOM = $(".ui.modal");
 
-      React.render(<SwapDialogComponent roundIndex={this.props.roundIndex} teamToSwapOut={team} modalDOM={modalDOM} room={this.props.room} teams={this.props.teams} />, modalDOM[0]);
+      React.render(<SwapDialogComponent
+        roundIndex={this.props.roundIndex}
+        teamToSwapOut={team}
+        modalDOM={modalDOM}
+        room={this.props.room}
+        teams={this.props.teams} />,
+        modalDOM[0]
+      );
 
 
     },
