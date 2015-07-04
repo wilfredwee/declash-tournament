@@ -39,13 +39,13 @@ DeclashApp.client.templates.RoomComponent = (function() {
     },
 
     openSwapDialog: function(team) {
-      if(!this.getDragData) {
+      if(!this.props.getDragData) {
         return;
       }
 
       var self = this;
 
-      var modalDOM = $(".ui.modal");
+      var modalDOM = $("<div>").modal();
 
       React.render(<SwapDialogComponent
         roundIndex={this.props.roundIndex}
@@ -157,8 +157,9 @@ DeclashApp.client.templates.RoomComponent = (function() {
     componentDidMount: function() {
       var self = this;
 
-      var modal = this.props.modalDOM.modal({
-        closable: false,
+      var modal = $(".ui.modal").modal({
+        closable: true,
+        detachable: false,
         onApprove: function() {
           Meteor.call("swapTeamsForRound", self.props.teamToSwapOut, self.state.teamToSwapIn, self.props.roundIndex, function(err, result) {
             // TODO:
@@ -167,8 +168,9 @@ DeclashApp.client.templates.RoomComponent = (function() {
             }
           });
         },
-        onHide: function() {
-          React.unmountComponentAtNode(this);
+        onHidden: function() {
+          React.unmountComponentAtNode(self.props.modalDOM[0]);
+          $(this).remove();
         }
       });
 
@@ -202,7 +204,6 @@ DeclashApp.client.templates.RoomComponent = (function() {
     },
 
     render: function() {
-      var header = <h1 className="ui header">Swap Teams Assignment</h1>
       var content = (
         <div className="ui local search swapteams">
           <div className="ui icon input">
@@ -243,19 +244,21 @@ DeclashApp.client.templates.RoomComponent = (function() {
       }
 
       return (
-        <div>
-          <div className="ui grid modalgrid">
-            <div className="column">
-              <div className="row">
-                {header}
-                <br />
-              </div>
-              <div className="row">
-                {content}
-                <br />
-              </div>
-              <div className="row">
-                <span>{informMessage}</span>
+        <div className="ui modal">
+          <i className="close icon"></i>
+          <div className="header">
+            Swapping {this.props.teamToSwapOut.name}
+          </div>
+          <div className="content">
+            <div className="ui grid">
+              <div className="column">
+                <div className="row">
+                  {content}
+                  <br />
+                </div>
+                <div className="row">
+                  <span>{informMessage}</span>
+                </div>
               </div>
             </div>
           </div>

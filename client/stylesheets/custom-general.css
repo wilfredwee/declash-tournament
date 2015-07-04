@@ -5,11 +5,3 @@
 /* Go to default color on hover.*/
 .roomTeam:hover {
 }
-
-/* Custom margin for grid in modal to ensure proper alignment. */
-.ui.grid.modalgrid {
-  margin-top: 0px;
-  margin-bottom: 0px;
-  margin-left: 0px;
-  margin-right: 0px;
-}
