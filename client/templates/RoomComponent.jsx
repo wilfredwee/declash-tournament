@@ -38,6 +38,16 @@ DeclashApp.client.templates.RoomComponent = (function() {
       return true;
     },
 
+    openSwapDialog: function(team) {
+      var self = this;
+
+      var modalDOM = $(".ui.modal");
+
+      React.render(<SwapDialogComponent roundIndex={this.props.roundIndex} teamToSwapOut={team} modalDOM={modalDOM} room={this.props.room} teams={this.props.teams} />, modalDOM[0]);
+
+
+    },
+
     renderTeamsForRoom: function(room, roundIndex) {
       function getTeamForRole(role) {
         return _.find(room.teams, function(team) {
@@ -60,14 +70,16 @@ DeclashApp.client.templates.RoomComponent = (function() {
       var COTeam = getTeamForRole("CO");
 
       return (
-        <div className="ui stackable two column celled grid">
-          <div className="two column row">
-            <div className="column"><span><strong>OG: </strong>{OGTeam.name} ({getTotalResultForTeam(OGTeam)})</span></div>
-            <div className="column"><span><strong>OO: </strong>{OOTeam.name} ({getTotalResultForTeam(OOTeam)})</span></div>
-          </div>
-          <div className="two column row">
-            <div className="column"><span><strong>CG: </strong>{CGTeam.name} ({getTotalResultForTeam(CGTeam)})</span></div>
-            <div className="column"><span><strong>CO: </strong>{COTeam.name} ({getTotalResultForTeam(COTeam)})</span></div>
+        <div>
+          <div className="ui stackable two column celled grid">
+            <div className="two column row">
+              <div className="column"><a onClick={this.openSwapDialog.bind(this, OGTeam)} href="" className="roomTeam ui link"><strong>OG: </strong>{OGTeam.name} ({getTotalResultForTeam(OGTeam)})</a></div>
+              <div className="column"><a onClick={this.openSwapDialog.bind(this, OOTeam)} href="" className="roomTeam ui link"><strong>OO: </strong>{OOTeam.name} ({getTotalResultForTeam(OOTeam)})</a></div>
+            </div>
+            <div className="two column row">
+              <div className="column"><a onClick={this.openSwapDialog.bind(this, CGTeam)} href="" className="roomTeam ui link"><strong>CG: </strong>{CGTeam.name} ({getTotalResultForTeam(CGTeam)})</a></div>
+              <div className="column"><a onClick={this.openSwapDialog.bind(this, COTeam)} href="" className="roomTeam ui link"><strong>CO: </strong>{COTeam.name} ({getTotalResultForTeam(COTeam)})</a></div>
+            </div>
           </div>
         </div>
       );
@@ -118,6 +130,127 @@ DeclashApp.client.templates.RoomComponent = (function() {
             <div className="ui celled vertically divided grid">
               {this.renderJudgesForRoom(this.props.room, this.props.roundIndex)}
             </div>
+          </div>
+        </div>
+      );
+    }
+  });
+
+  var SwapDialogComponent = ReactMeteor.createClass({
+    getMeteorState: function() {
+      return {
+        teamToSwapIn: undefined
+      };
+    },
+
+    componentDidMount: function() {
+      var self = this;
+
+      var modal = this.props.modalDOM.modal({
+        closable: false,
+        onApprove: function() {
+          Meteor.call("swapTeamsForRound", self.props.teamToSwapOut, self.state.teamToSwapIn, self.props.roundIndex, function(err, result) {
+            // TODO:
+            if(err) {
+              alert(err.reason);
+            }
+          });
+        },
+        onHide: function() {
+          React.unmountComponentAtNode(this);
+        }
+      });
+
+      modal.modal("show");
+
+
+      var searchTeams = _.chain(this.props.teams)
+        .map(function(team) {
+          return {title: team.name, guid: team.guid};
+        })
+        .filter(function(searchTeam) {
+          return searchTeam.guid !== self.props.teamToSwapOut.guid;
+        })
+        .value();
+
+      $(".ui.local.search.swapteams").search({
+        source: searchTeams,
+        searchFields: [
+          "title"
+        ],
+        onSelect: function(result) {
+          var teamToSwapIn = _.find(self.props.teams, function(team) {
+            return team.guid === result.guid;
+          });
+
+          self.setState({
+            teamToSwapIn: teamToSwapIn
+          });
+        }
+      });
+    },
+
+    render: function() {
+      var header = <h1 className="ui header">Swap Teams Assignment</h1>
+      var content = (
+        <div className="ui local search swapteams">
+          <div className="ui icon input">
+            <input className="prompt" placeholder={"Search for teams"} type="text" />
+            <i className="search icon"></i>
+          </div>
+          <div className="results"></div>
+        </div>
+      );
+
+      var informMessage = "Please select a team to swap.";
+      if(this.state.teamToSwapIn) {
+        var teamToSwapIn = this.state.teamToSwapIn;
+        var teamToSwapOut = this.props.teamToSwapOut;
+
+        if(teamToSwapIn.isActiveForRound[this.props.roundIndex]) {
+          var isSameRoom = _.some(this.props.room.teams, function(team) {
+            return team.guid === teamToSwapIn.guid;
+          });
+
+          if(isSameRoom) {
+            informMessage = "You will swap positions between " +
+              teamToSwapIn.name + " and " +
+              teamToSwapOut.name;
+          }
+          else {
+            informMessage = "You will swap rooms and positions between " +
+              teamToSwapIn.name + " and " +
+              teamToSwapOut.name;
+          }
+        }
+        else {
+          informMessage = "You will swing in " + teamToSwapIn.name +
+            " to replace " + teamToSwapOut.name +
+            " for this round.";
+        }
+
+      }
+
+      return (
+        <div>
+          <div className="ui grid modalgrid">
+            <div className="column">
+              <div className="row">
+                {header}
+                <br />
+              </div>
+              <div className="row">
+                {content}
+                <br />
+              </div>
+              <div className="row">
+                <span>{informMessage}</span>
+              </div>
+            </div>
+          </div>
+          <div className="actions">
+            <div className="ui cancel button">Cancel</div>
+            <div className="ui ok button">Save</div>
           </div>
         </div>
       );

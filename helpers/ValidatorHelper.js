@@ -220,6 +220,25 @@ DeclashApp.helpers.ValidatorHelper = (function() {
       return _.some(roomTeams, function(team) {
         return team.resultForRound[roundIndex] === resultValue && team.guid !== teamToUpdate.guid;
       });
+    },
+
+    canSwapTeams: function(tournament, roundIndex, teamToSwapOut, teamToSwapIn) {
+      var round = _.find(tournament.rounds, function(round) {
+        return round.index === roundIndex;
+      });
+
+      if(!round) {
+        return false;
+      }
+
+      if(round.state !== "assigned") {
+        return false;
+      }
+
+      if(teamToSwapOut.guid === teamToSwapIn.guid) {
+        return false;
+      }
+      return true;
     }
   };
 

@@ -507,5 +507,155 @@ Meteor.methods({
       {_id: tournament._id, "rounds.index": round.index},
       {$set: {"rounds.$.motion": round.motion}}
     );
+  },
+
+  swapTeamsForRound: function(teamToSwapOut, teamToSwapIn, roundIndex) {
+    function changeRole(swapOutTeam, swapInTeam, rIndex) {
+      swapOutTeam = JSON.parse(JSON.stringify(swapOutTeam));
+      swapInTeam = JSON.parse(JSON.stringify(swapInTeam));
+
+      var swapOutSetObj = {};
+      swapOutSetObj["teams.$.roleForRound." + rIndex] = swapInTeam.roleForRound[rIndex];
+
+      var swapInSetObj = {};
+      swapInSetObj["teams.$.roleForRound." + rIndex] = swapOutTeam.roleForRound[rIndex];
+
+      Tournaments.update(
+        {_id: tournament._id, "teams.guid": swapOutTeam.guid},
+        {$set: swapOutSetObj},
+        {validate: false, filter: false}
+      );
+
+      Tournaments.update(
+        {_id: tournament._id, "teams.guid": swapInTeam.guid},
+        {$set: swapInSetObj},
+        {validate: false, filter: false}
+      );
+    }
+
+    function changeRoom(currRooms, swapOutTeam, swapInTeam, rIndex) {
+      swapOutTeam = JSON.parse(JSON.stringify(swapOutTeam));
+      swapInTeam = JSON.parse(JSON.stringify(swapInTeam));
+      currRooms = JSON.parse(JSON.stringify(currRooms));
+
+      var swapOutRoom = _.find(currRooms, function(room) {
+        return _.contains(room.teams, swapOutTeam.guid);
+      });
+
+      var swapInRoom = _.find(currRooms, function(room) {
+        return _.contains(room.teams, swapInTeam.guid);
+      });
+
+      swapOutRoom.teams = _.map(swapOutRoom.teams, function(teamGuid) {
+        if(teamGuid === swapOutTeam.guid) {
+          return swapInTeam.guid;
+        }
+        return teamGuid;
+      });
+
+      // swapInRoom will not be defined for non-active teams
+      if(swapInRoom) {
+        swapInRoom.teams = _.map(swapInRoom.teams, function(teamGuid) {
+          if(teamGuid === swapInTeam.guid) {
+            return swapOutTeam.guid;
+          }
+          return teamGuid;
+        });
+      }
+
+      currRooms = _.map(currRooms, function(room) {
+        if(room.locationId === swapOutRoom.locationId) {
+          return swapOutRoom;
+        }
+        else if(swapInRoom && room.locationId === swapInRoom.locationId) {
+          return swapInRoom;
+        }
+        return room;
+      });
+
+      Tournaments.update(
+        {_id: tournament._id, "rounds.index": rIndex},
+        {$set: {"rounds.$.rooms": currRooms}},
+        {validate: false, filter: false}
+      );
+    }
+
+    function changeActiveTeam(swapOutTeam, swapInTeam, rIndex) {
+      swapOutTeam = JSON.parse(JSON.stringify(swapOutTeam));
+      swapInTeam = JSON.parse(JSON.stringify(swapInTeam));
+
+      swapInTeam.isActiveForRound[rIndex] = true;
+      // these two changes shouldn't be necessary, actually.
+      swapInTeam.resultForRound[rIndex] = undefined;
+      swapInTeam.debaters = _.map(swapInTeam.debaters, function(debater) {
+        debater.scoreForRound[rIndex] = undefined;
+
+        return debater;
+      });
+      swapInTeam.roleForRound[rIndex] = swapOutTeam.roleForRound[rIndex];
+
+
+      swapOutTeam.isActiveForRound[rIndex] = false;
+      swapOutTeam.resultForRound[rIndex] = undefined;
+      swapOutTeam.debaters = _.map(swapOutTeam.debaters, function(debater) {
+        debater.scoreForRound[rIndex] = undefined;
+
+        return debater;
+      });
+      swapOutTeam.roleForRound[rIndex] = undefined;
+
+
+      Tournaments.update(
+        {_id: tournament._id, "teams.guid": swapOutTeam.guid},
+        {$set: {"teams.$": swapOutTeam}}
+      );
+
+      Tournaments.update(
+        {_id: tournament._id, "teams.guid": swapInTeam.guid},
+        {$set: {"teams.$": swapInTeam}}
+      );
+    }
+
+    var tournament = getOwnerTournament.call(this);
+
+    if(!ValidatorHelper.canSwapTeams(tournament, roundIndex, teamToSwapOut, teamToSwapIn)) {
+      throw new Meteor.Error("invalidAction", "Cannot swap these teams.");
+    }
+
+    var round = _.find(tournament.rounds, function(round) {
+      return round.index === roundIndex;
+    });
+
+    teamToSwapIn = _.find(tournament.teams, function(team) {
+      return team.guid === teamToSwapIn.guid;
+    });
+
+    teamToSwapOut = _.find(tournament.teams, function(team) {
+      return team.guid === teamToSwapOut.guid;
+    });
+
+    var roomOfSwapOut = _.find(round.rooms, function(room) {
+      return _.contains(room.teams, teamToSwapOut.guid);
+    });
+
+    // Do not need to change activeForRound, resultForRound, scoreForRound, roleForRound
+    // But should change room and position.
+    if(teamToSwapIn.isActiveForRound[roundIndex]) {
+      // Same Room, change positions only.
+      if(_.contains(roomOfSwapOut.teams, teamToSwapIn.guid)) {
+        changeRole(teamToSwapOut, teamToSwapIn, roundIndex);
+      // Different Room, change room and position.
+      }
+      else {
+        changeRole(teamToSwapOut, teamToSwapIn, roundIndex);
+        changeRoom(round.rooms, teamToSwapOut, teamToSwapIn, roundIndex);
+      }
+    }
+    // Change the necessary fields.
+    else {
+      // changeActiveTeam will change the roles of users for us.
+      changeActiveTeam(teamToSwapOut, teamToSwapIn, roundIndex);
+      changeRoom(round.rooms, teamToSwapOut, teamToSwapIn, roundIndex);
+    }
   }
 });
