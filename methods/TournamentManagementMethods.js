@@ -256,7 +256,7 @@ Meteor.methods({
       throw new Meteor.Error("invalidAction", "Cannot delete this round. Make sure you have the proper conditions.");
     }
 
-    Tournaments.update(tournament._id, {$pull: {"rounds": {index: roundIndex}}});
+    Tournaments.update(tournament._id, {$pull: {"rounds": {index: roundIndex}, "publicRounds": {index: roundIndex}}});
   },
 
   activateRound: function(roundIndex) {

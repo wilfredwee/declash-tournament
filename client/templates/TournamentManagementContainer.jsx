@@ -180,7 +180,10 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
           </div>
           <br />
           {typeof this.state.currentRoundIndex === "number"?
-            <RoundManagementComponent currentRoundIndex={this.state.currentRoundIndex} tournament={this.state.tournament} />
+            <RoundManagementComponent
+              currentRoundIndex={this.state.currentRoundIndex}
+              tournament={this.state.tournament}
+              switchContainerContextType={this.switchContainerContextType} />
             : undefined
           }
           {typeof this.state.currentRoundIndex === "number"?
@@ -220,6 +223,8 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
           alert(err.reason);
         }
       });
+
+      this.props.switchContainerContextType(ManagementContextConstants.TEAM_CONTEXT);
     },
 
     activateCurrentRound: function() {
