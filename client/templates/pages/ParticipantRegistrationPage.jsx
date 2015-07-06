@@ -78,7 +78,7 @@ DeclashApp.client.templates.pages.ParticipantRegistrationPageContainer = (functi
       Meteor.call("registerTeams", team, this.props.tournamentId, function(err, result) {
         // TODO
         if(err) {
-          alert(err);
+          alert(err.reason);
         }
         else {
           Session.set("registrationState", REGISTRATION_STATES.success);

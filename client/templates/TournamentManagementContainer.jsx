@@ -263,7 +263,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       Meteor.call("changeMotion", motionText, this.props.currentRoundIndex, function(err, result) {
         // TODO:
         if(err) {
-          alert(err);
+          alert(err.reason);
         }
         else {
           Session.set("isEditMode", false);
@@ -460,6 +460,21 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
     },
 
     render: function() {
+      var hasCreatedRound = this.state.tournament.rounds.length > 0;
+
+      var publicRegistrationText = "Public Registration of Teams/Judges is ";
+      if(hasCreatedRound) {
+        publicRegistrationText += "Closed because at least one Round is created."
+      }
+      else {
+        if(this.state.tournament.enablePublicRegistration) {
+          publicRegistrationText += "Open."
+        }
+        else {
+          publicRegistrationText += "Closed."
+        }
+      }
+
       return (
         <div>
           <div className="row">
@@ -471,7 +486,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
                 readOnly
                 type="checkbox"
               >
-                <label>Public Registration of Teams/Judges is {this.state.tournament.enablePublicRegistration ? "Open" : "Closed"}.</label>
+                <label>{publicRegistrationText}</label>
               </input>
             </div>
           </div>
@@ -661,7 +676,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
             Meteor.call(context.registerMethod, roomStrings, function(err, result) {
               // TODO
               if(err) {
-                alert(err);
+                alert(err.reason);
               }
             });
           }
@@ -674,7 +689,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
                 Meteor.call(context.updateMethod, collectionToSend, function(err, result) {
                   // TODO
                   if(err) {
-                    alert(err);
+                    alert(err.reason);
                   }
                 });
               }
@@ -683,7 +698,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
                 Meteor.call(context.registerMethod, collectionToSend, function(err, result) {
                   // TODO
                   if(err) {
-                    alert(err);
+                    alert(err.reason);
                   }
                 });
               }
@@ -728,7 +743,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
               Meteor.call(context.registerMethod, roomStrings, function(err, result) {
                 // TODO
                 if(err) {
-                  alert(err);
+                  alert(err.reason);
                 }
               });
 
@@ -746,7 +761,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
                 Meteor.call(context.removeMethod, collectionToSend, function(err, result) {
                   // TODO
                   if(err) {
-                    alert(err);
+                    alert(err.reason);
                   }
                 });
                 /* jshint ignore:end */

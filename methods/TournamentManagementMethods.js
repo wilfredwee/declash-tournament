@@ -126,6 +126,10 @@ Meteor.methods({
   togglePublicRegistration: function() {
     var tournament = getOwnerTournament.call(this);
 
+    if(tournament.rounds.length > 0 && !tournament.enablePublicRegistration) {
+      return;
+    }
+
     var newChecked = !tournament.enablePublicRegistration;
     Tournaments.update(tournament._id, {$set: {enablePublicRegistration: newChecked}});
 
@@ -200,6 +204,10 @@ Meteor.methods({
 
     //TODO: Need to validate this.
     Tournaments.update(tournament._id, {$set: {teams: newTeams, judges: newJudges}});
+
+    if(tournament.enablePublicRegistration) {
+      Tournaments.update(tournament._id, {$set: {enablePublicRegistration: false}});
+    }
 
     return newRoundIndex;
   },
