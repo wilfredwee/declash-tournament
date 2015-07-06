@@ -19,16 +19,12 @@ DeclashApp.client.templates.BaseComponent = (function() {
 
     render: function() {
       return (
-        <div className="ui grid">
-          <div className="row">
             <div className="ui inverted fixed menu navbar page grid">
               <a href="/" className="brand item">DeClash</a>
               <div className="right menu">
                 <UserManagementButtons />
               </div>
             </div>
-          </div>
-        </div>
       );
     }
   });
