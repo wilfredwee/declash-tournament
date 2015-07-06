@@ -214,26 +214,30 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
           alert(err.reason);
         }
       });
+
+      this.props.switchContainerContextType(ManagementContextConstants.MANAGE_CONTEXT_TYPE, this.props.currentRoundIndex);
     },
 
     deleteCurrentRound: function() {
-      Meteor.call("deleteRound", this.props.currentRoundIndex, function(err, result) {
-        // TODO
-        if(err) {
-          alert(err.reason);
-        }
-      });
+      var deleteRoundModalDOM = $("<div>").modal();
 
-      this.props.switchContainerContextType(ManagementContextConstants.TEAM_CONTEXT);
+      React.render(<DeleteRoundModal
+        roundIndex={this.props.currentRoundIndex}
+        modalDOM={deleteRoundModalDOM}
+        switchContainerContextType={this.props.switchContainerContextType} />,
+        deleteRoundModalDOM[0]
+      );
     },
 
     activateCurrentRound: function() {
-      Meteor.call("activateRound", this.props.currentRoundIndex, function(err, result) {
-        // TODO
-        if(err) {
-          alert(err.reason);
-        }
-      });
+      var activateRoundModalDOM = $("<div>").modal();
+
+      React.render(<ActivateRoundModal
+        roundIndex={this.props.currentRoundIndex}
+        modalDOM={activateRoundModalDOM}
+        switchContainerContextType={this.props.switchContainerContextType} />,
+        activateRoundModalDOM[0]
+      );
     },
 
     finalizeCurrentRound: function() {
@@ -328,6 +332,99 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
           {addRowToItem(deleteRoundButton)}
           {addRowToItem(activateRoundButton)}
           {addRowToItem(finalizeRoundButton)}
+        </div>
+      );
+    }
+  });
+
+  var DeleteRoundModal = ReactMeteor.createClass({
+    componentDidMount: function() {
+      var self = this;
+
+      $(".ui.modal").modal({
+        closable: true,
+        detachable: false,
+        onApprove: function() {
+          Meteor.call("deleteRound", self.props.roundIndex, function(err, result) {
+            // TODO
+            if(err) {
+              alert(err.reason);
+            }
+          });
+
+          self.props.switchContainerContextType(ManagementContextConstants.TEAM_CONTEXT);
+        },
+        onHidden: function() {
+          React.unmountComponentAtNode(self.props.modalDOM[0]);
+          $(this).remove();
+        }
+      })
+      .modal("show");
+
+    },
+
+    render: function() {
+      return (
+        <div className="ui modal">
+          <i className="close icon"></i>
+          <div className="header">
+            Warning
+          </div>
+          <div className="content">
+            <div className="description">
+              Are you sure you want to delete Round {this.props.roundIndex + 1}? All information for the round will be lost. This cannot be undone.
+            </div>
+          </div>
+          <div className="actions">
+            <div className="ui cancel button">No</div>
+            <div className="negative ui ok button">Yes, delete the round.</div>
+          </div>
+        </div>
+      );
+    }
+  });
+
+  var ActivateRoundModal = ReactMeteor.createClass({
+    componentDidMount: function() {
+      var self = this;
+
+      $(".ui.modal").modal({
+        closable: true,
+        detachable: false,
+        onApprove: function() {
+          Meteor.call("activateRound", self.props.roundIndex, function(err, result) {
+            // TODO
+            if(err) {
+              alert(err.reason);
+            }
+          });
+
+          self.props.switchContainerContextType(ManagementContextConstants.MANAGE_CONTEXT_TYPE, self.props.roundIndex);
+        },
+        onHidden: function() {
+          React.unmountComponentAtNode(self.props.modalDOM[0]);
+          $(this).remove();
+        }
+      })
+      .modal("show");
+    },
+
+    render: function() {
+      return (
+        <div className="ui modal">
+          <i className="close icon"></i>
+          <div className="header">
+            Activate Round
+          </div>
+          <div className="content">
+            <div className="description">
+              Activating a Round will release the motion and assignments to the public if you set the tournament as viewabl by the public. Activate Round {this.props.roundIndex + 1}?
+            </div>
+          </div>
+          <div className="actions">
+            <div className="ui cancel button">No</div>
+            <div className="primary ui ok button">Yes, activate the round.</div>
+          </div>
         </div>
       );
     }

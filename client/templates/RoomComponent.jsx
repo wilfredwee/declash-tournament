@@ -158,7 +158,7 @@ DeclashApp.client.templates.RoomComponent = (function() {
       var self = this;
 
       var modal = $(".ui.modal").modal({
-        closable: true,
+        closable: false,
         detachable: false,
         onApprove: function() {
           Meteor.call("swapTeamsForRound", self.props.teamToSwapOut, self.state.teamToSwapIn, self.props.roundIndex, function(err, result) {
