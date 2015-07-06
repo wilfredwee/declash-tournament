@@ -22,14 +22,27 @@ DeclashApp.helpers.InvariantChecker = (function() {
 
   InvariantChecker.types = {
     HAS_LEFTOVER_TEAMS: "HAS_LEFTOVER_TEAMS",
-    NOT_ENOUGH_ROOMS: "NOT_ENOUGH_ROOMS"
+    NOT_ENOUGH_ROOMS: "NOT_ENOUGH_ROOMS",
+    NOT_ENOUGH_TEAMS: "NOT_ENOUGH_TEAMS"
   };
 
   InvariantChecker.prototype.getViolatedInvariants = function() {
+    this.checkEnoughTeams();
     this.checkHasNoLeftOverTeams();
     this.checkEnoughRooms();
     this.checkEnoughJudges();
     return this.violations;
+  };
+
+  InvariantChecker.prototype.checkEnoughTeams = function() {
+    if(this._activeTeams.length < 4) {
+      this.violations.push({
+        type: InvariantChecker.types.NOT_ENOUGH_TEAMS,
+        message: "Not enough active teams. You need " +
+          (4 - this._activeTeams.length).toString() +
+          " more teams."
+      });
+    };
   };
 
   InvariantChecker.prototype.checkHasNoLeftOverTeams = function() {

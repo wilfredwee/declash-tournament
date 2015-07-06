@@ -29,9 +29,20 @@ DeclashApp.helpers.checkInvariantsBeforeAssign = function(tournament) {
     else {
       // IMPORTANT: Must see if it's different before updating the Collection or we'll end up in
       // an infinite loop because this checkinvariants call is called in a reactive observe.
-      if(_.difference(currViolations, trackedTournament.currentInvariantViolations).length > 0) {
+      var currViolationsMessages = _.map(currViolations, function(violation) {
+        return violation.message;
+      });
+
+      var prevViolationsMessages = _.map(trackedTournament.currentInvariantViolations, function(violation) {
+        return violation.message;
+      });
+
+      if(currViolations.length !== trackedTournament.currentInvariantViolations.length ||
+        !_.isEqual(currViolationsMessages, prevViolationsMessages))
+      {
         Tournaments.update(trackedTournament._id, {$set: {currentInvariantViolations: currViolations}});
       }
+
     }
   }
 };

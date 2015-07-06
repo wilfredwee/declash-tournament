@@ -4,19 +4,12 @@ DeclashApp.client.templates.BaseComponent = (function() {
   var BaseComponent = ReactMeteor.createClass({
     templateName: "baseTemplate",
 
-    getMeteorState: function() {
-
-    },
     render: function() {
       return (<NavBar></NavBar>);
     }
   });
 
   var NavBar = ReactMeteor.createClass({
-    getMeteorState: function() {
-
-    },
-
     render: function() {
       return (
             <div className="ui inverted fixed menu navbar page grid">
