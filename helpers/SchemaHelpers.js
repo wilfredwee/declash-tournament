@@ -24,11 +24,11 @@ DeclashApp.helpers.SchemaHelpers = (function(){
 
     getTotalResultForTeam: function(team) {
       return _.reduce(team.resultForRound, function(prev, curr) {
-        prev = getFiniteNumber(prev);
-        curr = getFiniteNumber(curr);
+        prev = this.getFiniteNumber(prev);
+        curr = this.getFiniteNumber(curr);
 
         return prev + curr;
-      }, 0);
+      }.bind(this), 0);
     },
 
     getTotalScoreForTeam: function(team, roundIndex) {
@@ -39,12 +39,12 @@ DeclashApp.helpers.SchemaHelpers = (function(){
         }
 
         return accValue + _.reduce(currDebater.scoreForRound, function(prev, curr) {
-          prev = getFiniteNumber(prev);
-          curr = getFiniteNumber(curr);
+          prev = this.getFiniteNumber(prev);
+          curr = this.getFiniteNumber(curr);
 
           return prev + curr;
-        }, 0)
-      }, 0)
+        }.bind(this), 0);
+      }.bind(this), 0);
     },
 
     getSchemaInjectedRound: function(tournament, roundIndex) {

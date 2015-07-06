@@ -167,7 +167,7 @@ Meteor.methods({
           locationId: roomString,
           teams: [],
           judges: []
-        }
+        };
       });
 
       Tournaments.update(
