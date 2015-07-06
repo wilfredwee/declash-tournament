@@ -654,16 +654,24 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
             return true;
           }
           else {
-            $(".ui.modal").modal({
-              closable: false,
-              onDeny: function() {
-                allowRemoveRow = false;
-              },
-              onApprove: function() {
-                allowRemoveRow = true;
-                thisTable.alter("remove_row", index, amount);
-              }
-            }).modal("show");
+            var modalDOM = $("<div>").modal();
+
+            var onDeny = function() {
+              allowRemoveRow = false;
+            };
+
+            var onApprove = function() {
+              allowRemoveRow = true;
+              thisTable.alter("remove_row", index, amount);
+            };
+
+            React.render(<DeleteRowModal
+              modalDOM={modalDOM}
+              onModalDeny={onDeny}
+              onModalApprove={onApprove} />,
+              modalDOM[0]
+            );
+
             return false;
           }
         },
@@ -715,20 +723,48 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
           </div>
 
           {/*UI for the Modal we will render*/}
-          <div className="ui modal">
-            <i className="close icon"></i>
-            <div className="header">
-              Warning
+
+        </div>
+      );
+    }
+  });
+
+  var DeleteRowModal = ReactMeteor.createClass({
+    componentDidMount: function() {
+      var self = this;
+
+      $(".ui.modal").modal({
+        closable: false,
+        detachable: false,
+        onDeny: function() {
+          self.props.onModalDeny();
+        },
+        onApprove: function() {
+          self.props.onModalApprove();
+        },
+        onHidden: function() {
+          React.unmountComponentAtNode(self.props.modalDOM[0]);
+          $(this).remove();
+        }
+      })
+      .modal("show");
+    },
+
+    render: function() {
+      return (
+        <div className="ui modal">
+          <i className="close icon"></i>
+          <div className="header">
+            Warning
+          </div>
+          <div className="content">
+            <div className="description">
+              Are you sure you want to delete the item?
             </div>
-            <div className="content">
-              <div className="description">
-                Are you sure you want to delete the item?
-              </div>
-            </div>
-            <div className="actions">
-              <div className="ui cancel button">No</div>
-              <div className="ui ok button">Yes</div>
-            </div>
+          </div>
+          <div className="actions">
+            <div className="ui cancel button">No</div>
+            <div className="ui ok button">Yes</div>
           </div>
         </div>
       );
