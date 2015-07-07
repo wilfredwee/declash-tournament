@@ -138,9 +138,12 @@ DeclashApp.client.templates.ConnectDraggable = (function() {
         if(this.state.dragging) {
           this.props.onDragStop();
 
-          return this.setState({
-            dragging: false,
-          });
+          if(this.isMounted()) {
+            return this.setState({
+              dragging: false,
+            });
+          }
+
         }
       },
 
