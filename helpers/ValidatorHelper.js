@@ -81,6 +81,18 @@ DeclashApp.helpers.ValidatorHelper = (function() {
       return round.state === "assigned" && round.motion && round.motion.length > 0;
     },
 
+    canDeactivateRound: function(tournament, roundIndex) {
+      var round = _.find(tournament.rounds, function(round) {
+        return round.index === roundIndex;
+      });
+
+      if(!round) {
+        return false;
+      }
+
+      return round.state === "active";
+    },
+
     canFinalizeRound: function(tournament, roundIndex) {
       var round = _.find(tournament.rounds, function(round) {
         return round.index === roundIndex;

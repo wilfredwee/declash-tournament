@@ -240,6 +240,17 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       );
     },
 
+    deactivateCurrentRound: function() {
+      var deactivateRoundModalDOM = $("<div>").modal();
+
+      React.render(<DeactivateRoundModal
+        roundIndex={this.props.currentRoundIndex}
+        modalDOM={deactivateRoundModalDOM}
+        switchContainerContextType={this.props.switchContainerContextType} />,
+        deactivateRoundModalDOM[0]
+      );
+    },
+
     finalizeCurrentRound: function() {
       Meteor.call("finalizeRound", this.props.currentRoundIndex, function(err, result) {
         // TODO:
@@ -320,6 +331,10 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
         <button className="ui positive button" onClick={this.activateCurrentRound}>Activate Round and Publish Assignment</button>
         : undefined;
 
+      var deactivateRoundButton = ValidatorHelper.canDeactivateRound(tournament, currentRoundIndex)?
+        <button className="ui negative button" onClick={this.deactivateCurrentRound}>Deactivate Round</button>
+        : undefined;
+
       var finalizeRoundButton = ValidatorHelper.canFinalizeRound(tournament, currentRoundIndex)?
         <button className="ui positive button" onClick={this.finalizeCurrentRound}>Finalize Round {currentRoundIndex + 1}</button>
         : undefined;
@@ -331,6 +346,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
           {addRowToItem(assignRoundButton)}
           {addRowToItem(deleteRoundButton)}
           {addRowToItem(activateRoundButton)}
+          {addRowToItem(deactivateRoundButton)}
           {addRowToItem(finalizeRoundButton)}
         </div>
       );
@@ -418,12 +434,58 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
           </div>
           <div className="content">
             <div className="description">
-              Activating a Round will release the motion and assignments to the public if you set the tournament as viewabl by the public. Activate Round {this.props.roundIndex + 1}?
+              Activating a Round will release the motion and assignments to the public if you set the tournament as viewable by the public. Activate Round {this.props.roundIndex + 1}?
             </div>
           </div>
           <div className="actions">
             <div className="ui cancel button">No</div>
-            <div className="primary ui ok button">Yes, activate the round.</div>
+            <div className="positive ui ok button">Yes, activate the round.</div>
+          </div>
+        </div>
+      );
+    }
+  });
+
+  var DeactivateRoundModal = ReactMeteor.createClass({
+    componentDidMount: function() {
+      var self = this;
+
+      $(".ui.modal").modal({
+        closable: true,
+        detachable: false,
+        onApprove: function() {
+          Meteor.call("deactivateRound", self.props.roundIndex, function(err, result) {
+            // TODO
+            if(err) {
+              alert(err.reason);
+            }
+          });
+
+          self.props.switchContainerContextType(ManagementContextConstants.MANAGE_CONTEXT_TYPE, self.props.roundIndex);
+        },
+        onHidden: function() {
+          React.unmountComponentAtNode(self.props.modalDOM[0]);
+          $(this).remove();
+        }
+      })
+      .modal("show");
+    },
+
+    render: function() {
+      return (
+        <div className="ui modal">
+          <i className="close icon"></i>
+          <div className="header">
+            Deactivate Round
+          </div>
+          <div className="content">
+            <div className="description">
+              Deactivating a round allows you to re-assign teams. You must inform participants that changes have been made! Existing results and scores will be kept.
+            </div>
+          </div>
+          <div className="actions">
+            <div className="ui cancel button">No</div>
+            <div className="negative primary ui ok button">Yes, deactivate the round.</div>
           </div>
         </div>
       );

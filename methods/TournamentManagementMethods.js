@@ -293,6 +293,32 @@ Meteor.methods({
     );
   },
 
+  deactivateRound: function(roundIndex) {
+    var tournament = getOwnerTournament.call(this);
+    var roundToDeactivate = _.find(tournament.rounds, function(round) {
+      return round.index === roundIndex;
+    });
+
+    if(!roundToDeactivate) {
+      throw new Meteor.Error("unableToFind", "Unable to find the round you're looking for.");
+    }
+
+    if(!ValidatorHelper.canDeactivateRound(tournament, roundIndex)) {
+      throw new Meteor.Error("invalidAction", "Cannot deactivate this round. Make sure you have the proper conditions.");
+    }
+
+    roundToDeactivate.state = "assigned";
+
+    // When activating a round, we create a public round that is similar to the private round,
+    // only that it is viewable by the public.
+    // We do this because of limitations of Mongo's capabilities in limiting fields.
+
+    Tournaments.update(
+      {_id: tournament._id, "rounds.index": roundToDeactivate.index},
+      {$set: {"rounds.$.state": roundToDeactivate.state, "publicRounds": tournament.rounds}}
+    );
+  },
+
   finalizeRound: function(roundIndex) {
     var tournament = getOwnerTournament.call(this);
     var roundToFinalize = _.find(tournament.rounds, function(round) {
