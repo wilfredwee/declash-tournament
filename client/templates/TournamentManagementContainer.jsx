@@ -1288,6 +1288,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
               onDrop={this.onDrop.bind(null, room)}
               room={room}
               teams={this.state.tournament.teams}
+              rooms={this.state.tournament.rounds[this.props.roundIndex].rooms}
               roundIndex={this.props.roundIndex}/>
         );
       }.bind(this));

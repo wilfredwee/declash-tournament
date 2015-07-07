@@ -665,5 +665,38 @@ Meteor.methods({
       changeActiveTeam(teamToSwapOut, teamToSwapIn, roundIndex);
       changeRoom(round.rooms, teamToSwapOut, teamToSwapIn, roundIndex);
     }
+  },
+
+  swapRoomsForRound: function(room1, room2, roundIndex) {
+    var tournament = getOwnerTournament.call(this);
+
+    if(!ValidatorHelper.canSwapRooms(tournament, roundIndex, room1, room2)) {
+      throw new Meteor.Error("invalidAction", "Cannot swap these rooms.");
+    }
+
+    var round = _.find(tournament.rounds, function(round) {
+      return round.index === roundIndex;
+    });
+
+    room1 = _.find(round.rooms, function(room) {
+      return room.locationId === room1.locationId;
+    });
+
+    room2 = _.find(round.rooms, function(room) {
+      return room.locationId === room2.locationId;
+    });
+
+    var room1Location = room1.locationId;
+    var room2Location = room2.locationId;
+
+    room1.locationId = room2Location;
+    room2.locationId = room1Location;
+
+    Tournaments.update(
+      {_id: tournament._id, "rounds.index": round.index},
+      {$set: {"rounds.$.rooms": round.rooms}},
+      {validate: false, filter: false}
+    );
+
   }
 });

@@ -38,6 +38,24 @@ DeclashApp.client.templates.RoomComponent = (function() {
       return true;
     },
 
+    openRoomSwapDialog: function() {
+      if(!this.props.getDragData) {
+        return;
+      }
+
+      var self = this;
+
+      var modalDOM = $("<div>").modal();
+
+      React.render(<RoomSwapDialogComponent
+        roundIndex={this.props.roundIndex}
+        swappingRoom={this.props.room}
+        rooms={this.props.rooms}
+        modalDOM={modalDOM} />,
+        modalDOM[0]
+      );
+    },
+
     openSwapDialog: function(team) {
       if(!this.props.getDragData) {
         return;
@@ -55,8 +73,14 @@ DeclashApp.client.templates.RoomComponent = (function() {
         teams={this.props.teams} />,
         modalDOM[0]
       );
+    },
 
-
+    renderRoomLocation: function(room, roundIndex) {
+      return (
+        <h3 className="ui horizontal header divider">
+          <a onClick={this.openRoomSwapDialog} href="" className="roomLink ui link">{room.locationId}</a>
+        </h3>
+      );
     },
 
     renderTeamsForRoom: function(room, roundIndex) {
@@ -84,12 +108,12 @@ DeclashApp.client.templates.RoomComponent = (function() {
         <div>
           <div className="ui stackable two column celled grid">
             <div className="two column row">
-              <div className="column"><a onClick={this.openSwapDialog.bind(this, OGTeam)} href="" className="roomTeam ui link"><strong>OG: </strong>{OGTeam.name} ({getTotalResultForTeam(OGTeam)})</a></div>
-              <div className="column"><a onClick={this.openSwapDialog.bind(this, OOTeam)} href="" className="roomTeam ui link"><strong>OO: </strong>{OOTeam.name} ({getTotalResultForTeam(OOTeam)})</a></div>
+              <div className="column"><a onClick={this.openSwapDialog.bind(this, OGTeam)} href="" className="roomLink ui link"><strong>OG: </strong>{OGTeam.name} ({getTotalResultForTeam(OGTeam)})</a></div>
+              <div className="column"><a onClick={this.openSwapDialog.bind(this, OOTeam)} href="" className="roomLink ui link"><strong>OO: </strong>{OOTeam.name} ({getTotalResultForTeam(OOTeam)})</a></div>
             </div>
             <div className="two column row">
-              <div className="column"><a onClick={this.openSwapDialog.bind(this, CGTeam)} href="" className="roomTeam ui link"><strong>CG: </strong>{CGTeam.name} ({getTotalResultForTeam(CGTeam)})</a></div>
-              <div className="column"><a onClick={this.openSwapDialog.bind(this, COTeam)} href="" className="roomTeam ui link"><strong>CO: </strong>{COTeam.name} ({getTotalResultForTeam(COTeam)})</a></div>
+              <div className="column"><a onClick={this.openSwapDialog.bind(this, CGTeam)} href="" className="roomLink ui link"><strong>CG: </strong>{CGTeam.name} ({getTotalResultForTeam(CGTeam)})</a></div>
+              <div className="column"><a onClick={this.openSwapDialog.bind(this, COTeam)} href="" className="roomLink ui link"><strong>CO: </strong>{COTeam.name} ({getTotalResultForTeam(COTeam)})</a></div>
             </div>
           </div>
         </div>
@@ -135,12 +159,117 @@ DeclashApp.client.templates.RoomComponent = (function() {
             onMouseUp={this.props.onMouseUp}
             style={this.props.style}
           >
-            <h3 className="ui horizontal header divider">{this.props.room.locationId}</h3>
+            {this.renderRoomLocation(this.props.room, this.props.roundIndex)}
             {this.renderTeamsForRoom(this.props.room, this.props.roundIndex)}
             <h5 className="ui horizontal header divider">Judges</h5>
             <div className="ui celled vertically divided grid">
               {this.renderJudgesForRoom(this.props.room, this.props.roundIndex)}
             </div>
+          </div>
+        </div>
+      );
+    }
+  });
+
+  var RoomSwapDialogComponent = ReactMeteor.createClass({
+    getMeteorState: function() {
+      return {
+        roomToSwapIn: undefined
+      };
+    },
+
+    componentDidMount: function() {
+      var self = this;
+
+      var modal = $(".ui.modal").modal({
+        closable: false,
+        detachable: false,
+        onApprove: function() {
+          if(!self.state.roomToSwapIn) {
+            return;
+          }
+
+          Meteor.call("swapRoomsForRound", self.props.swappingRoom, self.state.roomToSwapIn, self.props.roundIndex, function(err, result) {
+            // TODO:
+            if(err) {
+              alert(err.reason);
+            }
+          });
+        },
+        onHidden: function() {
+          React.unmountComponentAtNode(self.props.modalDOM[0]);
+          $(this).remove();
+        }
+      });
+
+      modal.modal("show");
+
+      var searchRooms = _.chain(this.props.rooms)
+        .map(function(room) {
+          return {title: room.locationId};
+        })
+        .filter(function(searchRoom) {
+          return searchRoom.title !== self.props.swappingRoom.locationId;
+        })
+        .value();
+
+      $(".ui.local.search.swaprooms").search({
+        source: searchRooms,
+        searchFields: [
+          "title"
+        ],
+        onSelect: function(result) {
+          var roomToSwapIn = _.find(self.props.rooms, function(room) {
+            return room.locationId === result.title;
+          });
+
+          self.setState({
+            roomToSwapIn: roomToSwapIn
+          });
+        }
+      });
+    },
+
+    render: function() {
+      var content =  (
+        <div className="ui local search swaprooms">
+          <div className="ui icon input">
+            <input className="prompt" placeholder={"Search for rooms"} type="text" />
+            <i className="search icon"></i>
+          </div>
+          <div className="results"></div>
+        </div>
+      );
+
+      var informMessage = "Please select a room to swap.";
+      if(this.state.roomToSwapIn) {
+        informMessage = "Swapping the rooms " + this.props.swappingRoom.locationId +
+          " and " + this.state.roomToSwapIn.locationId + ". " +
+          "Proceed?"
+      }
+
+      return (
+        <div className="ui modal">
+          <i className="close icon"></i>
+          <div className="header">
+            Swapping {this.props.swappingRoom.locationId}
+          </div>
+          <div className="content">
+            <div className="ui grid">
+              <div className="column">
+                <div className="row">
+                  {content}
+                  <br />
+                </div>
+                <div className="row">
+                  <span>{informMessage}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="actions">
+            <div className="ui cancel button">Cancel</div>
+            <div className="primary ui ok button">Save</div>
           </div>
         </div>
       );
@@ -161,6 +290,10 @@ DeclashApp.client.templates.RoomComponent = (function() {
         closable: false,
         detachable: false,
         onApprove: function() {
+          if(!self.state.teamToSwapIn) {
+            return;
+          }
+
           Meteor.call("swapTeamsForRound", self.props.teamToSwapOut, self.state.teamToSwapIn, self.props.roundIndex, function(err, result) {
             // TODO:
             if(err) {
@@ -264,7 +397,7 @@ DeclashApp.client.templates.RoomComponent = (function() {
           </div>
           <div className="actions">
             <div className="ui cancel button">Cancel</div>
-            <div className="ui ok button">Save</div>
+            <div className="primary ui ok button">Save</div>
           </div>
         </div>
       );

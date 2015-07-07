@@ -239,6 +239,26 @@ DeclashApp.helpers.ValidatorHelper = (function() {
         return false;
       }
       return true;
+    },
+
+    canSwapRooms: function(tournament, roundIndex, room1, room2) {
+      var round = _.find(tournament.rounds, function(round) {
+        return round.index === roundIndex;
+      });
+
+      if(!round) {
+        return false;
+      }
+
+      if(round.state !== "assigned") {
+        return false;
+      }
+
+      if(room1.locationId === room2.locationId) {
+        return false;
+      }
+
+      return true;
     }
   };
 
