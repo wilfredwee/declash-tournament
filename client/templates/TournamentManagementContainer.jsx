@@ -464,14 +464,14 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
 
       var publicRegistrationText = "Public Registration of Teams/Judges is ";
       if(hasCreatedRound) {
-        publicRegistrationText += "Closed because at least one Round is created."
+        publicRegistrationText += "Closed because at least one Round is created.";
       }
       else {
         if(this.state.tournament.enablePublicRegistration) {
-          publicRegistrationText += "Open."
+          publicRegistrationText += "Open.";
         }
         else {
-          publicRegistrationText += "Closed."
+          publicRegistrationText += "Closed.";
         }
       }
 

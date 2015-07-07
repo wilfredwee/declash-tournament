@@ -245,7 +245,7 @@ DeclashApp.client.templates.RoomComponent = (function() {
       if(this.state.roomToSwapIn) {
         informMessage = "Swapping the rooms " + this.props.swappingRoom.locationId +
           " and " + this.state.roomToSwapIn.locationId + ". " +
-          "Proceed?"
+          "Proceed?";
       }
 
       return (

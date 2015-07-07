@@ -42,7 +42,7 @@ DeclashApp.helpers.InvariantChecker = (function() {
           (4 - this._activeTeams.length).toString() +
           " more teams."
       });
-    };
+    }
   };
 
   InvariantChecker.prototype.checkHasNoLeftOverTeams = function() {
