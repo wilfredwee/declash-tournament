@@ -264,7 +264,31 @@ Meteor.methods({
       throw new Meteor.Error("invalidAction", "Cannot delete this round. Make sure you have the proper conditions.");
     }
 
+    tournament.teams = _.map(tournament.teams, function(team) {
+      team.debaters = _.map(team.debaters, function(debater) {
+        delete debater.scoreForRound[roundIndex];
+
+        return debater;
+      });
+
+      delete team.resultForRound[roundIndex];
+      delete team.roleForRound[roundIndex];
+      delete team.isActiveForRound[roundIndex];
+
+      return team;
+    });
+
+    tournament.judges = _.map(tournament.judges, function(judge) {
+      delete judge.isActiveForRound[roundIndex];
+      delete judge.rankForRound[roundIndex];
+      delete judge.isChairForRound[roundIndex];
+
+      return judge;
+    });
+
+
     Tournaments.update(tournament._id, {$pull: {"rounds": {index: roundIndex}, "publicRounds": {index: roundIndex}}});
+    Tournaments.update(tournament._id, {$set: {teams: tournament.teams, judges: tournament.judges}});
   },
 
   activateRound: function(roundIndex) {

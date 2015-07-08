@@ -44,7 +44,7 @@ DeclashApp.client.manualTestScripts.AddResultToAllTeamsForRound = (function() {
         _.each(team.debaters, function(debater) {
           var score = getRandomScore();
 
-          if(totalScore - score < 0) {
+          if(totalScore <= 92 && totalScore >= 68) {
             score = totalScore;
           }
           else {
