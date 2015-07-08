@@ -48,6 +48,8 @@ DeclashApp.helpers.SchemaHelpers = (function(){
     },
 
     getSchemaInjectedRound: function(tournament, roundIndex) {
+      tournament = JSON.parse(JSON.stringify(tournament));
+
       var round = _.find(tournament.rounds, function(round) {
         return round.index === roundIndex;
       });

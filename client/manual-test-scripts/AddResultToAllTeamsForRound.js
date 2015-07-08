@@ -1,5 +1,6 @@
 "use strict";
 
+// DeclashApp.client.manualTestScripts.AddResultToAllTeamsForRound(Tournaments.findOne({ownerId: Meteor.userId()}), 0)
 DeclashApp.client.manualTestScripts.AddResultToAllTeamsForRound = (function() {
   var getRandomScore = function() {
       return Math.floor(Math.random() * (92 - 68 + 1) + 68);

@@ -117,7 +117,13 @@ DeclashApp.helpers.ValidatorHelper = (function() {
         return typeof result === "number" && everyDebaterHasScore;
       });
 
-      return everyActiveTeamHasResult && round.state === "active";
+      var schemaInjectedRound = SchemaHelpers.getSchemaInjectedRound(tournament, roundIndex);
+
+      var roomScoresAddUp = _.every(schemaInjectedRound.rooms, function(room) {
+        return this.doesRoomScoresAddUp(room.teams, roundIndex);
+      }.bind(this));
+
+      return everyActiveTeamHasResult && roomScoresAddUp && round.state === "active";
     },
 
     canEditMotion: function(tournament, roundIndex) {

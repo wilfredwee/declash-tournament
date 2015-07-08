@@ -252,12 +252,13 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
     },
 
     finalizeCurrentRound: function() {
-      Meteor.call("finalizeRound", this.props.currentRoundIndex, function(err, result) {
-        // TODO:
-        if(err) {
-          alert(err.reson);
-        }
-      });
+      var finalizeRoundModalDOM = $("<div>").modal();
+
+      React.render(<FinalizeRoundModal
+        roundIndex={this.props.currentRoundIndex}
+        modalDOM={finalizeRoundModalDOM} />,
+        finalizeRoundModalDOM[0]
+      );
     },
 
     setToEditMode: function(e) {
@@ -394,6 +395,51 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
           <div className="actions">
             <div className="ui cancel button">No</div>
             <div className="negative ui ok button">Yes, delete the round.</div>
+          </div>
+        </div>
+      );
+    }
+  });
+
+  var FinalizeRoundModal = ReactMeteor.createClass({
+    componentDidMount: function() {
+      var self = this;
+
+      $(".ui.modal").modal({
+        closable: true,
+        detachable: false,
+        onApprove: function() {
+          Meteor.call("finalizeRound", self.props.roundIndex, function(err, result) {
+            // TODO
+            if(err) {
+              alert(err.reason);
+            }
+          });
+        },
+        onHidden: function() {
+          React.unmountComponentAtNode(self.props.modalDOM[0]);
+          $(this).remove();
+        }
+      })
+      .modal("show");
+
+    },
+
+    render: function() {
+      return (
+        <div className="ui modal">
+          <i className="close icon"></i>
+          <div className="header">
+            Finalize Round
+          </div>
+          <div className="content">
+            <div className="description">
+              Are you sure you want to finalize Round {this.props.roundIndex + 1}? No more changes can be made for this round.
+            </div>
+          </div>
+          <div className="actions">
+            <div className="ui cancel button">No</div>
+            <div className="negative ui ok button">Yes, finalize the round.</div>
           </div>
         </div>
       );
