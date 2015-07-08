@@ -48,6 +48,13 @@ DeclashApp.client.manualTestScripts.AddResultToAllTeamsForRound = (function() {
             score = totalScore;
           }
           else {
+            var nextScore = totalScore - score;
+
+            while(nextScore > 92 || nextScore < 68) {
+              score = getRandomScore();
+              nextScore = totalScore - score;
+            }
+
             totalScore -= score;
           }
 
@@ -55,18 +62,18 @@ DeclashApp.client.manualTestScripts.AddResultToAllTeamsForRound = (function() {
         });
       });
 
-      var filteredTeamGuids = _.map(teams, function(team) {
-        return team.guid;
+      var filteredTeamGuids = _.map(teams, function(filterTeam) {
+        return filterTeam.guid;
       });
 
-      tournament.teams = _.map(tournament.teams, function(team) {
-        if(_.contains(filteredTeamGuids, team.guid)) {
+      tournament.teams = _.map(tournament.teams, function(tournTeam) {
+        if(_.contains(filteredTeamGuids, tournTeam.guid)) {
           return _.find(teams, function(updatedTeam) {
-            return updatedTeam.guid === team.guid;
+            return updatedTeam.guid === tournTeam.guid;
           });
         }
 
-        return team;
+        return tournTeam;
       });
     });
 
