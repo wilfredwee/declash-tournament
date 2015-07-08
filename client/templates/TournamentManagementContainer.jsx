@@ -930,6 +930,8 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
 
       var dataToBeChanged = _.chain(uniqueRowIndexes)
         .map(function(index) {
+          index = hot.sortOrder === undefined? index : hot.sortIndex[index][0];
+
           var data = hot.getSourceDataAtRow(index);
 
           var hasIncompleteData = _.some(data, function(element) {

@@ -90,15 +90,6 @@ DeclashApp.client.templates.RoomComponent = (function() {
         });
       }
 
-      function getTotalResultForTeam(team) {
-        return _.reduce(team.resultForRound, function(prev, curr) {
-          prev = typeof prev === "number"? prev : 0;
-          curr = typeof curr === "number"? curr : 0;
-
-          return prev + curr;
-        }, 0);
-      }
-
       var OGTeam = getTeamForRole("OG");
       var OOTeam = getTeamForRole("OO");
       var CGTeam = getTeamForRole("CG");
@@ -108,12 +99,12 @@ DeclashApp.client.templates.RoomComponent = (function() {
         <div>
           <div className="ui stackable two column celled grid">
             <div className="two column row">
-              <div className="column"><a onClick={this.openSwapDialog.bind(this, OGTeam)} href="" className="roomLink ui link"><strong>OG: </strong>{OGTeam.name} ({getTotalResultForTeam(OGTeam)})</a></div>
-              <div className="column"><a onClick={this.openSwapDialog.bind(this, OOTeam)} href="" className="roomLink ui link"><strong>OO: </strong>{OOTeam.name} ({getTotalResultForTeam(OOTeam)})</a></div>
+              <div className="column"><a onClick={this.openSwapDialog.bind(this, OGTeam)} href="" className="roomLink ui link"><strong>OG: </strong>{OGTeam.name}</a></div>
+              <div className="column"><a onClick={this.openSwapDialog.bind(this, OOTeam)} href="" className="roomLink ui link"><strong>OO: </strong>{OOTeam.name}</a></div>
             </div>
             <div className="two column row">
-              <div className="column"><a onClick={this.openSwapDialog.bind(this, CGTeam)} href="" className="roomLink ui link"><strong>CG: </strong>{CGTeam.name} ({getTotalResultForTeam(CGTeam)})</a></div>
-              <div className="column"><a onClick={this.openSwapDialog.bind(this, COTeam)} href="" className="roomLink ui link"><strong>CO: </strong>{COTeam.name} ({getTotalResultForTeam(COTeam)})</a></div>
+              <div className="column"><a onClick={this.openSwapDialog.bind(this, CGTeam)} href="" className="roomLink ui link"><strong>CG: </strong>{CGTeam.name}</a></div>
+              <div className="column"><a onClick={this.openSwapDialog.bind(this, COTeam)} href="" className="roomLink ui link"><strong>CO: </strong>{COTeam.name}</a></div>
             </div>
           </div>
         </div>
