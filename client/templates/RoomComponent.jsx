@@ -35,7 +35,7 @@ DeclashApp.client.templates.RoomComponent = (function() {
         return !_.isEqual(this.props.room, nextProps.room) || !_.isEqual(this.props.style, nextProps.style);
       }
 
-      return true;
+      return !_.isEqual(this.props, nextProps);
     },
 
     openRoomSwapDialog: function() {

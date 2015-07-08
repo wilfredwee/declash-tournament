@@ -5,17 +5,23 @@
 /* global Handsontable */
 
 
+// Imports
 var ValidatorHelper;
 var SchemaHelpers;
 var ManagementContextConstants;
 var RoomComponent;
 var ConnectDroppable;
+
+// Special variable from imports
+var DroppableRoomComponent;
 Meteor.startup(function() {
   ValidatorHelper = DeclashApp.helpers.ValidatorHelper;
   SchemaHelpers = DeclashApp.helpers.SchemaHelpers;
   ManagementContextConstants = DeclashApp.client.constants.ManagementContextConstants;
   RoomComponent = DeclashApp.client.templates.RoomComponent;
   ConnectDroppable = DeclashApp.client.templates.ConnectDroppable;
+
+  DroppableRoomComponent = ConnectDroppable(RoomComponent);
 });
 
 DeclashApp.client.templates.TournamentManagementContainer = (function() {
@@ -1379,9 +1385,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
     },
 
     renderRooms: function(room) {
-      var DroppableRoomComponent = ConnectDroppable(RoomComponent);
       var roundState = this.state.schemaInjectedRound.state;
-
       return _.map(this.state.schemaInjectedRound.rooms, function(room, roomIndex) {
         if(roundState === "finished") {
           return <RoomComponent key={roomIndex} room={room} roundIndex={this.props.roundIndex} />;
