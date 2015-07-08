@@ -1459,47 +1459,85 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
   var ActiveRoomComponent = ReactMeteor.createClass({
     getMeteorState: function() {
       return {
-        lastUpdate: new Date(),
+        room: this.props.room,
         doesRoomScoresAddUp: ValidatorHelper.doesRoomScoresAddUp(this.props.room.teams, this.props.roundIndex)
       };
     },
 
-    componentDidMount: function() {
-      var current = new Date();
-      this.setState({lastUpdate: current});
-    },
-
     shouldComponentUpdate: function(nextProps, nextState) {
-      var lastUpdate = this.state.lastUpdate || new Date();
-      var current = new Date();
+      if(this.state.doesRoomScoresAddUp !== nextState.doesRoomScoresAddUp) {
+        return true;
+      }
 
-      if((lastUpdate.getTime() - current.getTime() > 10000) && !_.isEqual(this.props, nextProps)) {
-        this.setState({
-          lastUpdate: current
+      var roundIndex = this.props.roundIndex;
+
+      var currentTeams = this.props.room.teams;
+      var nextTeams = nextState.room.teams;
+
+      // length of teams should be the same.
+      var allResultSame = _.every(currentTeams, function(currTeam, index) {
+        var nextTeam = nextTeams[index];
+
+        var resultSame = currTeam.resultForRound[roundIndex] === nextTeam.resultForRound[roundIndex]
+
+        var everyDebaterScoreSame = _.every(currTeam.debaters, function(currDebater, dIndex) {
+          if(!ValidatorHelper.isDebaterScoreWithinRange(currDebater.scoreForRound[roundIndex])) {
+            return true;
+          }
+
+          var nextDebater = nextTeam.debaters[dIndex];
+
+          return currDebater.scoreForRound[roundIndex] === nextDebater.scoreForRound[roundIndex];
         });
 
-        return true;
-      }
-      else if(this.state.doesRoomScoresAddUp !== nextState.doesRoomScoresAddUp) {
-        return true;
+        return resultSame && everyDebaterScoreSame;
+      });
+
+      if(allResultSame) {
+        return false;
       }
 
-      return false;
+      return true;
     },
 
     changeTeamResult: function(team, event) {
+      var roundIndex = this.props.roundIndex;
+
       var inputClassName = "ui mini fluid input";
       var value = event.target.valueAsNumber;
 
+      function doesRoomScoresAddUp(roomTeams) {
+        roomTeams = JSON.parse(JSON.stringify(roomTeams));
+
+        var teamToUpdate = _.find(roomTeams, function(teamInList) {
+          return teamInList.guid === team.guid;
+        });
+
+        teamToUpdate.resultForRound[roundIndex] = value;
+
+        return ValidatorHelper.doesRoomScoresAddUp(roomTeams, roundIndex);
+      }
+
+      this.setState({
+        doesRoomScoresAddUp: doesRoomScoresAddUp(this.state.room.teams)
+      });
 
       if(!ValidatorHelper.isTeamResultWithinRange(value)) {
         event.target.parentElement.className =  inputClassName + " error";
       }
-      else if(ValidatorHelper.isTeamResultDuplicate(this.props.room.teams, team, this.props.roundIndex, value)) {
-        event.target.parentElement.className =  inputClassName + " error";
-      }
       else {
         event.target.parentElement.className =  inputClassName;
+
+        var teamToMutate = _.find(this.state.room.teams, function(propTeam) {
+          return propTeam.guid === team.guid;
+        });
+
+        teamToMutate.resultForRound[this.props.roundIndex] = value;
+
+        this.setState({
+          room: this.state.room
+        });
+
 
         Meteor.call("changeTeamResult", team, this.props.roundIndex, value, function(err, result) {
           // TODO:
@@ -1517,6 +1555,8 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       var value = event.target.valueAsNumber;
 
       function doesRoomScoresAddUp(roomTeams) {
+        roomTeams = JSON.parse(JSON.stringify(roomTeams));
+
         var teamToUpdate = _.find(roomTeams, function(teamInList) {
           return teamInList.guid === team.guid;
         });
@@ -1527,7 +1567,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       }
 
       this.setState({
-        doesRoomScoresAddUp: doesRoomScoresAddUp(this.props.room.teams)
+        doesRoomScoresAddUp: doesRoomScoresAddUp(this.state.room.teams)
       });
 
       if(!ValidatorHelper.isDebaterScoreWithinRange(value)) {
@@ -1536,11 +1576,21 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       else {
         event.target.parentElement.className = inputClassName;
 
+        var teamToMutate = _.find(this.state.room.teams, function(propTeam) {
+          return propTeam.guid === team.guid;
+        });
+
+        teamToMutate.debaters[debaterIndex].scoreForRound[this.props.roundIndex] = value;
+
+        this.setState({
+          room: this.state.room
+        });
+
         Meteor.call("changeDebaterScore", team, debaterIndex, this.props.roundIndex, value, function(err, result) {
           // TODO
-          // if(err) {
-          //   alert(err.reason);
-          // }
+          if(err) {
+            alert(err.reason);
+          }
         });
       }
     },
@@ -1589,7 +1639,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
                         <div className="ui two column grid">
                           <div className="two column row">
                             <div className="ten wide column">
-                              <span><strong>{teamPosition + ": "} </strong><u>{team.name}</u></span>
+                              <span><strong>{teamPosition + ": "} </strong><u>{team.name + " (" + team.resultForRound[this.props.roundIndex] + ")"}</u></span>
                             </div>
                             <div className="six wide column">
                               <div className="ui mini fluid input">
@@ -1599,7 +1649,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
                           </div>
                           <div className="two column row">
                             <div className="ten wide column">
-                              <span>{team.debaters[0].name}:</span>
+                              <span>{team.debaters[0].name + " (" + team.debaters[0].scoreForRound[this.props.roundIndex] + ")"}:</span>
                             </div>
                             <div className="six wide column">
                               <div className="ui mini fluid input">
@@ -1609,7 +1659,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
                           </div>
                           <div className="two column row">
                             <div className="ten wide column">
-                              <span>{team.debaters[1].name}:</span>
+                              <span>{team.debaters[1].name + " (" + team.debaters[1].scoreForRound[this.props.roundIndex] + ")"}:</span>
                             </div>
                             <div className="six wide column">
                               <div className="ui mini fluid input">

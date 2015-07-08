@@ -146,7 +146,8 @@ DeclashApp.helpers.ValidatorHelper = (function() {
 
     doesRoomScoresAddUp: function(teamsInRoom, roundIndex) {
       var hasEmpties = _.some(teamsInRoom, function(team) {
-        var hasEmptyResult = typeof team.resultForRound[roundIndex] !== "number";
+        var result = team.resultForRound[roundIndex];
+        var hasEmptyResult = typeof result !== "number" || isNaN(result);
 
         var hasEmptyScore = _.some(team.debaters, function(debater) {
           return typeof debater.scoreForRound[roundIndex] !== "number";
@@ -156,6 +157,22 @@ DeclashApp.helpers.ValidatorHelper = (function() {
       });
 
       if(hasEmpties) {
+        return false;
+      }
+
+      var uniqueResults = [];
+      var hasDuplicateResult = _.some(teamsInRoom, function(team) {
+        var teamResult = team.resultForRound[roundIndex];
+
+        if(_.contains(uniqueResults, teamResult)) {
+          return true;
+        }
+
+        uniqueResults.push(teamResult);
+        return false;
+      });
+
+      if(hasDuplicateResult) {
         return false;
       }
 
@@ -209,35 +226,11 @@ DeclashApp.helpers.ValidatorHelper = (function() {
       }
 
       // This is BP Specific. Update when necessary.
-      var resultWithinRange =  this.isTeamResultWithinRange(resultValue);
-
-      var isResultDuplicate = (function() {
-        var room = _.find(round.rooms, function(room) {
-          return _.some(room.teams, function(teamGuid) {
-            return teamGuid === teamToUpdate.guid;
-          });
-        });
-
-        var roomTeams = _.map(room.teams, function(teamGuid) {
-          return _.find(tournament.teams, function(team) {
-            return team.guid === teamGuid;
-          });
-        });
-
-        return this.isTeamResultDuplicate(roomTeams, teamToUpdate, roundIndex, resultValue);
-      }.bind(this))();
-
-      return resultWithinRange && !isResultDuplicate;
+      return this.isTeamResultWithinRange(resultValue);
     },
 
     isTeamResultWithinRange: function(resultValue) {
       return resultValue >= 0 && resultValue <= 3;
-    },
-
-    isTeamResultDuplicate: function(roomTeams, teamToUpdate, roundIndex, resultValue) {
-      return _.some(roomTeams, function(team) {
-        return team.resultForRound[roundIndex] === resultValue && team.guid !== teamToUpdate.guid;
-      });
     },
 
     canSwapTeams: function(tournament, roundIndex, teamToSwapOut, teamToSwapIn) {
