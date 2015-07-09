@@ -118,7 +118,7 @@ DeclashApp.client.templates.RoomComponent = (function() {
         if(this.props.getDragData) {
           return (
             <div className="row" key={judgeIndex}>
-              <div className="column">
+              <div className="column" style={{margin: 0}}>
                 <DraggableJudgeComponent
                   onDragStart={this.props.onDragStart.bind(null, judge, roundIndex)}
                   onDragStop={this.props.onDragStop}
@@ -133,7 +133,7 @@ DeclashApp.client.templates.RoomComponent = (function() {
 
         return (
           <div className="row" key={judgeIndex}>
-            <div className="column">
+            <div className="column" style={{margin: 0}}>
               <JudgeComponent key={judgeIndex} judge={judge} roundIndex={roundIndex} />
             </div>
           </div>
@@ -173,7 +173,7 @@ DeclashApp.client.templates.RoomComponent = (function() {
       var self = this;
 
       var modal = $(".ui.modal").modal({
-        closable: false,
+        closable: true,
         detachable: false,
         onApprove: function() {
           if(!self.state.roomToSwapIn) {
@@ -278,7 +278,7 @@ DeclashApp.client.templates.RoomComponent = (function() {
       var self = this;
 
       var modal = $(".ui.modal").modal({
-        closable: false,
+        closable: true,
         detachable: false,
         onApprove: function() {
           if(!self.state.teamToSwapIn) {

@@ -10,19 +10,6 @@ DeclashApp.client.templates.BaseComponent = (function() {
   });
 
   var NavBar = ReactMeteor.createClass({
-    render: function() {
-      return (
-            <div className="ui inverted fixed menu navbar page grid">
-              <a href="/" className="brand item">DeClash</a>
-              <div className="right menu">
-                <UserManagementButtons />
-              </div>
-            </div>
-      );
-    }
-  });
-
-  var UserManagementButtons = ReactMeteor.createClass({
     getMeteorState: function() {
       return {
         user: Meteor.user()
@@ -43,16 +30,21 @@ DeclashApp.client.templates.BaseComponent = (function() {
       var message = this.state.user? "Logout" : "Login";
 
       var logins = <a className="active item" href="" onClick={this.handleLogins}>{message}</a>;
-      if(this.state.user) {
-        return (
-          <div><a className="item" href="/management">Management</a>{logins}</div>
-        );
-      }
+
+      var stateDependentButton = this.state.user?
+        <a className="item" href="/management">Management</a>
+        :<a className="item" href="/register">Register</a>
+
       return (
-        <div>
-          <a className="item" href="/register">Register</a>
-          {logins}
-        </div>
+            <div className="ui fixed inverted menu">
+              <div className="ui container">
+                <a href="/" className="item">DeClash</a>
+                <div className="right menu">
+                  {stateDependentButton}
+                  {logins}
+                </div>
+              </div>
+            </div>
       );
     }
   });

@@ -144,9 +144,9 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
         <div>
           <div className="row">
             <div className="ui menu">
-              <div tabIndex="-1" className="ui simple pointing dropdown link item">
-                <i tabIndex="0" className="dropdown icon"></i>
+              <div tabIndex="-1" className="ui simple dropdown item">
                 <span className="text">Management</span>
+                <i tabIndex="0" className="dropdown icon"></i>
                 <div tabIndex="-1" className="menu">
                   <div className="item" onClick={this.switchContainerContextType.bind(this, ManagementContextConstants.TEAM_CONTEXT.type)}>Teams</div>
                   <div className="item" onClick={this.switchContainerContextType.bind(this, ManagementContextConstants.JUDGE_CONTEXT.type)}>Judges</div>
@@ -155,9 +155,9 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
               </div>
               {this.props.tournament.rounds.map(function(round) {
                 return (
-                  <div key={round.index} tabIndex="-1" className="ui simple pointing dropdown link item">
-                    <i tabIndex="0" className="dropdown icon"></i>
+                  <div key={round.index} tabIndex="-1" className="ui simple dropdown item">
                     <span className="text">Round {round.index + 1}</span>
+                    <i tabIndex="0" className="dropdown icon"></i>
                     <div tabIndex="-1" className="menu">
                       <div className="item" onClick={this.switchContainerContextType.bind(this, ManagementContextConstants.TEAM_ROUND_CONTEXT.type, round.index)}>Teams</div>
                       <div className="item" onClick={this.switchContainerContextType.bind(this, ManagementContextConstants.JUDGE_ROUND_CONTEXT.type, round.index)}>Judges</div>
@@ -174,9 +174,9 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
                 );
               }.bind(this))}
               <div onClick={createRoundClassName.indexOf("disabled") >= 0? undefined : this.createRound} className={createRoundClassName}>Create a Round</div>
-              <div tabIndex="-1" className="ui simple pointing dropdown link item">
-                <i tabIndex="0" className="dropdown icon"></i>
+              <div tabIndex="-1" className="ui simple dropdown item">
                 <span className="text">Tab Results</span>
+                <i tabIndex="0" className="dropdown icon"></i>
                 <div tabIndex="-1" className="menu">
                   <div className="item" onClick={this.switchContainerContextType.bind(this, ManagementContextConstants.TEAM_TAB_CONTEXT.type)}>Teams</div>
                   <div className="item" onClick={this.switchContainerContextType.bind(this, ManagementContextConstants.SPEAKER_TAB_CONTEXT.type)}>Speakers</div>

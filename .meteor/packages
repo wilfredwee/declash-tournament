@@ -7,13 +7,13 @@
 meteor-platform
 sanjo:jasmine
 velocity:html-reporter
-semantic:ui
 flemay:less-autoprefixer
 iron:router
 accounts-password
 underscore
 accounts-ui
-semantic:ui-data
 alanning:roles
 aldeed:collection2
 reactjs:react
+semantic:ui
+semantic:ui-data

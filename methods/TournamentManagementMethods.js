@@ -442,7 +442,8 @@ Meteor.methods({
 
     Tournaments.update(
       {_id: tournament._id, "rounds.index": roundIndex},
-      {$set: {"rounds.$.rooms": tournament.rounds[roundIndex].rooms}});
+      {$set: {"rounds.$.rooms": tournament.rounds[roundIndex].rooms}}
+    );
   },
 
   changeDebaterScore: function(team, debaterIndex, roundIndex, scoreValue) {
