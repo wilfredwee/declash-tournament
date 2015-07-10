@@ -2238,8 +2238,10 @@ var sampleTournament = {
 Meteor.startup(function() {
   if(Meteor.isServer) {
     var tournament = Tournaments.find().fetch();
+    var users = Meteor.users.find().fetch();
 
-    if(tournament.length > 0)  {
+    // change it to specific user/tournament.
+    if(tournament.length > 0 && users.length > 0)  {
       return;
     }
 
