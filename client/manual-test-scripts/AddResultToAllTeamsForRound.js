@@ -29,9 +29,9 @@ DeclashApp.client.manualTestScripts.AddResultToAllTeamsForRound = (function() {
       .sort();
 
 
-      var teams = _.filter(tournament.teams, function(team) {
+      var teams = _.shuffle(_.filter(tournament.teams, function(team) {
         return _.contains(room.teams, team.guid);
-      });
+      }));
 
       _.each(teams, function(team) {
         // our result is like an index, so use it as so.
