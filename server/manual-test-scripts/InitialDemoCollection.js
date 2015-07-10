@@ -2241,7 +2241,7 @@ Meteor.startup(function() {
     var users = Meteor.users.find().fetch();
 
     // change it to specific user/tournament.
-    if(tournament.length > 0 && users.length > 0)  {
+    if(tournament.length > 0 || users.length > 0)  {
       return;
     }
 
@@ -2252,15 +2252,15 @@ Meteor.startup(function() {
     demoUser.profile.name = "Demo User";
     demoUser.profile.institution = "Demo Institution";
 
-    var createdUser = Accounts.createUser(demoUser);
+    var user = Accounts.createUser(demoUser);
 
-    if(!createUser) {
+    if(!user) {
       return;
     }
 
-    Roles.addUsersToRoles(createdUser, "tab");
+    Roles.addUsersToRoles(user, "tab");
 
-    sampleTournament.ownerId = createdUser;
+    sampleTournament.ownerId = user;
     sampleTournament.createdAt = new Date();
 
     var urlId = sampleTournament.urlId;
