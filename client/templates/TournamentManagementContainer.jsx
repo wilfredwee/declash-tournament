@@ -289,6 +289,12 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       });
     },
 
+    handleMotionCancel: function(e) {
+      e.preventDefault();
+
+      Session.set("isEditMode", false);
+    },
+
     render: function() {
       function addRowToItem(uiItem) {
         return uiItem? <div className="row">{uiItem}<br /></div> : undefined;
@@ -302,8 +308,13 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
 
       var motionInputForm = (
         <form className="ui form" onSubmit={this.handleMotionSubmit}>
+          <div className="field">
           <input type="text" ref="motionText" placeholder="Enter the Motion" />
-          <input type="submit" className="ui submit button" value="Save" />
+          </div>
+          <div className="field">
+          <input type="submit" className="primary ui submit button" value="Save" />
+          <input type="button" className="ui button" onClick={this.handleMotionCancel} value="Cancel" />
+          </div>
         </form>
       );
 
@@ -326,35 +337,63 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
         </div>
       );
 
-      var assignRoundButton = ValidatorHelper.canAssignRound(tournament, currentRoundIndex)?
-        <button className="ui primary button" onClick={this.assignCurrentRound}>Assign Round</button>
-        : undefined;
-
       var deleteRoundButton = ValidatorHelper.canDeleteRound(tournament, currentRoundIndex)?
         <button className="ui negative button" onClick={this.deleteCurrentRound}>Delete Round</button>
         : undefined;
 
-      var activateRoundButton = ValidatorHelper.canActivateRound(tournament, currentRoundIndex)?
-        <button className="ui positive button" onClick={this.activateCurrentRound}>Activate Round and Publish Assignment</button>
-        : undefined;
+      var roundLifecycleButton = (function() {
+        var currState = currentRound.state;
 
-      var deactivateRoundButton = ValidatorHelper.canDeactivateRound(tournament, currentRoundIndex)?
-        <button className="ui negative button" onClick={this.deactivateCurrentRound}>Deactivate Round</button>
-        : undefined;
+        if(currState === "initial") {
+          var buttonClass = ValidatorHelper.canAssignRound(tournament, currentRoundIndex)?
+            "ui primary button"
+            : "ui disabled primary button";
 
-      var finalizeRoundButton = ValidatorHelper.canFinalizeRound(tournament, currentRoundIndex)?
-        <button className="ui positive button" onClick={this.finalizeCurrentRound}>Finalize Round {currentRoundIndex + 1}</button>
-        : undefined;
+          return <button className={buttonClass} onClick={this.assignCurrentRound}>Assign Round</button>
+        }
+        else if(currState === "assigned") {
+          var buttonClass = ValidatorHelper.canActivateRound(tournament, currentRoundIndex)?
+            "ui positive button"
+            : "ui disabled positive button";
+
+          return <button className={buttonClass} onClick={this.activateCurrentRound}>Activate Round and Publish Assignment</button>
+        }
+        else if(currState === "active") {
+          var deactivateButtonClass = ValidatorHelper.canDeactivateRound(tournament, currentRoundIndex)?
+            "ui negative button"
+            : "ui disabled negative button";
+
+          var deactivateButton = <button className={deactivateButtonClass} onClick={this.deactivateCurrentRound}>Deactivate Round</button>
+
+          var finalizeButtonClass = ValidatorHelper.canFinalizeRound(tournament, currentRoundIndex)?
+            "ui positive button"
+            : "ui disabled positive button";
+
+          var finalizeButton = <button className={finalizeButtonClass} onClick={this.finalizeCurrentRound}>Finalize Round</button>
+
+          return <div>{deactivateButton}{finalizeButton}</div>
+        }
+        else {
+          return undefined;
+        }
+
+      }.bind(this))();
+
 
       return (
         <div>
           {addRowToItem(manageRoundLabel)}
           {addRowToItem(motionSegment)}
-          {addRowToItem(assignRoundButton)}
-          {addRowToItem(deleteRoundButton)}
-          {addRowToItem(activateRoundButton)}
-          {addRowToItem(deactivateRoundButton)}
-          {addRowToItem(finalizeRoundButton)}
+          <div className="row">
+            <div className="ui two column grid">
+            <div className="left floated left aligned column">
+              {roundLifecycleButton}
+            </div>
+            <div className="right floated right aligned column">
+              {deleteRoundButton}
+            </div>
+            </div>
+          </div>
         </div>
       );
     }
