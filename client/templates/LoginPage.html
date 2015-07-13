@@ -1,7 +1,14 @@
 <template name="LoginPage">
-  <div class="ui middle aligned center aligned grid login">
+  <div class="ui middle aligned center aligned two column grid login">
     <div class="column loginColumn">
       {{> atForm}}
+    </div>
+    <div class="ui vertical divider">
+      Or
+    </div>
+    <div class="column loginColumn">
+      <h3 class="ui header">Want to register as a participant?</h3>
+      <a href="/tournaments">Go to Tournaments List Page</a>
     </div>
   </div>
 </template>

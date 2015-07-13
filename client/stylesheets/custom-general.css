@@ -16,6 +16,6 @@
 }
 
 .grid.login {
-  justify-content: center;
+  justify-content: space-around;
   height: 100%;
 }
