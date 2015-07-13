@@ -10,7 +10,13 @@ DeclashApp.client.templates.pages.ParticipantRegistrationPageContainer = (functi
 
   var ParticipantRegistrationPageContainer = ReactMeteor.createClass({
     render: function() {
-      return <ParticipantRegistrationPageBody tournamentId={this.props.tournamentId} />;
+      return (
+        <div className="ui stackable container grid">
+          <div className="column">
+            <ParticipantRegistrationPageBody tournamentId={this.props.tournamentId} />
+          </div>
+        </div>
+      );
     }
   });
 

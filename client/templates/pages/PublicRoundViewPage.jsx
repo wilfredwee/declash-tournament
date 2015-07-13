@@ -11,7 +11,13 @@ Meteor.startup(function() {
 DeclashApp.client.templates.pages.PublicRoundViewPageContainer = (function() {
   var PublicRoundViewPageContainer = ReactMeteor.createClass({
     render: function() {
-      return <RoundViewBody urlId={this.props.tournamentUrlId} roundIndex={this.props.roundIndex} />;
+      return (
+        <div className="ui stackable container grid">
+          <div className="column">
+           <RoundViewBody urlId={this.props.tournamentUrlId} roundIndex={this.props.roundIndex} />;
+          </div>
+        </div>
+      )
     }
   });
 

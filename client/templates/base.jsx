@@ -27,20 +27,20 @@ DeclashApp.client.templates.BaseComponent = (function() {
     },
 
     render: function() {
-      var message = this.state.user? "Logout" : "Login";
+      var message = this.state.user? "Logout" : "Login/Register";
 
       var logins = <a className="active item" href="" onClick={this.handleLogins}>{message}</a>;
 
-      var stateDependentButton = this.state.user?
+      var managementButton = this.state.user?
         <a className="item" href="/management">Management</a>
-        :<a className="item" href="/register">Register</a>
+        :undefined
 
       return (
             <div className="ui fixed inverted menu">
               <div className="ui container">
                 <a href="/" className="item">DeClash</a>
                 <div className="right menu">
-                  {stateDependentButton}
+                  {managementButton}
                   {logins}
                 </div>
               </div>

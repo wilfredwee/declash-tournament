@@ -5,3 +5,17 @@
 /* Go to default color on hover.*/
 .roomLink:hover {
 }
+
+.reactComponentDiv > .grid {
+  height: 100%;
+  padding-top: 2.75rem;
+}
+
+.column.loginColumn {
+  max-width: 450px;
+}
+
+.grid.login {
+  justify-content: center;
+  height: 100%;
+}

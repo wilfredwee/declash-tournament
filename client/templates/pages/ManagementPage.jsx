@@ -12,7 +12,13 @@ Meteor.startup(function() {
 DeclashApp.client.templates.pages.ManagementPageContainer = (function() {
   var ManagementPageContainer = ReactMeteor.createClass({
     render: function() {
-      return <ManagementBody />;
+      return (
+        <div className="ui stackable container grid">
+          <div className="column">
+            <ManagementBody />
+          </div>
+        </div>
+      );
     }
   });
 

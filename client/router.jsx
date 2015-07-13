@@ -2,6 +2,7 @@
 
 function renderReactPage(component) {
   React.render(component, document.getElementById("ReactComponentDiv"));
+  this.render(null);
   // router will keep warning that we did not call this.next() here.
   // we can't call this.stop() because it'll kill our reactive state.
 }
@@ -15,48 +16,39 @@ Router.onBeforeAction(function() {
     this.next();
   }
   else if(!Meteor.userId()) {
-    renderReactPage(<DeclashApp.client.templates.pages.LoginPageContainer />);
+    renderReactPage.call(this, <DeclashApp.client.templates.pages.LoginPageContainer />);
   }
   else {
     this.next();
   }
 });
 
-Router.route("/register", function() {
-  renderReactPage(<DeclashApp.client.templates.pages.TabRegistrationPageContainer />);
-});
-
 Router.route("/login", function() {
-  if(!Meteor.user()) {
-    renderReactPage(<DeclashApp.client.templates.pages.LoginPageContainer />);
-  }
-  else {
-    this.redirect("/");
-  }
+  this.render("LoginPage");
 });
 
 Router.route("/management", function() {
-  renderReactPage(<DeclashApp.client.templates.pages.ManagementPageContainer />);
+  renderReactPage.call(this, <DeclashApp.client.templates.pages.ManagementPageContainer />);
 });
 
 Router.route("/", function() {
-  renderReactPage(<DeclashApp.client.templates.pages.HomePageContainer />);
+  renderReactPage.call(this, <DeclashApp.client.templates.pages.HomePageContainer />);
 });
 
 Router.route("/tournaments", function() {
-  renderReactPage(<DeclashApp.client.templates.pages.TournamentListPageContainer />);
+  renderReactPage.call(this, <DeclashApp.client.templates.pages.TournamentListPageContainer />);
 });
 
 Router.route("/registerParticipants/:tournamentId", function() {
-  renderReactPage(<DeclashApp.client.templates.pages.ParticipantRegistrationPageContainer tournamentId={this.params.tournamentId} />);
+  renderReactPage.call(this, <DeclashApp.client.templates.pages.ParticipantRegistrationPageContainer tournamentId={this.params.tournamentId} />);
 });
 
 Router.route("/tournaments/:tournamentUrlId", function() {
-  renderReactPage(<DeclashApp.client.templates.pages.PublicTournamentPageContainer tournamentUrlId={this.params.tournamentUrlId} />);
+  renderReactPage.call(this, <DeclashApp.client.templates.pages.PublicTournamentPageContainer tournamentUrlId={this.params.tournamentUrlId} />);
 });
 
 Router.route("/tournaments/:tournamentUrlId/:roundIndex", function() {
-  renderReactPage(<DeclashApp.client.templates.pages.PublicRoundViewPageContainer
+  renderReactPage.call(this, <DeclashApp.client.templates.pages.PublicRoundViewPageContainer
     tournamentUrlId={this.params.tournamentUrlId}
     roundIndex={this.params.roundIndex} />
   );

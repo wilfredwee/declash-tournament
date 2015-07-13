@@ -9,7 +9,13 @@ Meteor.startup(function() {
 DeclashApp.client.templates.pages.PublicTournamentPageContainer = (function() {
   var PublicTournamentPageContainer = ReactMeteor.createClass({
     render: function() {
-      return <TournamentPageBody urlId={this.props.tournamentUrlId} />;
+      return (
+        <div className="ui stackable container grid">
+          <div className="column">
+            <TournamentPageBody urlId={this.props.tournamentUrlId} />
+          </div>
+        </div>
+      );
     }
   });
 
@@ -42,26 +48,24 @@ DeclashApp.client.templates.pages.PublicTournamentPageContainer = (function() {
       }
 
       return (
-        <div className="ui stackable column grid">
-          <div className="column">
-            <div className="row">
-              <h1>{this.state.tournament.name}</h1>
-            </div>
-            <br />
-            <br />
-            {participantRegistration}
-            <br />
-            {_.map(this.state.tournament.rounds, function(round, index) {
-              return (
-                <div key={index} className="row">
-                  <a className="ui primary button" href={window.location.origin + "/tournaments/" + this.props.urlId + "/" + round.index.toString()}>
-                    View Round {round.index + 1}
-                  </a>
-                </div>
-              );
-            }.bind(this))}
+            <div>
+              <div className="row">
+                <h1>{this.state.tournament.name}</h1>
+              </div>
+              <br />
+              <br />
+              {participantRegistration}
+              <br />
+              {_.map(this.state.tournament.rounds, function(round, index) {
+                return (
+                  <div key={index} className="row">
+                    <a className="ui primary button" href={window.location.origin + "/tournaments/" + this.props.urlId + "/" + round.index.toString()}>
+                      View Round {round.index + 1}
+                    </a>
+                  </div>
+                );
+              }.bind(this))}
           </div>
-        </div>
       );
     }
   });

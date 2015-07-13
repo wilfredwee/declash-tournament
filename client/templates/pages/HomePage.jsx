@@ -3,7 +3,13 @@
 DeclashApp.client.templates.pages.HomePageContainer = (function() {
   var HomePageContainer = ReactMeteor.createClass({
     render: function() {
-      return <Home />;
+      return (
+        <div className="ui stackable container grid">
+          <div className="column">
+            <Home />
+          </div>
+        </div>
+      );
     }
   });
 
