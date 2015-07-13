@@ -1,3 +1,10 @@
+"use strict";
+/* jshint maxlen:false */
+/* global Tournaments */
+/* global Roles */
+
+
+
 var sampleTournament = {
   "name": "Mock WUDC 2015",
   "maxUsers": 1000,

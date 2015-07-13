@@ -1,6 +1,8 @@
 "use strict";
+/* jshint maxlen:false */
 
 function renderReactPage(component) {
+  /*jshint validthis:true */
   React.render(component, document.getElementById("ReactComponentDiv"));
   this.render(null);
   // router will keep warning that we did not call this.next() here.

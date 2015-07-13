@@ -34,6 +34,8 @@ DeclashApp.client.templates.pages.HomePageContainer = (function() {
     },
 
     render: function() {
+      /* jshint maxlen:false */
+
       var fontStyle = {fontSize: 12};
       return (
         <div>

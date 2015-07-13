@@ -344,34 +344,35 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       var roundLifecycleButton = (function() {
         var currState = currentRound.state;
 
+        var buttonClass;
         if(currState === "initial") {
-          var buttonClass = ValidatorHelper.canAssignRound(tournament, currentRoundIndex)?
+          buttonClass = ValidatorHelper.canAssignRound(tournament, currentRoundIndex)?
             "ui primary button"
             : "ui disabled primary button";
 
-          return <button className={buttonClass} onClick={this.assignCurrentRound}>Assign Round</button>
+          return <button className={buttonClass} onClick={this.assignCurrentRound}>Assign Round</button>;
         }
         else if(currState === "assigned") {
-          var buttonClass = ValidatorHelper.canActivateRound(tournament, currentRoundIndex)?
+          buttonClass = ValidatorHelper.canActivateRound(tournament, currentRoundIndex)?
             "ui positive button"
             : "ui disabled positive button";
 
-          return <button className={buttonClass} onClick={this.activateCurrentRound}>Activate Round and Publish Assignment</button>
+          return <button className={buttonClass} onClick={this.activateCurrentRound}>Activate Round and Publish Assignment</button>;
         }
         else if(currState === "active") {
           var deactivateButtonClass = ValidatorHelper.canDeactivateRound(tournament, currentRoundIndex)?
             "ui negative button"
             : "ui disabled negative button";
 
-          var deactivateButton = <button className={deactivateButtonClass} onClick={this.deactivateCurrentRound}>Deactivate Round</button>
+          var deactivateButton = <button className={deactivateButtonClass} onClick={this.deactivateCurrentRound}>Deactivate Round</button>;
 
           var finalizeButtonClass = ValidatorHelper.canFinalizeRound(tournament, currentRoundIndex)?
             "ui positive button"
             : "ui disabled positive button";
 
-          var finalizeButton = <button className={finalizeButtonClass} onClick={this.finalizeCurrentRound}>Finalize Round</button>
+          var finalizeButton = <button className={finalizeButtonClass} onClick={this.finalizeCurrentRound}>Finalize Round</button>;
 
-          return <div>{deactivateButton}{finalizeButton}</div>
+          return <div>{deactivateButton}{finalizeButton}</div>;
         }
         else {
           return undefined;
@@ -1523,7 +1524,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       var allResultSame = _.every(currentTeams, function(currTeam, index) {
         var nextTeam = nextTeams[index];
 
-        var resultSame = currTeam.resultForRound[roundIndex] === nextTeam.resultForRound[roundIndex]
+        var resultSame = currTeam.resultForRound[roundIndex] === nextTeam.resultForRound[roundIndex];
 
         var everyDebaterScoreSame = _.every(currTeam.debaters, function(currDebater, dIndex) {
           if(!ValidatorHelper.isDebaterScoreWithinRange(currDebater.scoreForRound[roundIndex])) {

@@ -17,7 +17,7 @@ DeclashApp.client.templates.pages.PublicRoundViewPageContainer = (function() {
            <RoundViewBody urlId={this.props.tournamentUrlId} roundIndex={this.props.roundIndex} />;
           </div>
         </div>
-      )
+      );
     }
   });
 
