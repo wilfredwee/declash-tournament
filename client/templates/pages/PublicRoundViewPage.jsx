@@ -22,23 +22,19 @@ DeclashApp.client.templates.pages.PublicRoundViewPageContainer = (function() {
   });
 
   var RoundViewBody = ReactMeteor.createClass({
-    getMeteorState: function() {
-      return {
-        tournament: SchemaHelpers.populateRoundsForPublic(Tournaments.findOne({urlId: this.props.urlId})),
-        roundIndex: parseInt(this.props.roundIndex)
-      };
-    },
-
-    renderRooms: function() {
-      var schemaInjectedRound = SchemaHelpers.getSchemaInjectedRound(this.state.tournament, this.state.roundIndex);
+    renderRooms: function(tournament, roundIndex) {
+      var schemaInjectedRound = SchemaHelpers.getSchemaInjectedRound(tournament, roundIndex);
 
       return _.map(schemaInjectedRound.rooms, function(room, index) {
-        return <RoomComponent key={index} room={room} roundIndex={this.state.roundIndex} />;
+        return <RoomComponent key={index} room={room} roundIndex={roundIndex} />;
       }.bind(this));
     },
 
     render: function() {
-      if(!this.state.tournament) {
+      var tournament = SchemaHelpers.populateRoundsForPublic(Tournaments.findOne({urlId: this.props.urlId}));
+      var roundIndex = parseInt(this.props.roundIndex);
+
+      if(!tournament) {
         return <h1>No Tournament Found </h1>;
       }
 
@@ -49,14 +45,14 @@ DeclashApp.client.templates.pages.PublicRoundViewPageContainer = (function() {
               <h4 className="ui header">Motion:</h4>
             </div>
           </div>
-          <p>{this.state.tournament.rounds[this.state.roundIndex].motion}</p>
+          <p>{tournament.rounds[roundIndex].motion}</p>
         </div>
       );
 
       return (
           <div>
           <div className="row">
-            <h1 className="ui header">{this.state.tournament.name + ": Round " + (this.state.roundIndex + 1).toString()}</h1>
+            <h1 className="ui header">{tournament.name + ": Round " + (roundIndex + 1).toString()}</h1>
           </div>
           <div className="row">
             {motionSegment}
@@ -65,7 +61,7 @@ DeclashApp.client.templates.pages.PublicRoundViewPageContainer = (function() {
           </div>
           <div className="row">
             <div className="ui stackable three column grid">
-              {this.renderRooms()}
+              {this.renderRooms(tournament, roundIndex)}
             </div>
           </div>
           </div>

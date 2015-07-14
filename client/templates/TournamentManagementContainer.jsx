@@ -1403,13 +1403,14 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
     getMeteorState: function() {
       var tournament = Tournaments.findOne({ownerId: Meteor.userId()});
       return {
-        tournament: tournament,
-        schemaInjectedRound: SchemaHelpers.getSchemaInjectedRound(tournament, this.props.roundIndex),
+        tournament: tournament
       };
     },
 
-    renderRooms: function(room) {
-      return _.map(this.state.schemaInjectedRound.rooms, function(room, roomIndex) {
+    renderRooms: function() {
+      var schemaInjectedRound = SchemaHelpers.getSchemaInjectedRound(this.state.tournament, this.props.roundIndex);
+
+      return _.map(schemaInjectedRound.rooms, function(room, roomIndex) {
         return (
             <ActiveRoomComponent
               key={roomIndex}
@@ -1440,7 +1441,6 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       Session.setDefault("currentDraggedJudgeData", null);
       return {
         tournament: tournament,
-        schemaInjectedRound: this.filterRooms(SchemaHelpers.getSchemaInjectedRound(tournament, this.props.roundIndex), Session.get("filteredRoomIds")),
         currentDraggedJudgeData: Session.get("currentDraggedJudgeData")
       };
     },
@@ -1494,9 +1494,10 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       });
     },
 
-    renderRooms: function(room) {
-      var roundState = this.state.schemaInjectedRound.state;
-      return _.map(this.state.schemaInjectedRound.rooms, function(room, roomIndex) {
+    renderRooms: function() {
+      var schemaInjectedRound = this.filterRooms(SchemaHelpers.getSchemaInjectedRound(this.state.tournament, this.props.roundIndex), Session.get("filteredRoomIds"));
+      var roundState = schemaInjectedRound.state;
+      return _.map(schemaInjectedRound.rooms, function(room, roomIndex) {
         if(roundState === "finished") {
           return <RoomComponent key={roomIndex} room={room} roundIndex={this.props.roundIndex} />;
         }
@@ -1572,6 +1573,8 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
 
   var ActiveRoomComponent = ReactMeteor.createClass({
     getMeteorState: function() {
+      // We specially set the state from props here because we want to do limited validation/
+      // client-side caching for entering results.
       return {
         room: this.props.room,
         doesRoomScoresAddUp: ValidatorHelper.doesRoomScoresAddUp(this.props.room.teams, this.props.roundIndex)
@@ -1736,6 +1739,7 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       var COTeam = getTeamForRole("CO");
 
       var teams = [OGTeam, OOTeam, CGTeam, COTeam];
+
       var teamPositions = ["OG", "OO", "CG", "CO"];
 
       return (
