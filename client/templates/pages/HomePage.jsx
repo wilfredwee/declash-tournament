@@ -4,7 +4,7 @@ DeclashApp.client.templates.pages.HomePageContainer = (function() {
   var HomePageContainer = ReactMeteor.createClass({
     render: function() {
       return (
-        <div className="ui stackable container grid">
+        <div className="ui stackable grid">
           <div className="column">
             <Home />
           </div>
@@ -39,14 +39,15 @@ DeclashApp.client.templates.pages.HomePageContainer = (function() {
       var fontStyle = {fontSize: 12};
       return (
         <div>
-          <div className="row">
-            <h1>Welcome to DeClash! This is the homepage!</h1>
-          </div>
-          <div className="row">
-            <a className="header" style={fontStyle} href="/tournaments">View Active Tournaments</a>
-          </div>
-          <div className="row">
-            <span>Interested? <a href="" onClick={this.loginDemoAccount}>Click here</a> to test it out on a demo account!</span>
+          <div className="ui inverted vertical masthead center aligned segment">
+            <div className="ui text container">
+              <h1 className="ui inverted header">
+                Debate Tournament Tabbing Has Never Been Easier
+              </h1>
+              <h4 className="ui inverted header">Intuitive, Simple, Familiar</h4>
+              <a href="/tournaments" className="ui large primary button">View Active Tournaments<i className="right arrow icon"></i></a>
+              <div onClick={this.loginDemoAccount} className="ui large positive button">Interested? Click to log in to a demo account!</div>
+            </div>
           </div>
         </div>
       );
