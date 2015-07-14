@@ -1437,11 +1437,15 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
   var RoundRoomsContainer = ReactMeteor.createClass({
     getMeteorState: function() {
       var tournament = Tournaments.findOne({ownerId: Meteor.userId()});
-      Session.setDefault("filteredRoomIds", ["", ""]);
-      Session.setDefault("currentDraggedJudgeData", null);
       return {
         tournament: tournament,
-        currentDraggedJudgeData: Session.get("currentDraggedJudgeData")
+      };
+    },
+
+    getInitialState: function() {
+      return {
+        currentDraggedJudgeData: null,
+        filteredRoomIds: ["", ""]
       };
     },
 
@@ -1468,18 +1472,22 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
     },
 
     setCurrentDraggedJudge: function(judge, roundIndex) {
-      Session.set("currentDraggedJudgeData", {
-        judge: judge,
-        roundIndex: roundIndex
+      this.setState({
+        currentDraggedJudgeData: {
+          judge: judge,
+          roundIndex: roundIndex
+        }
       });
     },
 
     clearCurrentDraggedJudge: function(){
-      Session.set("currentDraggedJudgeData", null);
+      this.setState({
+        currentDraggedJudgeData: null
+      });
     },
 
     getDragData: function() {
-      return Session.get("currentDraggedJudgeData");
+      return this.state.currentDraggedJudgeData;
     },
 
     onDrop: function(room) {
@@ -1495,7 +1503,10 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
     },
 
     renderRooms: function() {
-      var schemaInjectedRound = this.filterRooms(SchemaHelpers.getSchemaInjectedRound(this.state.tournament, this.props.roundIndex), Session.get("filteredRoomIds"));
+      var schemaInjectedRound = this.filterRooms(
+        SchemaHelpers.getSchemaInjectedRound(this.state.tournament, this.props.roundIndex),
+        this.state.filteredRoomIds
+      );
       var roundState = schemaInjectedRound.state;
       return _.map(schemaInjectedRound.rooms, function(room, roomIndex) {
         if(roundState === "finished") {
@@ -1521,14 +1532,18 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       var firstFilteredRoom = React.findDOMNode(this.refs.selectOne).value;
       var secondFilteredRoom = React.findDOMNode(this.refs.selectTwo).value;
 
-      Session.set("filteredRoomIds", [firstFilteredRoom, secondFilteredRoom]);
+      this.setState({
+        filteredRoomIds: [firstFilteredRoom, secondFilteredRoom]
+      });
     },
 
     clearFilter: function() {
-      Session.set("filteredRoomIds", ["", ""]);
-
       $("#" + this.refs.selectOne.getDOMNode().id).dropdown("clear");
       $("#" + this.refs.selectTwo.getDOMNode().id).dropdown("clear");
+
+      this.setState({
+        filteredRoomIds: ["", ""]
+      });
     },
 
     render: function() {
