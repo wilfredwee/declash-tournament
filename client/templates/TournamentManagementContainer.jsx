@@ -125,6 +125,17 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
       });
     },
 
+    openFinishTournamentDialog: function() {
+      var modalDOM = $("<div>").modal();
+
+      React.render(<FinishTournamentDialog
+        tournamentId={this.state.tournament._id}
+        modalDOM={modalDOM} />,
+        modalDOM[0]
+      );
+
+    },
+
     render: function() {
       var contentContainer = this.renderAccordingToContextType(this.state.containerContextType, this.state.currentRoundIndex);
 
@@ -182,6 +193,9 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
                   <div className="item" onClick={this.switchContainerContextType.bind(this, ManagementContextConstants.SPEAKER_TAB_CONTEXT.type)}>Speakers</div>
                 </div>
               </div>
+              <div className="right menu">
+                <a href="" onClick={this.openFinishTournamentDialog} className="item">Finish Tournament</a>
+              </div>
             </div>
           </div>
           <br />
@@ -202,6 +216,60 @@ DeclashApp.client.templates.TournamentManagementContainer = (function() {
         </div>
       );
     }
+  });
+
+  var FinishTournamentDialog = ReactMeteor.createClass({
+    componentDidMount: function() {
+      var self = this;
+
+      $(".ui.modal").modal({
+        closable: true,
+        detachable: false,
+        onApprove: function() {
+          Meteor.call("finalizeTournament", self.props.tournamentId, function(err, result) {
+            // TODO
+            if(err) {
+              alert(err.reason);
+            }
+            else {
+              Router.go("/");
+            }
+          });
+
+        },
+        onHidden: function() {
+          React.unmountComponentAtNode(self.props.modalDOM[0]);
+          $(this).remove();
+        }
+      })
+      .modal("show");
+
+    },
+
+    render: function() {
+      return (
+        <div className="ui modal">
+          <i className="close icon"></i>
+          <div className="header">
+            Finishing Your Tournament
+          </div>
+          <div className="content">
+            <div className="description">
+             Are you sure you want to close your tournament?
+             <strong>All information will be lost</strong>!
+             Please backup all data to services such as Google Docs by going to the appropriate table and do Ctrl + A, Ctrl + C and paste it to an external spreadsheet.<br />
+             In the future, you will be able to close tournaments and persist relevant informations such as Tabs and Statistics. <br />
+             You may not create a new tournament until you close this one.
+            </div>
+          </div>
+          <div className="actions">
+            <div className="ui cancel button">No</div>
+            <div className="negative ui ok button">Yes, close the tournament.</div>
+          </div>
+        </div>
+      );
+    }
+
   });
 
   var RoundManagementComponent = ReactMeteor.createClass({

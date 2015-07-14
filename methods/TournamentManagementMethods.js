@@ -748,6 +748,25 @@ Meteor.methods({
       {$set: {"rounds.$.rooms": round.rooms}},
       {validate: false, filter: false}
     );
+  },
 
+  finalizeTournament: function() {
+    var tournament = getOwnerTournament.call(this);
+
+    // Do not allow demo user accounts to be closed.
+    var user = Meteor.users.findOne({_id: this.userId});
+
+    if(_.some(user.emails, function(emailObj) {
+      return emailObj.address === "demouser@declash.com";
+    })) {
+      throw new Meteor.Error("invalidAction", "Unable to close the tournament for a demo account.");
+    }
+
+    tournament.finished = true;
+
+    Tournaments.update(
+      {_id: tournament._id},
+      {$set: {finished: true}}
+    );
   }
 });
