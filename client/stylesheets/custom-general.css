@@ -22,13 +22,9 @@
 
 .masthead.segment {
   min-height: 700px;
-  padding: 1em 0em;
   background-image: url('/images/masthead-bg.jpg');
   background-position: center;
   background-size: cover;
-/*  padding-top: 10% !important;
-  padding-right: 10% !important;
-  padding-left: 10% !important;*/
   padding: 12% !important;
 }
 
@@ -37,4 +33,23 @@
   background-color: rgba(0, 0, 0, 0.24);
   padding: 14px;
   border-radius: 0.28571429rem;
+}
+
+.vertical.first.homepage.segment {
+  padding: 8em 0em;
+}
+
+.vertical.first.homepage.segment h3 {
+  font-size: 2em;
+}
+
+.vertical.first.homepage.segment p {
+  font-size: 1.33em;
+}
+
+.column.homepage {
+  padding-bottom: 0 !important;
+}
+.vertical.footer.homepage.segment {
+  padding: 5em 0em;
 }
