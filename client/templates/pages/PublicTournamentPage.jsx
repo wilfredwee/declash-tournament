@@ -20,26 +20,20 @@ DeclashApp.client.templates.pages.PublicTournamentPageContainer = (function() {
   });
 
   var TournamentPageBody = ReactMeteor.createClass({
-    getMeteorState: function() {
-      return {
-        tournament: SchemaHelpers.populateRoundsForPublic(Tournaments.findOne({urlId: this.props.urlId}))
-      };
-    },
-
     render: function() {
-      /* jshint maxlen:false */
+      var tournament = SchemaHelpers.populateRoundsForPublic(Tournaments.findOne({urlId: this.props.urlId}));
 
-      if(!this.state.tournament) {
+      if(!tournament) {
         return false;
       }
 
       var participantRegistration;
-      if(this.state.tournament.enablePublicRegistration === true) {
+      if(tournament.enablePublicRegistration === true) {
         participantRegistration = (
           <div className="row">
             <a
               className="ui primary button"
-              href={window.location.origin + "/registerParticipants/" + this.state.tournament._id}
+              href={window.location.origin + "/registerParticipants/" + tournament._id}
             >
               Register As A Participant
             </a>
@@ -50,16 +44,19 @@ DeclashApp.client.templates.pages.PublicTournamentPageContainer = (function() {
       return (
             <div>
               <div className="row">
-                <h1>{this.state.tournament.name}</h1>
+                <h1>{tournament.name}</h1>
               </div>
               <br />
               <br />
               {participantRegistration}
               <br />
-              {_.map(this.state.tournament.rounds, function(round, index) {
+              {_.map(tournament.rounds, function(round, index) {
                 return (
                   <div key={index} className="row">
-                    <a className="ui primary button" href={window.location.origin + "/tournaments/" + this.props.urlId + "/" + round.index.toString()}>
+                    <a
+                      className="ui primary button"
+                      href={window.location.origin + "/tournaments/" + this.props.urlId + "/" + round.index.toString()}
+                    >
                       View Round {round.index + 1}
                     </a>
                   </div>
