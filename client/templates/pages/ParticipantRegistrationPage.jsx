@@ -11,7 +11,7 @@ DeclashApp.client.templates.pages.ParticipantRegistrationPageContainer = (functi
   var ParticipantRegistrationPageContainer = ReactMeteor.createClass({
     render: function() {
       return (
-        <div className="ui middle aligned centered grid registerparticipant">
+        <div className="ui middle aligned centered container grid registerparticipant">
           <div className="column">
             <ParticipantRegistrationPageBody tournamentId={this.props.tournamentId} />
           </div>

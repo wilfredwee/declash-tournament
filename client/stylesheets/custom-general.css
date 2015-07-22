@@ -6,10 +6,6 @@
 .roomLink:hover {
 }
 
-.reactComponentDiv {
-  height: 100%;
-}
-
 .reactComponentDiv > .grid {
   height: 100%;
   padding-top: 2.75rem;
@@ -25,7 +21,7 @@
 }
 
 .grid.registerparticipant {
-  height: 100%;
+  height: 100vh;
 }
 
 .grid.registerparticipant > .column {

@@ -10,7 +10,7 @@ DeclashApp.client.templates.pages.PublicTournamentPageContainer = (function() {
   var PublicTournamentPageContainer = ReactMeteor.createClass({
     render: function() {
       return (
-        <div className="ui stackable container grid">
+        <div className="ui stackable center aligned container grid">
           <div className="column">
             <TournamentPageBody urlId={this.props.tournamentUrlId} />
           </div>
@@ -52,6 +52,7 @@ DeclashApp.client.templates.pages.PublicTournamentPageContainer = (function() {
               <br />
               {_.map(tournament.rounds, function(round, index) {
                 return (
+                  <div>
                   <div key={index} className="row">
                     <a
                       className="ui primary button"
@@ -59,6 +60,8 @@ DeclashApp.client.templates.pages.PublicTournamentPageContainer = (function() {
                     >
                       View Round {round.index + 1}
                     </a>
+                  </div>
+                  <br />
                   </div>
                 );
               }.bind(this))}

@@ -46,6 +46,8 @@ DeclashApp.client.templates.pages.HomePageContainer = (function() {
               </h1>
               <h4 className="ui inverted header">Intuitive, Simple, Familiar</h4>
               <a href="/tournaments" className="ui large primary button">View Active Tournaments<i className="right arrow icon"></i></a>
+              <br />
+              <br />
               <div onClick={this.loginDemoAccount} className="ui large positive button">Interested? Click to log in to a demo account!</div>
             </div>
           </div>
