@@ -333,13 +333,13 @@ Meteor.methods({
 
     roundToDeactivate.state = "assigned";
 
-    // When activating a round, we create a public round that is similar to the private round,
-    // only that it is viewable by the public.
-    // We do this because of limitations of Mongo's capabilities in limiting fields.
+    var publicRounds = _.filter(tournament.rounds, function(round) {
+      return round.index !== roundToDeactivate.index;
+    });
 
     Tournaments.update(
       {_id: tournament._id, "rounds.index": roundToDeactivate.index},
-      {$set: {"rounds.$.state": roundToDeactivate.state, "publicRounds": tournament.rounds}}
+      {$set: {"rounds.$.state": roundToDeactivate.state, "publicRounds": publicRounds}}
     );
   },
 
