@@ -98,7 +98,7 @@ DeclashApp.client.templates.pages.HomePageContainer = (function() {
                   <div className="ui stackable grid">
                     <div className="twelve wide column">
                       <h3>Host your own DeClash!</h3>
-                      <p>{"It's"} super easy and completely free! Read the How-To <a href="http://github.com/WilfredWee/declash-tournament" taget="_blank">here</a>.</p>
+                      <p>{"It's"} super easy and completely free! Read the How-To <a href="http://github.com/WilfredWee/declash-tournament/wiki/Setup-Instructions" taget="_blank">here</a>.</p>
                     </div>
                     <div className="four wide column">
                       <i className="circular red database huge icon" />
@@ -115,14 +115,14 @@ DeclashApp.client.templates.pages.HomePageContainer = (function() {
                   <h4 className="ui inverted header">Overview</h4>
                   <div className="ui inverted link list">
                     <a className="item" href="http://github.com/WilfredWee/declash-tournament">About</a>
-                    <a className="item" href="http://github.com/WilfredWee/declash-tournament">How-To</a>
-                    <a className="item" href="http://github.com/WilfredWee/declash-tournament">Feature Suggestions</a>
+                    <a className="item" href="http://github.com/WilfredWee/declash-tournament/wiki">How-To</a>
+                    <a className="item" href="http://github.com/WilfredWee/declash-tournament/issues">Feature Suggestions</a>
                   </div>
                 </div>
                 <div className="four wide column">
                   <h4 className="ui inverted header">Developers</h4>
                   <div className="ui inverted link list">
-                    <a className="item" href="/">Contribute</a>
+                    <a className="item" href="http://github.com/WilfredWee/declash-tournament">Contribute</a>
                   </div>
                 </div>
               </div>
