@@ -72,7 +72,7 @@ Meteor.methods({
     if(!tournament) {
       throw new Meteor.Error("invalidAction", "Unable to find the tournament you're looking for.");
     }
-    else if(!this.userId && !tournament.enablePublicRegister) {
+    else if(!this.userId && !tournament.enablePublicRegistration) {
       throw new Meteor.Error("invalidAction", "You cannot register for this tournament.");
     }
     else if(!this.userId && teams.length > 1) {
@@ -118,7 +118,7 @@ Meteor.methods({
     if(!tournament) {
       throw new Meteor.Error("invalidAction", "Unable to find the tournament you're looking for.");
     }
-    else if(!this.userId && !tournament.enablePublicRegister) {
+    else if(!this.userId && !tournament.enablePublicRegistration) {
       throw new Meteor.Error("invalidAction", "You cannot register for this tournament.");
     }
     else if(!this.userId && judges.length > 1) {

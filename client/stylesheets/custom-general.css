@@ -6,6 +6,10 @@
 .roomLink:hover {
 }
 
+.reactComponentDiv {
+  height: 100%;
+}
+
 .reactComponentDiv > .grid {
   height: 100%;
   padding-top: 2.75rem;
@@ -18,6 +22,14 @@
 .grid.login {
   justify-content: space-around;
   height: 100%;
+}
+
+.grid.registerparticipant {
+  height: 100%;
+}
+
+.grid.registerparticipant > .column {
+  max-width: 450px;
 }
 
 .masthead.segment {

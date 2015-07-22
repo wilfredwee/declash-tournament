@@ -11,7 +11,7 @@ DeclashApp.client.templates.pages.ParticipantRegistrationPageContainer = (functi
   var ParticipantRegistrationPageContainer = ReactMeteor.createClass({
     render: function() {
       return (
-        <div className="ui stackable container grid">
+        <div className="ui middle aligned centered grid registerparticipant">
           <div className="column">
             <ParticipantRegistrationPageBody tournamentId={this.props.tournamentId} />
           </div>
@@ -21,15 +21,16 @@ DeclashApp.client.templates.pages.ParticipantRegistrationPageContainer = (functi
   });
 
   var ParticipantRegistrationPageBody = ReactMeteor.createClass({
-    getMeteorState: function() {
-      var registrationState = Session.get("registrationState") || REGISTRATION_STATES.choosing;
+    getInitialState: function() {
       return {
-        registrationState: registrationState
+        "registrationState": REGISTRATION_STATES.choosing
       };
     },
 
     changeState: function(registrationState) {
-      Session.set("registrationState", registrationState);
+      this.setState({
+        "registrationState": registrationState
+      });
     },
 
     render: function() {
@@ -41,25 +42,26 @@ DeclashApp.client.templates.pages.ParticipantRegistrationPageContainer = (functi
         case REGISTRATION_STATES.registerJudge:
           return <JudgeRegistrationForm updateParentState={this.changeState} tournamentId={this.props.tournamentId} />;
         case REGISTRATION_STATES.success:
-          return <Success />;
+          return <Success updateParentState={this.changeState} />;
       }
     }
   });
 
   var ParticipantTypeChooser = ReactMeteor.createClass({
-    handleRegisterTeam: function() {
-      Session.set("registrationState", REGISTRATION_STATES.registerTeam);
-    },
-
-    handleRegisterJudge: function() {
-      Session.set("registrationState", REGISTRATION_STATES.registerJudge);
-    },
-
     render: function() {
       return (
-        <div className="row">
-          <button onClick={this.handleRegisterTeam}>Register As A Team</button>
-          <button onClick={this.handleRegisterJudge}>Register As A Judge</button>
+        <div className="ui fluid buttons">
+          <button className="ui primary button"
+            onClick={this.props.updateParentState.bind(null, REGISTRATION_STATES.registerTeam)}
+          >
+          Register As A Team
+          </button>
+          <div className="or" />
+          <button className="ui positive button"
+            onClick={this.props.updateParentState.bind(null, REGISTRATION_STATES.registerJudge)}
+          >
+          Register As A Judge
+          </button>
         </div>
       );
     }
@@ -81,13 +83,14 @@ DeclashApp.client.templates.pages.ParticipantRegistrationPageContainer = (functi
         debaters: [{name: debaterName1}, {name: debaterName2}]
       }];
 
+      var self = this;
       Meteor.call("registerTeams", team, this.props.tournamentId, function(err, result) {
         // TODO
         if(err) {
           alert(err.reason);
         }
         else {
-          Session.set("registrationState", REGISTRATION_STATES.success);
+          self.props.updateParentState(REGISTRATION_STATES.success);
         }
       });
 
@@ -96,11 +99,23 @@ DeclashApp.client.templates.pages.ParticipantRegistrationPageContainer = (functi
     render: function() {
       return (
         <form className="ui form TeamRegistrationForm" onSubmit={this.handleSubmit}>
-          <input type="text" placeholder="Your Team Name" ref="teamName" />
-          <input type="text" placeholder="Your Team's Institution Name" ref="institutionName" />
-          <input type="text" placeholder="Debater Name 1" ref="debaterName1" />
-          <input type="text" placeholder="Debater Name 2" ref="debaterName2" />
-          <input type="submit" className="ui submit button" value="Register" />
+          <h3 className="ui header">Registering a Team</h3>
+          <div className="field">
+            <label>Team Name</label>
+            <input type="text" placeholder="Your Team Name" ref="teamName" />
+          </div>
+          <div className="field">
+            <label>Institution Name</label>
+            <input type="text" placeholder="Your Team's Institution Name" ref="institutionName" />
+          </div>
+          <div className="field">
+            <label>{"Debaters'"} Name</label>
+            <input type="text" placeholder="Debater Name 1" ref="debaterName1" />
+            <input type="text" placeholder="Debater Name 2" ref="debaterName2" />
+          </div>
+          <input type="submit" className="ui primary button" value="Register" />
+          <br />
+          <a href="" onClick={this.props.updateParentState.bind(null, REGISTRATION_STATES.choosing)}>Back</a>
         </form>
       );
     }
@@ -119,13 +134,14 @@ DeclashApp.client.templates.pages.ParticipantRegistrationPageContainer = (functi
         institution: institutionName
       }];
 
+      var self = this;
       Meteor.call("registerJudges", judge, this.props.tournamentId, function(err, result) {
         // TODO
         if(err) {
           alert(err.reason);
         }
         else {
-          Session.set("registrationState", REGISTRATION_STATES.success);
+          self.props.updateParentState(REGISTRATION_STATES.success);
         }
       });
     },
@@ -133,9 +149,18 @@ DeclashApp.client.templates.pages.ParticipantRegistrationPageContainer = (functi
     render: function() {
       return (
         <form className="ui form JudgeRegistrationForm" onSubmit={this.handleSubmit}>
-          <input type="text" placeholder="Your Name" ref="name" />
-          <input type="text" placeholder="Your Institution's Name" ref="institutionName" />
-          <input type="submit" className="ui submit button" value="Register" />
+          <h3 className="ui header">Registering a Judge</h3>
+          <div className="field">
+            <label>Name</label>
+            <input type="text" placeholder="Your Name" ref="name" />
+          </div>
+          <div className="field">
+            <label>Institution Name</label>
+            <input type="text" placeholder="Your Institution's Name" ref="institutionName" />
+          </div>
+          <input type="submit" className="ui positive button" value="Register" />
+          <br />
+          <a href="" onClick={this.props.updateParentState.bind(null, REGISTRATION_STATES.choosing)}>Back</a>
         </form>
       );
     }
@@ -143,7 +168,13 @@ DeclashApp.client.templates.pages.ParticipantRegistrationPageContainer = (functi
 
   var Success = ReactMeteor.createClass({
     render: function() {
-      return <h1>Yay! Success!</h1>;
+      return (
+        <div>
+          <h1>Registration Done!</h1>
+          <br />
+          <a href="" onClick={this.props.updateParentState.bind(null, REGISTRATION_STATES.choosing)}>Back</a>
+        </div>
+      );
     }
   });
 

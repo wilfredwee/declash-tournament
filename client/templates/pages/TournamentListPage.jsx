@@ -12,7 +12,7 @@ DeclashApp.client.templates.pages.TournamentListPageContainer = (function() {
 
     render: function() {
       return (
-        <div className="ui stackable container grid">
+        <div className="ui stackable center aligned container grid">
           <div className="column">
             <div className="row">
               <h1 className="ui header">Active Tournaments</h1>
