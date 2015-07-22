@@ -250,6 +250,18 @@ var TournamentSchema = new SimpleSchema({
     minCount: 0
   },
 
+  publicJudges: {
+    type: [JudgeSchema],
+    label: "All judges in a tournament - viewable by the public.",
+    minCount: 0
+  },
+
+  publicTeams: {
+    type: [TeamSchema],
+    label: "All teams in a tournament - viewable by the public",
+    minCount: 0
+  },
+
   currentInvariantViolations: {
     type: [Object],
     label: "List of invariant violation types",

@@ -31,7 +31,7 @@ DeclashApp.client.templates.pages.PublicRoundViewPageContainer = (function() {
     },
 
     render: function() {
-      var tournament = SchemaHelpers.populateRoundsForPublic(Tournaments.findOne({urlId: this.props.urlId}));
+      var tournament = SchemaHelpers.populateTournamentForPublic(Tournaments.findOne({urlId: this.props.urlId}));
       var roundIndex = parseInt(this.props.roundIndex);
 
       if(!tournament) {

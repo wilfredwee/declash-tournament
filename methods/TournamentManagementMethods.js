@@ -311,10 +311,37 @@ Meteor.methods({
     // only that it is viewable by the public.
     // We do this because of limitations of Mongo's capabilities in limiting fields.
 
+    // For teams and judges, we update it whenever we activate a round.
+    // Not optimal, needs refactoring in the future.
+    var publicTeams = _.map(tournament.teams, function(team) {
+      team.resultForRound = {};
+
+      team.debaters = _.map(team.debaters, function(debater) {
+        debater.scoreForRound = {};
+
+        return debater;
+      });
+
+      return team;
+    });
+
+    var publicJudges = _.map(tournament.judges, function(judge) {
+      judge.rankForRound = {};
+
+      return judge;
+    });
+
     Tournaments.update(
       {_id: tournament._id, "rounds.index": roundToActivate.index},
-      {$set: {"rounds.$.state": roundToActivate.state, "publicRounds": tournament.rounds}}
+      {$set: {
+        "rounds.$.state": roundToActivate.state,
+        "publicRounds": tournament.rounds,
+        "publicTeams": publicTeams,
+        "publicJudges": publicJudges
+      }}
     );
+
+
   },
 
   deactivateRound: function(roundIndex) {

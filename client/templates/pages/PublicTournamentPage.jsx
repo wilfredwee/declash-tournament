@@ -21,7 +21,7 @@ DeclashApp.client.templates.pages.PublicTournamentPageContainer = (function() {
 
   var TournamentPageBody = ReactMeteor.createClass({
     render: function() {
-      var tournament = SchemaHelpers.populateRoundsForPublic(Tournaments.findOne({urlId: this.props.urlId}));
+      var tournament = SchemaHelpers.populateTournamentForPublic(Tournaments.findOne({urlId: this.props.urlId}));
 
       if(!tournament) {
         return false;

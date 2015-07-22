@@ -10,7 +10,7 @@ Meteor.publish("unfinishedTournaments", function() {
   else {
     return Tournaments.find(
       {finished: false, enablePublicView: true},
-      {fields: {"rounds": 0}}
+      {fields: {"rounds": 0, "teams": 0, "judges": 0}}
     );
   }
 

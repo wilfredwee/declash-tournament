@@ -73,12 +73,14 @@ DeclashApp.helpers.SchemaHelpers = (function(){
       return round;
     },
 
-    populateRoundsForPublic: function(tournament) {
+    populateTournamentForPublic: function(tournament) {
       if(!tournament) {
         return undefined;
       }
 
       tournament.rounds = tournament.publicRounds;
+      tournament.teams = tournament.publicTeams;
+      tournament.judges = tournament.publicJudges;
 
       return tournament;
     }
